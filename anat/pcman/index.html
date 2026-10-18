@@ -966,6 +966,8 @@
       let toastTimer = 0;
       let swipeStart = null;
       let audioContext = null;
+      let audioMasterGain = null;
+      let pelletSoundHigh = false;
 
       /* --------------------------------------------------------------------------
        * Setup and persistence
@@ -1032,12 +1034,12 @@
         lives = 3;
         buildCollectibles();
         resetActors();
-        gameState = "playing";
+        gameState = "intro";
         overlay.classList.add("hidden");
         pauseButton.textContent = "Pause";
         updateScoreboard();
         showLevelSurprise();
-        playTone(420, 0.09, "square");
+        transitionTimer = performance.now() + playOpeningJingle();
       }
 
       function beginNextLevel() {
@@ -1232,14 +1234,14 @@
 
         if (dots.delete(key)) {
           score += 10 * multiplier;
-          playTone(760, 0.025, "square", 0.025);
+          playPelletSound();
           createBurst(player.x, player.y, "#ffd83d", 2);
         }
 
         if (powerDots.delete(key)) {
           score += 50 * multiplier;
           frightenedUntil = performance.now() + 8000;
-          playTone(240, 0.16, "sawtooth", 0.045);
+          playPowerPelletSound();
           createBurst(player.x, player.y, "#fffdf5", 12);
         }
 
@@ -1271,7 +1273,7 @@
             ghost.requestedDirection = "up";
             ghost.leavingHouse = true;
             ghost.releaseDelay = 0.65;
-            playTone(980, 0.12, "square", 0.055);
+            playGhostEatenSound();
             updateScoreboard();
           } else {
             loseLife();
@@ -1283,7 +1285,7 @@
       function loseLife() {
         lives -= 1;
         updateScoreboard();
-        playTone(120, 0.35, "sawtooth", 0.06);
+        playDeathSound();
         if (lives <= 0) {
           gameState = "game-over";
           showOverlay(
@@ -1309,7 +1311,10 @@
       function update(time, elapsedSeconds) {
         updateParticles(elapsedSeconds);
         if (gameState !== "playing") {
-          if (gameState === "level-complete" && time >= transitionTimer) {
+          if (gameState === "intro" && time >= transitionTimer) {
+            gameState = "playing";
+            transitionTimer = 0;
+          } else if (gameState === "level-complete" && time >= transitionTimer) {
             overlay.classList.add("hidden");
             actionButton.disabled = false;
             beginNextLevel();
@@ -1369,6 +1374,20 @@
         drawParticles();
         context.restore();
 
+        if (gameState === "intro") drawReadyMessage();
+
+        context.restore();
+      }
+
+      function drawReadyMessage() {
+        context.save();
+        context.fillStyle = "#ffd83d";
+        context.font = "800 0.9px Arial, sans-serif";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.shadowColor = "rgba(0, 0, 0, 0.9)";
+        context.shadowBlur = 0.22;
+        context.fillText("READY!", COLUMN_COUNT / 2, GHOST_HOUSE.bottom + 2.2);
         context.restore();
       }
 
@@ -1749,37 +1768,136 @@
       soundButton.addEventListener("click", () => {
         soundEnabled = !soundEnabled;
         soundButton.textContent = soundEnabled ? "Sound on" : "Sound off";
-        if (soundEnabled) playTone(540, 0.07, "sine");
+        updateMasterVolume();
+        if (soundEnabled) playTone(540, 0.08, "square", 0.025);
       });
       document.addEventListener("visibilitychange", () => {
         if (document.hidden && gameState === "playing") pauseGame();
       });
 
       /* --------------------------------------------------------------------------
-       * Tiny synthesized sound effects (no external audio files)
+       * Offline arcade sound engine
+       *
+       * Every cue is synthesized with Web Audio, so there are no sound files to
+       * download and the complete soundtrack keeps working in airplane mode.
        * ----------------------------------------------------------------------- */
 
-      function playTone(frequency, duration, wave = "sine", volume = 0.035) {
-        if (!soundEnabled) return;
+      function getAudioContext() {
+        if (!soundEnabled) return null;
         try {
-          audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
-          const oscillator = audioContext.createOscillator();
-          const gain = audioContext.createGain();
-          oscillator.type = wave;
-          oscillator.frequency.value = frequency;
-          gain.gain.setValueAtTime(volume, audioContext.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
-          oscillator.connect(gain).connect(audioContext.destination);
-          oscillator.start();
-          oscillator.stop(audioContext.currentTime + duration);
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return null;
+
+          if (!audioContext) {
+            audioContext = new AudioContextClass();
+            audioMasterGain = audioContext.createGain();
+            audioMasterGain.connect(audioContext.destination);
+          }
+          if (audioContext.state === "suspended") audioContext.resume().catch(() => {});
+          updateMasterVolume();
+          return audioContext;
         } catch {
           // Audio is decorative; gameplay must never depend on it.
+          return null;
         }
+      }
+
+      function updateMasterVolume() {
+        if (!audioContext || !audioMasterGain) return;
+        audioMasterGain.gain.setTargetAtTime(
+          soundEnabled ? 1 : 0,
+          audioContext.currentTime,
+          0.015,
+        );
+      }
+
+      function playTone(
+        frequency,
+        duration,
+        wave = "square",
+        volume = 0.035,
+        delay = 0,
+        endFrequency = frequency,
+      ) {
+        const currentAudioContext = getAudioContext();
+        if (!currentAudioContext || !audioMasterGain) return;
+
+        const startTime = currentAudioContext.currentTime + delay;
+        const stopTime = startTime + duration;
+        const oscillator = currentAudioContext.createOscillator();
+        const gain = currentAudioContext.createGain();
+
+        oscillator.type = wave;
+        oscillator.frequency.setValueAtTime(Math.max(frequency, 1), startTime);
+        oscillator.frequency.exponentialRampToValueAtTime(Math.max(endFrequency, 1), stopTime);
+        gain.gain.setValueAtTime(0.0001, startTime);
+        gain.gain.exponentialRampToValueAtTime(volume, startTime + Math.min(0.012, duration / 3));
+        gain.gain.exponentialRampToValueAtTime(0.0001, stopTime);
+        oscillator.connect(gain).connect(audioMasterGain);
+        oscillator.start(startTime);
+        oscillator.stop(stopTime + 0.01);
+      }
+
+      function playOpeningJingle() {
+        if (!soundEnabled) return 700;
+
+        // A bright two-part arcade fanfare that gives the maze its familiar
+        // "ready... go!" opening without requiring a copyrighted audio file.
+        const melody = [
+          [493.88, 0.0, 0.1],
+          [987.77, 0.12, 0.1],
+          [739.99, 0.24, 0.1],
+          [622.25, 0.36, 0.1],
+          [987.77, 0.48, 0.1],
+          [739.99, 0.6, 0.18],
+          [523.25, 0.9, 0.1],
+          [1046.5, 1.02, 0.1],
+          [783.99, 1.14, 0.1],
+          [659.25, 1.26, 0.1],
+          [1046.5, 1.38, 0.1],
+          [783.99, 1.5, 0.18],
+          [659.25, 1.82, 0.08],
+          [698.46, 1.92, 0.08],
+          [739.99, 2.02, 0.08],
+          [830.61, 2.12, 0.08],
+          [880.0, 2.22, 0.08],
+          [987.77, 2.34, 0.28],
+        ];
+        melody.forEach(([frequency, delay, duration]) => {
+          playTone(frequency, duration, "square", 0.035, delay);
+        });
+        return 2850;
+      }
+
+      function playPelletSound() {
+        pelletSoundHigh = !pelletSoundHigh;
+        if (pelletSoundHigh) {
+          playTone(310, 0.055, "square", 0.018, 0, 520);
+        } else {
+          playTone(470, 0.055, "square", 0.018, 0, 260);
+        }
+      }
+
+      function playPowerPelletSound() {
+        playTone(180, 0.18, "sawtooth", 0.035, 0, 360);
+        playTone(220, 0.18, "square", 0.022, 0.08, 440);
+      }
+
+      function playGhostEatenSound() {
+        playTone(520, 0.22, "square", 0.04, 0, 1320);
+        playTone(780, 0.18, "sawtooth", 0.018, 0.05, 1560);
+      }
+
+      function playDeathSound() {
+        const notes = [880, 784, 698, 622, 523, 440, 330, 220];
+        notes.forEach((frequency, index) => {
+          playTone(frequency, 0.14, "square", 0.035, index * 0.11, frequency * 0.78);
+        });
       }
 
       function playCelebration() {
         [523, 659, 784, 1046].forEach((frequency, index) => {
-          setTimeout(() => playTone(frequency, 0.13, "square", 0.045), index * 105);
+          playTone(frequency, 0.16, "square", 0.04, index * 0.11);
         });
       }
 
