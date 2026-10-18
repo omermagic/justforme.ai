@@ -1,0 +1,1759 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#fff8df" />
+    <meta
+      name="description"
+      content="Snoopy's Maze — a playful offline maze game made especially for Anat."
+    />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon.svg" />
+    <title>Snoopy's Maze — For Anat</title>
+
+    <style>
+      :root {
+        --ink: #171717;
+        --cream: #fff8df;
+        --paper: #fffdf5;
+        --red: #ed3f38;
+        --yellow: #ffd83d;
+        --blue: #4075db;
+        --soft-blue: #dce9ff;
+        --line: rgba(23, 23, 23, 0.15);
+        --shadow: 8px 8px 0 #171717;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-height: 100%;
+        background: var(--cream);
+      }
+
+      body {
+        min-height: 100%;
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 4%, rgba(255, 216, 61, 0.5), transparent 25rem),
+          radial-gradient(circle at 95% 90%, rgba(64, 117, 219, 0.18), transparent 28rem),
+          var(--cream);
+        font-family: "Trebuchet MS", "Avenir Next", system-ui, sans-serif;
+        line-height: 1.4;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      button {
+        font: inherit;
+      }
+
+      button:focus-visible,
+      a:focus-visible {
+        outline: 4px solid var(--blue);
+        outline-offset: 3px;
+      }
+
+      .page {
+        width: min(calc(100% - 32px), 1100px);
+        margin-inline: auto;
+        padding: 22px 0 max(32px, env(safe-area-inset-bottom));
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid var(--ink);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 38px;
+        aspect-ratio: 1;
+        place-items: center;
+        background: var(--yellow);
+        border: 2px solid var(--ink);
+        border-radius: 50%;
+        transform: rotate(-8deg);
+      }
+
+      .offline-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(23, 23, 23, 0.62);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .offline-status::before {
+        content: "";
+        width: 8px;
+        aspect-ratio: 1;
+        background: #dc8f17;
+        border: 1px solid var(--ink);
+        border-radius: 50%;
+      }
+
+      .offline-status.ready::before {
+        background: #46ae5b;
+      }
+
+      .game-layout {
+        display: grid;
+        grid-template-columns: minmax(250px, 0.68fr) minmax(320px, 1fr);
+        gap: clamp(28px, 6vw, 78px);
+        align-items: start;
+      }
+
+      .intro {
+        position: sticky;
+        top: 24px;
+        padding-top: 18px;
+      }
+
+      .for-anat {
+        display: inline-block;
+        margin: 0 0 20px;
+        padding: 7px 10px;
+        background: var(--red);
+        border: 2px solid var(--ink);
+        color: white;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        transform: rotate(-2deg);
+      }
+
+      h1 {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(3.5rem, 7vw, 6.5rem);
+        font-weight: 400;
+        letter-spacing: -0.075em;
+        line-height: 0.78;
+      }
+
+      h1 span {
+        display: block;
+        margin-left: 0.3em;
+        color: var(--red);
+        font-family: "Trebuchet MS", system-ui, sans-serif;
+        font-size: 0.67em;
+        font-weight: 1000;
+        letter-spacing: -0.07em;
+        text-transform: uppercase;
+        transform: rotate(-3deg);
+      }
+
+      .intro-copy {
+        max-width: 330px;
+        margin: 28px 0 24px;
+        color: rgba(23, 23, 23, 0.66);
+        font-size: 14px;
+      }
+
+      .flight-note {
+        max-width: 330px;
+        padding: 14px;
+        background: var(--paper);
+        border: 2px solid var(--ink);
+        box-shadow: 4px 4px 0 var(--ink);
+        font-size: 12px;
+      }
+
+      .flight-note strong {
+        display: block;
+        margin-bottom: 3px;
+      }
+
+      .keyboard-help {
+        margin-top: 24px;
+        color: rgba(23, 23, 23, 0.55);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .game-column {
+        width: min(100%, 560px);
+        justify-self: end;
+      }
+
+      .scoreboard {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 7px;
+        margin-bottom: 10px;
+      }
+
+      .stat {
+        min-width: 0;
+        padding: 9px 10px;
+        background: var(--paper);
+        border: 2px solid var(--ink);
+        text-align: center;
+      }
+
+      .stat-label {
+        display: block;
+        color: rgba(23, 23, 23, 0.55);
+        font-size: 8px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .stat-value {
+        display: block;
+        overflow: hidden;
+        margin-top: 2px;
+        font-size: clamp(0.9rem, 3vw, 1.18rem);
+        font-weight: 1000;
+        text-overflow: ellipsis;
+      }
+
+      .game-frame {
+        position: relative;
+        overflow: hidden;
+        background: #10111b;
+        border: 3px solid var(--ink);
+        border-radius: 4px;
+        box-shadow: var(--shadow);
+      }
+
+      #game-canvas {
+        display: block;
+        width: 100%;
+        aspect-ratio: 19 / 22;
+        touch-action: none;
+      }
+
+      .game-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: rgba(10, 11, 20, 0.77);
+        backdrop-filter: blur(4px);
+        transition: opacity 0.2s ease;
+      }
+
+      .game-overlay.hidden {
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .overlay-card {
+        width: min(100%, 360px);
+        padding: 24px;
+        background: var(--cream);
+        border: 3px solid var(--ink);
+        box-shadow: 7px 7px 0 var(--red);
+        text-align: center;
+        transform: rotate(-1deg);
+      }
+
+      .overlay-kicker {
+        margin: 0 0 8px;
+        color: var(--red);
+        font-size: 10px;
+        font-weight: 1000;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .overlay-card h2 {
+        margin: 0;
+        color: var(--ink);
+        background: none !important;
+        font-family: Georgia, serif;
+        font-size: clamp(2rem, 8vw, 3.4rem);
+        font-weight: 400;
+        letter-spacing: -0.05em;
+        line-height: 0.95;
+        -webkit-text-fill-color: var(--ink) !important;
+      }
+
+      .overlay-card p {
+        margin: 13px auto 20px;
+        color: rgba(23, 23, 23, 0.67);
+        font-size: 13px;
+      }
+
+      .action-button {
+        width: 100%;
+        padding: 13px 18px;
+        background: var(--yellow);
+        border: 2px solid var(--ink);
+        box-shadow: 4px 4px 0 var(--ink);
+        color: var(--ink);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 1000;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .action-button:active {
+        box-shadow: 1px 1px 0 var(--ink);
+        transform: translate(3px, 3px);
+      }
+
+      .game-tools {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .tool-button {
+        padding: 9px 12px;
+        background: transparent;
+        border: 2px solid var(--ink);
+        border-radius: 99px;
+        color: var(--ink);
+        cursor: pointer;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .touch-controls {
+        display: grid;
+        width: 190px;
+        margin: 14px auto 0;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+
+      .direction-button {
+        display: grid;
+        aspect-ratio: 1;
+        place-items: center;
+        background: var(--paper);
+        border: 2px solid var(--ink);
+        border-radius: 12px;
+        box-shadow: 3px 3px 0 var(--ink);
+        color: var(--ink);
+        cursor: pointer;
+        font-size: 20px;
+        font-weight: 1000;
+        touch-action: manipulation;
+        user-select: none;
+      }
+
+      .direction-button:active,
+      .direction-button.pressed {
+        background: var(--yellow);
+        box-shadow: 1px 1px 0 var(--ink);
+        transform: translate(2px, 2px);
+      }
+
+      .direction-button[data-direction="up"] {
+        grid-column: 2;
+      }
+
+      .direction-button[data-direction="left"] {
+        grid-column: 1;
+        grid-row: 2;
+      }
+
+      .direction-button[data-direction="down"] {
+        grid-column: 2;
+        grid-row: 2;
+      }
+
+      .direction-button[data-direction="right"] {
+        grid-column: 3;
+        grid-row: 2;
+      }
+
+      .surprise-toast {
+        position: fixed;
+        top: max(18px, env(safe-area-inset-top));
+        left: 50%;
+        z-index: 50;
+        width: min(calc(100% - 30px), 430px);
+        padding: 14px 18px;
+        background: var(--yellow);
+        border: 2px solid var(--ink);
+        box-shadow: 5px 5px 0 var(--ink);
+        text-align: center;
+        transform: translate(-50%, -160%);
+        transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.2, 1.2);
+      }
+
+      .surprise-toast.visible {
+        transform: translate(-50%, 0);
+      }
+
+      .surprise-toast strong {
+        display: block;
+        font-family: Georgia, serif;
+        font-size: 20px;
+      }
+
+      .surprise-toast span {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .footer {
+        margin-top: 32px;
+        color: rgba(23, 23, 23, 0.5);
+        font-size: 10px;
+        text-align: center;
+      }
+
+      @media (max-width: 780px) {
+        .game-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .intro {
+          position: static;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          column-gap: 22px;
+          padding-top: 0;
+        }
+
+        .for-anat,
+        h1 {
+          grid-column: 1;
+        }
+
+        .intro-copy,
+        .flight-note {
+          grid-column: 2;
+        }
+
+        .intro-copy {
+          grid-row: 1 / span 2;
+          align-self: end;
+        }
+
+        .keyboard-help {
+          display: none;
+        }
+
+        .game-column {
+          justify-self: center;
+        }
+      }
+
+      @media (max-width: 540px) {
+        html,
+        body {
+          width: 100%;
+          height: 100%;
+          overscroll-behavior: none;
+        }
+
+        body {
+          overflow: hidden;
+        }
+
+        .page {
+          display: flex;
+          width: 100%;
+          height: 100vh;
+          height: 100dvh;
+          min-height: 0;
+          flex-direction: column;
+          padding: max(8px, env(safe-area-inset-top)) 8px
+            max(8px, env(safe-area-inset-bottom));
+        }
+
+        .topbar {
+          flex: 0 0 auto;
+          margin-bottom: 6px;
+          padding-bottom: 6px;
+        }
+
+        .offline-status {
+          max-width: 130px;
+          text-align: right;
+        }
+
+        .game-layout {
+          display: block;
+          min-height: 0;
+          flex: 1;
+        }
+
+        .intro {
+          display: none;
+        }
+
+        .game-column {
+          display: grid;
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+          grid-template-rows: auto minmax(0, 1fr) auto auto;
+          gap: 6px;
+        }
+
+        .scoreboard {
+          width: 100%;
+          margin: 0;
+          gap: 4px;
+        }
+
+        .stat {
+          padding: 5px 3px;
+        }
+
+        .game-frame {
+          width: auto;
+          max-width: 100%;
+          height: 100%;
+          min-height: 0;
+          aspect-ratio: 19 / 22;
+          justify-self: center;
+          box-shadow: none;
+        }
+
+        #game-canvas {
+          width: 100%;
+          height: 100%;
+          aspect-ratio: auto;
+          background: #10111b;
+          object-fit: contain;
+        }
+
+        .game-tools {
+          width: 100%;
+          margin: 0;
+        }
+
+        .tool-button {
+          padding: 6px 10px;
+        }
+
+        .touch-controls {
+          width: 136px;
+          margin-top: 0;
+          gap: 4px;
+        }
+
+        .direction-button {
+          border-radius: 9px;
+          box-shadow: 2px 2px 0 var(--ink);
+          font-size: 17px;
+        }
+
+        .game-overlay {
+          padding: 12px;
+        }
+
+        .overlay-card {
+          padding: 18px;
+        }
+
+        .footer {
+          display: none;
+        }
+      }
+
+      @media (max-width: 900px) and (max-height: 540px) {
+        .page {
+          display: block;
+          width: 100%;
+          height: 100vh;
+          height: 100dvh;
+          padding: max(4px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right))
+            max(4px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+        }
+
+        .topbar,
+        .intro,
+        .footer {
+          display: none;
+        }
+
+        .game-layout,
+        .game-column {
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+        }
+
+        .game-layout {
+          display: block;
+        }
+
+        .game-column {
+          display: grid;
+          grid-template-columns: minmax(72px, 0.25fr) minmax(0, 1fr) minmax(126px, 0.36fr);
+          grid-template-rows: minmax(0, 1fr) auto;
+          gap: 6px;
+        }
+
+        .scoreboard {
+          grid-row: 1 / -1;
+          grid-template-columns: 1fr;
+          margin: 0;
+        }
+
+        .game-frame {
+          width: auto;
+          max-width: 100%;
+          height: 100%;
+          min-height: 0;
+          grid-row: 1 / -1;
+          aspect-ratio: 19 / 22;
+          justify-self: center;
+          box-shadow: none;
+        }
+
+        #game-canvas {
+          width: 100%;
+          height: 100%;
+          aspect-ratio: auto;
+          background: #10111b;
+          object-fit: contain;
+        }
+
+        .touch-controls {
+          width: min(138px, 100%);
+          margin: 0;
+          grid-column: 3;
+          grid-row: 1;
+          align-self: center;
+          justify-self: center;
+        }
+
+        .game-tools {
+          display: grid;
+          margin: 0;
+          grid-column: 3;
+          grid-row: 2;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 4px;
+        }
+
+        .tool-button {
+          padding: 5px 3px;
+          font-size: 8px;
+        }
+      }
+
+      @media (pointer: fine) and (min-width: 781px) {
+        .touch-controls {
+          display: none;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="surprise-toast" id="surprise-toast" role="status" aria-live="polite">
+      <strong id="surprise-title">A surprise!</strong>
+      <span id="surprise-copy">Something wonderful just happened.</span>
+    </div>
+
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">A</span>
+          <span>Anat's Arcade</span>
+        </div>
+        <span class="offline-status" id="offline-status">Preparing offline mode</span>
+      </header>
+
+      <main class="game-layout">
+        <section class="intro" aria-labelledby="page-title">
+          <p class="for-anat">Made especially for Anat</p>
+          <h1 id="page-title">
+            Snoopy's
+            <span>Maze</span>
+          </h1>
+          <p class="intro-copy">
+            Help Snoopy collect every treat, dodge the mischievous ghosts and discover a new
+            surprise on every level.
+          </p>
+          <p class="flight-note">
+            <strong>✈ Ready for the airplane</strong>
+            Open this page once with internet before the flight. After the green “Ready offline”
+            light appears, the game works without Wi-Fi.
+          </p>
+          <p class="keyboard-help">Move: arrow keys or WASD · Pause: space</p>
+        </section>
+
+        <section class="game-column" aria-label="Snoopy's Maze game">
+          <div class="scoreboard" aria-label="Game score">
+            <div class="stat">
+              <span class="stat-label">Score</span>
+              <span class="stat-value" id="score">0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Best</span>
+              <span class="stat-value" id="high-score">0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Level</span>
+              <span class="stat-value" id="level">1</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Lives</span>
+              <span class="stat-value" id="lives">♥ ♥ ♥</span>
+            </div>
+          </div>
+
+          <div class="game-frame" id="game-frame">
+            <canvas
+              id="game-canvas"
+              width="570"
+              height="660"
+              aria-label="Maze game. Use arrow keys, WASD, swipe, or the direction buttons to move Snoopy."
+            ></canvas>
+
+            <div class="game-overlay" id="game-overlay">
+              <div class="overlay-card">
+                <p class="overlay-kicker" id="overlay-kicker">A little game for Anat</p>
+                <h2 id="overlay-title">Ready, Snoopy?</h2>
+                <p id="overlay-copy">Collect every treat and watch out for the ghosts.</p>
+                <button class="action-button" id="action-button" type="button">Play</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="game-tools">
+            <button class="tool-button" id="pause-button" type="button">Pause</button>
+            <button class="tool-button" id="sound-button" type="button">Sound on</button>
+            <button class="tool-button" id="restart-button" type="button">New game</button>
+          </div>
+
+          <div class="touch-controls" aria-label="Touch controls">
+            <button class="direction-button" data-direction="up" type="button" aria-label="Move up">
+              ↑
+            </button>
+            <button
+              class="direction-button"
+              data-direction="left"
+              type="button"
+              aria-label="Move left"
+            >
+              ←
+            </button>
+            <button
+              class="direction-button"
+              data-direction="down"
+              type="button"
+              aria-label="Move down"
+            >
+              ↓
+            </button>
+            <button
+              class="direction-button"
+              data-direction="right"
+              type="button"
+              aria-label="Move right"
+            >
+              →
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">Progress and high score stay safely on this device.</footer>
+    </div>
+
+    <script>
+      "use strict";
+
+      /* --------------------------------------------------------------------------
+       * Game data
+       * ----------------------------------------------------------------------- */
+
+      const MAP = [
+        "###################",
+        "#........#........#",
+        "#.##.###.#.###.##.#",
+        "#o##.###.#.###.##o#",
+        "#.................#",
+        "#.##.#.#####.#.##.#",
+        "#....#...#...#....#",
+        "####.###...###.####",
+        "#....#.##D##.#....#",
+        "#.##.#.#GGG#.#.##.#",
+        "#......#GGG#......#",
+        "#.####.#####.####.#",
+        "#......#####......#",
+        "###.##.#####.##.###",
+        "#...##...#...##...#",
+        "#.##.###.#.###.##.#",
+        "#o.#.....S.....#.o#",
+        "##.#.#.#####.#.#.##",
+        "#....#...#...#....#",
+        "#.######.#.######.#",
+        "#.................#",
+        "###################",
+      ];
+
+      const DIRECTIONS = {
+        left: { x: -1, y: 0, angle: Math.PI },
+        right: { x: 1, y: 0, angle: 0 },
+        up: { x: 0, y: -1, angle: -Math.PI / 2 },
+        down: { x: 0, y: 1, angle: Math.PI / 2 },
+      };
+
+      const LEVEL_SURPRISES = [
+        {
+          title: "Anat's starry night!",
+          copy: "The sky is sparkling just for you.",
+          mode: "stars",
+          wall: "#527de5",
+          floor: "#10111b",
+        },
+        {
+          title: "Woodstock joins in!",
+          copy: "A tiny yellow friend is flying beside Snoopy.",
+          mode: "woodstock",
+          wall: "#f0b833",
+          floor: "#17223b",
+        },
+        {
+          title: "Rainbow power!",
+          copy: "Snoopy leaves a brilliant rainbow trail.",
+          mode: "rainbow",
+          wall: "#9a65e8",
+          floor: "#121020",
+        },
+        {
+          title: "Airplane mode!",
+          copy: "The maze is flying above the clouds.",
+          mode: "airplane",
+          wall: "#79bfe8",
+          floor: "#172534",
+        },
+        {
+          title: "Disco for Anat!",
+          copy: "The whole maze dances with the beat.",
+          mode: "disco",
+          wall: "#ef4e83",
+          floor: "#170d20",
+        },
+        {
+          title: "The golden level!",
+          copy: "Every treat is worth double points.",
+          mode: "gold",
+          wall: "#e0a91e",
+          floor: "#19150d",
+        },
+      ];
+
+      const GHOST_STYLES = [
+        { color: "#ef4b47", personality: "chaser" },
+        { color: "#f18ac2", personality: "ambusher" },
+        { color: "#57c8d7", personality: "wanderer" },
+        { color: "#f09b41", personality: "shy" },
+      ];
+
+      const HIGH_SCORE_KEY = "anat_snoopy_maze_high_score_v1";
+      const COLUMN_COUNT = MAP[0].length;
+      const ROW_COUNT = MAP.length;
+      const GHOST_HOUSE = {
+        left: 7,
+        top: 8,
+        right: 11,
+        bottom: 11,
+        doorX: 9,
+        doorY: 8,
+      };
+
+      /* --------------------------------------------------------------------------
+       * DOM and game state
+       * ----------------------------------------------------------------------- */
+
+      const canvas = document.getElementById("game-canvas");
+      const context = canvas.getContext("2d");
+      const gameFrame = document.getElementById("game-frame");
+      const overlay = document.getElementById("game-overlay");
+      const overlayKicker = document.getElementById("overlay-kicker");
+      const overlayTitle = document.getElementById("overlay-title");
+      const overlayCopy = document.getElementById("overlay-copy");
+      const actionButton = document.getElementById("action-button");
+      const pauseButton = document.getElementById("pause-button");
+      const soundButton = document.getElementById("sound-button");
+      const restartButton = document.getElementById("restart-button");
+      const scoreElement = document.getElementById("score");
+      const highScoreElement = document.getElementById("high-score");
+      const levelElement = document.getElementById("level");
+      const livesElement = document.getElementById("lives");
+      const surpriseToast = document.getElementById("surprise-toast");
+      const surpriseTitle = document.getElementById("surprise-title");
+      const surpriseCopy = document.getElementById("surprise-copy");
+      const offlineStatus = document.getElementById("offline-status");
+
+      let score = 0;
+      let highScore = readHighScore();
+      let level = 1;
+      let lives = 3;
+      let dots = new Set();
+      let powerDots = new Set();
+      let player;
+      let ghosts = [];
+      let trail = [];
+      let particles = [];
+      let gameState = "ready";
+      let soundEnabled = true;
+      let frightenedUntil = 0;
+      let lastFrameTime = 0;
+      let transitionTimer = 0;
+      let toastTimer = 0;
+      let swipeStart = null;
+      let audioContext = null;
+
+      /* --------------------------------------------------------------------------
+       * Setup and persistence
+       * ----------------------------------------------------------------------- */
+
+      function readHighScore() {
+        try {
+          return Number(localStorage.getItem(HIGH_SCORE_KEY)) || 0;
+        } catch {
+          return 0;
+        }
+      }
+
+      function saveHighScore() {
+        if (score <= highScore) return;
+        highScore = score;
+        try {
+          localStorage.setItem(HIGH_SCORE_KEY, String(highScore));
+        } catch {
+          // The game still works if private browsing blocks local storage.
+        }
+      }
+
+      function findMapPositions(character) {
+        const positions = [];
+        MAP.forEach((row, y) => {
+          [...row].forEach((tile, x) => {
+            if (tile === character) positions.push({ x, y });
+          });
+        });
+        return positions;
+      }
+
+      function buildCollectibles() {
+        dots = new Set();
+        powerDots = new Set();
+        MAP.forEach((row, y) => {
+          [...row].forEach((tile, x) => {
+            const key = tileKey(x, y);
+            if (tile === ".") dots.add(key);
+            if (tile === "o") powerDots.add(key);
+          });
+        });
+      }
+
+      function createActor(position, direction, speed) {
+        return {
+          x: position.x,
+          y: position.y,
+          startX: position.x,
+          startY: position.y,
+          direction,
+          requestedDirection: direction,
+          speed,
+        };
+      }
+
+      function resetActors() {
+        const playerStart = findMapPositions("S")[0];
+        const ghostStarts = findMapPositions("G");
+        player = createActor(playerStart, "left", 5.25 + Math.min(level - 1, 5) * 0.08);
+        ghosts = GHOST_STYLES.slice(0, Math.min(3 + Math.floor(level / 3), 4)).map(
+          (style, index) => ({
+            ...createActor(
+              ghostStarts[index % ghostStarts.length],
+              index % 2 ? "left" : "right",
+              4.25,
+            ),
+            ...style,
+            index,
+            eaten: false,
+          }),
+        );
+        frightenedUntil = 0;
+        trail = [];
+      }
+
+      function startNewGame() {
+        score = 0;
+        level = 1;
+        lives = 3;
+        buildCollectibles();
+        resetActors();
+        gameState = "playing";
+        overlay.classList.add("hidden");
+        pauseButton.textContent = "Pause";
+        updateScoreboard();
+        showLevelSurprise();
+        playTone(420, 0.09, "square");
+      }
+
+      function beginNextLevel() {
+        level += 1;
+        buildCollectibles();
+        resetActors();
+        gameState = "playing";
+        transitionTimer = 0;
+        updateScoreboard();
+        showLevelSurprise();
+      }
+
+      function showLevelSurprise() {
+        const surprise = currentSurprise();
+        surpriseTitle.textContent = surprise.title;
+        surpriseCopy.textContent = surprise.copy;
+        surpriseToast.classList.add("visible");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => surpriseToast.classList.remove("visible"), 3100);
+      }
+
+      function currentSurprise() {
+        return LEVEL_SURPRISES[(level - 1) % LEVEL_SURPRISES.length];
+      }
+
+      function updateScoreboard() {
+        saveHighScore();
+        scoreElement.textContent = score.toLocaleString();
+        highScoreElement.textContent = highScore.toLocaleString();
+        levelElement.textContent = level;
+        livesElement.textContent = Array(Math.max(lives, 0)).fill("♥").join(" ") || "—";
+      }
+
+      /* --------------------------------------------------------------------------
+       * Movement and collisions
+       * ----------------------------------------------------------------------- */
+
+      function tileKey(x, y) {
+        return `${x},${y}`;
+      }
+
+      function isBlocked(actor, x, y) {
+        const tileX = Math.round(x);
+        const tileY = Math.round(y);
+        if (tileY < 0 || tileY >= ROW_COUNT || tileX < 0 || tileX >= COLUMN_COUNT) return true;
+        const tile = MAP[tileY][tileX];
+        return tile === "#" || (tile === "D" && actor === player);
+      }
+
+      function canMove(actor, directionName) {
+        const direction = DIRECTIONS[directionName];
+        return !isBlocked(
+          actor,
+          Math.round(actor.x) + direction.x,
+          Math.round(actor.y) + direction.y,
+        );
+      }
+
+      function nearTileCenter(actor, tolerance = 0.1) {
+        return (
+          Math.abs(actor.x - Math.round(actor.x)) < tolerance &&
+          Math.abs(actor.y - Math.round(actor.y)) < tolerance
+        );
+      }
+
+      function moveActor(actor, elapsedSeconds, chooseDirection) {
+        let remaining = actor.speed * elapsedSeconds;
+        while (remaining > 0) {
+          const step = Math.min(remaining, 0.075);
+          // Snap only when genuinely close to the tile center. A tolerance based
+          // on the movement step can pull the actor backward at high frame rates.
+          if (nearTileCenter(actor, 0.035)) {
+            actor.x = Math.round(actor.x);
+            actor.y = Math.round(actor.y);
+            if (chooseDirection) chooseDirection(actor);
+            if (canMove(actor, actor.requestedDirection)) {
+              actor.direction = actor.requestedDirection;
+            }
+            if (!canMove(actor, actor.direction)) return;
+          }
+          const direction = DIRECTIONS[actor.direction];
+          actor.x += direction.x * step;
+          actor.y += direction.y * step;
+          remaining -= step;
+        }
+      }
+
+      function requestDirection(directionName) {
+        if (!player || !DIRECTIONS[directionName]) return;
+        player.requestedDirection = directionName;
+        if (gameState === "ready" || gameState === "paused") resumeGame();
+      }
+
+      function chooseGhostDirection(ghost) {
+        const opposite = {
+          left: "right",
+          right: "left",
+          up: "down",
+          down: "up",
+        }[ghost.direction];
+        let options = Object.keys(DIRECTIONS).filter(
+          (direction) => direction !== opposite && canMove(ghost, direction),
+        );
+        if (!options.length) {
+          options = Object.keys(DIRECTIONS).filter((direction) => canMove(ghost, direction));
+        }
+        if (!options.length) return;
+
+        const frightened = performance.now() < frightenedUntil;
+        const target = ghostTarget(ghost);
+        options.sort((first, second) => {
+          const firstVector = DIRECTIONS[first];
+          const secondVector = DIRECTIONS[second];
+          const firstDistance = Math.hypot(
+            ghost.x + firstVector.x - target.x,
+            ghost.y + firstVector.y - target.y,
+          );
+          const secondDistance = Math.hypot(
+            ghost.x + secondVector.x - target.x,
+            ghost.y + secondVector.y - target.y,
+          );
+          return frightened ? secondDistance - firstDistance : firstDistance - secondDistance;
+        });
+
+        const randomTurn = ghost.personality === "wanderer" && Math.random() < 0.38;
+        ghost.requestedDirection = randomTurn
+          ? options[Math.floor(Math.random() * options.length)]
+          : options[0];
+      }
+
+      function ghostTarget(ghost) {
+        if (ghost.personality === "ambusher") {
+          const direction = DIRECTIONS[player.direction];
+          return { x: player.x + direction.x * 3, y: player.y + direction.y * 3 };
+        }
+        if (ghost.personality === "shy" && Math.hypot(ghost.x - player.x, ghost.y - player.y) < 5) {
+          return { x: COLUMN_COUNT - 2, y: ROW_COUNT - 2 };
+        }
+        if (ghost.personality === "wanderer") {
+          return { x: (level * 7 + ghost.index * 3) % COLUMN_COUNT, y: (level * 5) % ROW_COUNT };
+        }
+        return { x: player.x, y: player.y };
+      }
+
+      function collectAtPlayerPosition() {
+        const x = Math.round(player.x);
+        const y = Math.round(player.y);
+        if (!nearTileCenter(player, 0.18)) return;
+        const key = tileKey(x, y);
+        const multiplier = currentSurprise().mode === "gold" ? 2 : 1;
+
+        if (dots.delete(key)) {
+          score += 10 * multiplier;
+          playTone(760, 0.025, "square", 0.025);
+          createBurst(player.x, player.y, "#ffd83d", 2);
+        }
+
+        if (powerDots.delete(key)) {
+          score += 50 * multiplier;
+          frightenedUntil = performance.now() + 8000;
+          playTone(240, 0.16, "sawtooth", 0.045);
+          createBurst(player.x, player.y, "#fffdf5", 12);
+        }
+
+        if (!dots.size && !powerDots.size && gameState === "playing") {
+          gameState = "level-complete";
+          transitionTimer = performance.now() + 1900;
+          score += 500 * level;
+          playCelebration();
+          showOverlay(
+            "Level complete!",
+            "Snoopy found every treat. A new surprise is coming…",
+            "Next!",
+          );
+          actionButton.disabled = true;
+        }
+        updateScoreboard();
+      }
+
+      function checkGhostCollisions() {
+        const frightened = performance.now() < frightenedUntil;
+        for (const ghost of ghosts) {
+          if (Math.hypot(player.x - ghost.x, player.y - ghost.y) >= 0.62) continue;
+          if (frightened) {
+            score += 200;
+            createBurst(ghost.x, ghost.y, ghost.color, 16);
+            ghost.x = ghost.startX;
+            ghost.y = ghost.startY;
+            ghost.direction = "left";
+            ghost.requestedDirection = "left";
+            playTone(980, 0.12, "square", 0.055);
+            updateScoreboard();
+          } else {
+            loseLife();
+            return;
+          }
+        }
+      }
+
+      function loseLife() {
+        lives -= 1;
+        updateScoreboard();
+        playTone(120, 0.35, "sawtooth", 0.06);
+        if (lives <= 0) {
+          gameState = "game-over";
+          showOverlay(
+            "Good try, Anat!",
+            `You scored ${score.toLocaleString()} points. Snoopy is ready for another adventure.`,
+            "Play again",
+          );
+          return;
+        }
+        gameState = "paused";
+        resetActors();
+        showOverlay(
+          "Oops!",
+          `${lives} ${lives === 1 ? "life" : "lives"} left. You've got this!`,
+          "Keep going",
+        );
+      }
+
+      /* --------------------------------------------------------------------------
+       * Game loop
+       * ----------------------------------------------------------------------- */
+
+      function update(time, elapsedSeconds) {
+        updateParticles(elapsedSeconds);
+        if (gameState !== "playing") {
+          if (gameState === "level-complete" && time >= transitionTimer) {
+            overlay.classList.add("hidden");
+            actionButton.disabled = false;
+            beginNextLevel();
+          }
+          return;
+        }
+
+        moveActor(player, elapsedSeconds);
+        ghosts.forEach((ghost) => moveActor(ghost, elapsedSeconds, chooseGhostDirection));
+        collectAtPlayerPosition();
+        checkGhostCollisions();
+
+        if (currentSurprise().mode === "rainbow" && time % 45 < 18) {
+          trail.push({ x: player.x, y: player.y, age: 0 });
+          if (trail.length > 80) trail.shift();
+        }
+        trail.forEach((point) => (point.age += elapsedSeconds));
+        trail = trail.filter((point) => point.age < 1.4);
+      }
+
+      function gameLoop(time) {
+        const elapsedSeconds = Math.min((time - lastFrameTime) / 1000 || 0, 0.05);
+        lastFrameTime = time;
+        update(time, elapsedSeconds);
+        drawGame(time);
+        requestAnimationFrame(gameLoop);
+      }
+
+      /* --------------------------------------------------------------------------
+       * Drawing
+       * ----------------------------------------------------------------------- */
+
+      function drawGame(time) {
+        const scale = canvas.width / COLUMN_COUNT;
+        const surprise = currentSurprise();
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.save();
+        context.scale(scale, scale);
+
+        drawBackground(time, surprise);
+        drawGhostHouse();
+        drawMaze(time, surprise);
+        drawCollectibles(time, surprise);
+        drawTrail();
+        ghosts.forEach((ghost) => drawGhost(ghost, time));
+        drawSnoopy(player, time, surprise);
+        drawParticles();
+
+        context.restore();
+      }
+
+      function drawBackground(time, surprise) {
+        context.fillStyle = surprise.floor;
+        context.fillRect(0, 0, COLUMN_COUNT, ROW_COUNT);
+
+        if (surprise.mode === "stars") {
+          context.fillStyle = "rgba(255,255,255,.65)";
+          for (let index = 0; index < 35; index++) {
+            const x = (index * 7.7) % COLUMN_COUNT;
+            const y = (index * 4.3) % ROW_COUNT;
+            const radius = 0.025 + Math.abs(Math.sin(time * 0.002 + index)) * 0.04;
+            context.beginPath();
+            context.arc(x, y, radius, 0, Math.PI * 2);
+            context.fill();
+          }
+        }
+
+        if (surprise.mode === "airplane") {
+          context.fillStyle = "rgba(255,255,255,.14)";
+          for (let index = 0; index < 6; index++) {
+            const x = ((time * 0.00025 + index * 4.2) % 25) - 3;
+            const y = 2 + index * 3.7;
+            context.beginPath();
+            context.arc(x, y, 0.55, 0, Math.PI * 2);
+            context.arc(x + 0.55, y + 0.1, 0.4, 0, Math.PI * 2);
+            context.fill();
+          }
+        }
+      }
+
+      function drawMaze(time, surprise) {
+        MAP.forEach((row, y) => {
+          [...row].forEach((tile, x) => {
+            if (tile !== "#") return;
+            let wallColor = surprise.wall;
+            if (surprise.mode === "disco") {
+              wallColor = `hsl(${(x * 19 + y * 11 + time * 0.08) % 360} 78% 61%)`;
+            }
+            context.fillStyle = wallColor;
+            roundedRect(x + 0.08, y + 0.08, 0.84, 0.84, 0.18);
+            context.fill();
+            context.strokeStyle = "rgba(255,255,255,.18)";
+            context.lineWidth = 0.035;
+            context.stroke();
+          });
+        });
+
+        drawGhostHouseDoor(time);
+      }
+
+      function drawGhostHouse() {
+        const width = GHOST_HOUSE.right - GHOST_HOUSE.left + 1;
+        const height = GHOST_HOUSE.bottom - GHOST_HOUSE.top + 1;
+        context.fillStyle = "rgba(0, 0, 0, 0.24)";
+        roundedRect(GHOST_HOUSE.left + 0.12, GHOST_HOUSE.top + 0.12, width - 0.24, height - 0.24, 0.32);
+        context.fill();
+      }
+
+      function drawGhostHouseDoor(time) {
+        const pulse = 0.72 + Math.abs(Math.sin(time * 0.004)) * 0.28;
+        context.save();
+        context.globalAlpha = pulse;
+        context.strokeStyle = "#f5a7d0";
+        context.lineWidth = 0.15;
+        context.lineCap = "round";
+        context.setLineDash([0.12, 0.1]);
+        context.beginPath();
+        context.moveTo(GHOST_HOUSE.doorX + 0.12, GHOST_HOUSE.doorY + 0.5);
+        context.lineTo(GHOST_HOUSE.doorX + 0.88, GHOST_HOUSE.doorY + 0.5);
+        context.stroke();
+        context.restore();
+      }
+
+      function drawCollectibles(time, surprise) {
+        const dotColor = surprise.mode === "gold" ? "#ffd83d" : "#fff5c4";
+        context.fillStyle = dotColor;
+        dots.forEach((key) => {
+          const [x, y] = key.split(",").map(Number);
+          context.beginPath();
+          context.arc(x, y, 0.085, 0, Math.PI * 2);
+          context.fill();
+        });
+
+        powerDots.forEach((key) => {
+          const [x, y] = key.split(",").map(Number);
+          const pulse = 0.16 + Math.abs(Math.sin(time * 0.006)) * 0.07;
+          context.fillStyle = "#fff";
+          context.beginPath();
+          context.arc(x, y, pulse, 0, Math.PI * 2);
+          context.fill();
+          context.strokeStyle = "#ffd83d";
+          context.lineWidth = 0.06;
+          context.stroke();
+        });
+      }
+
+      function drawSnoopy(actor, time, surprise) {
+        if (!actor) return;
+        const direction = DIRECTIONS[actor.direction];
+        const mouthOpen = 0.07 + Math.abs(Math.sin(time * 0.015)) * 0.23;
+
+        context.save();
+        context.translate(actor.x, actor.y);
+        context.rotate(direction.angle);
+
+        // Red collar and small body.
+        context.fillStyle = "#f4f1e8";
+        context.strokeStyle = "#111";
+        context.lineWidth = 0.055;
+        context.beginPath();
+        context.ellipse(-0.38, 0.18, 0.34, 0.27, 0, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+        context.fillStyle = "#ed3f38";
+        context.fillRect(-0.36, -0.1, 0.12, 0.48);
+
+        // Head.
+        context.fillStyle = "#fffdf6";
+        context.beginPath();
+        context.ellipse(0.03, -0.04, 0.54, 0.42, -0.05, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+
+        // Black floppy ear.
+        context.fillStyle = "#111";
+        context.beginPath();
+        context.ellipse(-0.35, -0.18, 0.24, 0.38, -0.5, 0, Math.PI * 2);
+        context.fill();
+
+        // Opening and closing mouth, cut from the white head.
+        context.fillStyle = surprise.floor;
+        context.beginPath();
+        context.moveTo(0.2, 0.07);
+        context.lineTo(0.58, -mouthOpen + 0.08);
+        context.lineTo(0.58, mouthOpen + 0.08);
+        context.closePath();
+        context.fill();
+
+        // Eye, eyebrow and nose.
+        context.fillStyle = "#111";
+        context.beginPath();
+        context.arc(0.17, -0.18, 0.055, 0, Math.PI * 2);
+        context.fill();
+        context.lineWidth = 0.035;
+        context.beginPath();
+        context.arc(0.12, -0.24, 0.13, 3.7, 5.5);
+        context.stroke();
+        context.beginPath();
+        context.ellipse(0.5, -0.02, 0.13, 0.1, 0, 0, Math.PI * 2);
+        context.fill();
+
+        context.restore();
+
+        if (surprise.mode === "woodstock") drawWoodstock(actor, time);
+      }
+
+      function drawWoodstock(actor, time) {
+        const angle = time * 0.0025;
+        const x = actor.x + Math.cos(angle) * 0.9;
+        const y = actor.y - 0.75 + Math.sin(angle * 1.7) * 0.17;
+        context.save();
+        context.translate(x, y);
+        context.fillStyle = "#ffd83d";
+        context.strokeStyle = "#111";
+        context.lineWidth = 0.045;
+        context.beginPath();
+        context.ellipse(0, 0, 0.18, 0.14, 0, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+        context.beginPath();
+        context.moveTo(0.12, -0.02);
+        context.lineTo(0.28, 0.03);
+        context.lineTo(0.12, 0.08);
+        context.closePath();
+        context.fill();
+        context.stroke();
+        context.restore();
+      }
+
+      function drawGhost(ghost, time) {
+        const frightened = performance.now() < frightenedUntil;
+        const flashing = frightened && frightenedUntil - performance.now() < 2200;
+        const bodyColor = frightened
+          ? flashing && Math.floor(time / 180) % 2
+            ? "#fff"
+            : "#4464d9"
+          : ghost.color;
+
+        context.save();
+        context.translate(ghost.x, ghost.y);
+        context.fillStyle = bodyColor;
+        context.beginPath();
+        context.arc(0, -0.05, 0.4, Math.PI, 0);
+        context.lineTo(0.4, 0.35);
+        context.lineTo(0.2, 0.2);
+        context.lineTo(0, 0.35);
+        context.lineTo(-0.2, 0.2);
+        context.lineTo(-0.4, 0.35);
+        context.closePath();
+        context.fill();
+
+        context.fillStyle = "#fff";
+        [-0.15, 0.15].forEach((x) => {
+          context.beginPath();
+          context.ellipse(x, -0.08, 0.1, 0.13, 0, 0, Math.PI * 2);
+          context.fill();
+        });
+        context.fillStyle = frightened ? "#fff" : "#18315f";
+        const direction = DIRECTIONS[ghost.direction];
+        [-0.15, 0.15].forEach((x) => {
+          context.beginPath();
+          context.arc(x + direction.x * 0.035, -0.08 + direction.y * 0.035, 0.045, 0, Math.PI * 2);
+          context.fill();
+        });
+        context.restore();
+      }
+
+      function drawTrail() {
+        const colors = ["#ef4b47", "#f0b833", "#56bd69", "#57c8d7", "#8e68db"];
+        trail.forEach((point, index) => {
+          context.globalAlpha = Math.max(0, 1 - point.age / 1.4) * 0.7;
+          context.fillStyle = colors[index % colors.length];
+          context.beginPath();
+          context.arc(point.x, point.y, 0.12, 0, Math.PI * 2);
+          context.fill();
+        });
+        context.globalAlpha = 1;
+      }
+
+      function createBurst(x, y, color, count) {
+        for (let index = 0; index < count; index++) {
+          const angle = Math.random() * Math.PI * 2;
+          particles.push({
+            x,
+            y,
+            velocityX: Math.cos(angle) * (0.7 + Math.random() * 1.5),
+            velocityY: Math.sin(angle) * (0.7 + Math.random() * 1.5),
+            color,
+            life: 0.6 + Math.random() * 0.4,
+          });
+        }
+      }
+
+      function updateParticles(elapsedSeconds) {
+        particles.forEach((particle) => {
+          particle.x += particle.velocityX * elapsedSeconds;
+          particle.y += particle.velocityY * elapsedSeconds;
+          particle.life -= elapsedSeconds;
+        });
+        particles = particles.filter((particle) => particle.life > 0);
+      }
+
+      function drawParticles() {
+        particles.forEach((particle) => {
+          context.globalAlpha = Math.min(1, particle.life * 2);
+          context.fillStyle = particle.color;
+          context.beginPath();
+          context.arc(particle.x, particle.y, 0.07, 0, Math.PI * 2);
+          context.fill();
+        });
+        context.globalAlpha = 1;
+      }
+
+      function roundedRect(x, y, width, height, radius) {
+        context.beginPath();
+        context.roundRect(x, y, width, height, radius);
+      }
+
+      /* --------------------------------------------------------------------------
+       * Controls and UI
+       * ----------------------------------------------------------------------- */
+
+      function showOverlay(title, copy, buttonLabel, kicker = "Snoopy's Maze") {
+        overlayKicker.textContent = kicker;
+        overlayTitle.textContent = title;
+        overlayCopy.textContent = copy;
+        actionButton.textContent = buttonLabel;
+        actionButton.disabled = false;
+        overlay.classList.remove("hidden");
+      }
+
+      function pauseGame() {
+        if (gameState !== "playing") return;
+        gameState = "paused";
+        pauseButton.textContent = "Resume";
+        showOverlay("Paused", "Snoopy is waiting right here.", "Resume");
+      }
+
+      function resumeGame() {
+        if (gameState === "ready") {
+          startNewGame();
+          return;
+        }
+        if (gameState === "game-over") {
+          startNewGame();
+          return;
+        }
+        if (gameState !== "paused") return;
+        gameState = "playing";
+        pauseButton.textContent = "Pause";
+        overlay.classList.add("hidden");
+      }
+
+      function handleActionButton() {
+        if (gameState === "level-complete") return;
+        resumeGame();
+      }
+
+      const KEY_TO_DIRECTION = {
+        ArrowLeft: "left",
+        a: "left",
+        A: "left",
+        ArrowRight: "right",
+        d: "right",
+        D: "right",
+        ArrowUp: "up",
+        w: "up",
+        W: "up",
+        ArrowDown: "down",
+        s: "down",
+        S: "down",
+      };
+
+      document.addEventListener("keydown", (event) => {
+        const direction = KEY_TO_DIRECTION[event.key];
+        if (direction) {
+          event.preventDefault();
+          requestDirection(direction);
+        }
+        if (event.code === "Space") {
+          event.preventDefault();
+          gameState === "playing" ? pauseGame() : resumeGame();
+        }
+      });
+
+      document.querySelectorAll("[data-direction]").forEach((button) => {
+        const direction = button.dataset.direction;
+        const activate = (event) => {
+          event.preventDefault();
+          requestDirection(direction);
+          button.classList.add("pressed");
+          setTimeout(() => button.classList.remove("pressed"), 120);
+        };
+        button.addEventListener("pointerdown", activate);
+      });
+
+      canvas.addEventListener("pointerdown", (event) => {
+        swipeStart = { x: event.clientX, y: event.clientY };
+      });
+
+      canvas.addEventListener("pointerup", (event) => {
+        if (!swipeStart) return;
+        const deltaX = event.clientX - swipeStart.x;
+        const deltaY = event.clientY - swipeStart.y;
+        swipeStart = null;
+        if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 18) return;
+        requestDirection(
+          Math.abs(deltaX) > Math.abs(deltaY)
+            ? deltaX > 0
+              ? "right"
+              : "left"
+            : deltaY > 0
+              ? "down"
+              : "up",
+        );
+      });
+
+      actionButton.addEventListener("click", handleActionButton);
+      pauseButton.addEventListener("click", () => {
+        gameState === "playing" ? pauseGame() : resumeGame();
+      });
+      restartButton.addEventListener("click", () => {
+        showOverlay("Start fresh?", "A brand-new maze adventure is ready.", "Start new game");
+        gameState = "game-over";
+      });
+      soundButton.addEventListener("click", () => {
+        soundEnabled = !soundEnabled;
+        soundButton.textContent = soundEnabled ? "Sound on" : "Sound off";
+        if (soundEnabled) playTone(540, 0.07, "sine");
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden && gameState === "playing") pauseGame();
+      });
+
+      /* --------------------------------------------------------------------------
+       * Tiny synthesized sound effects (no external audio files)
+       * ----------------------------------------------------------------------- */
+
+      function playTone(frequency, duration, wave = "sine", volume = 0.035) {
+        if (!soundEnabled) return;
+        try {
+          audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+          const oscillator = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          oscillator.type = wave;
+          oscillator.frequency.value = frequency;
+          gain.gain.setValueAtTime(volume, audioContext.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+          oscillator.connect(gain).connect(audioContext.destination);
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + duration);
+        } catch {
+          // Audio is decorative; gameplay must never depend on it.
+        }
+      }
+
+      function playCelebration() {
+        [523, 659, 784, 1046].forEach((frequency, index) => {
+          setTimeout(() => playTone(frequency, 0.13, "square", 0.045), index * 105);
+        });
+      }
+
+      /* --------------------------------------------------------------------------
+       * Offline support
+       * ----------------------------------------------------------------------- */
+
+      async function prepareOfflineMode() {
+        if (!("serviceWorker" in navigator)) {
+          offlineStatus.textContent = "Offline unavailable here";
+          return;
+        }
+        try {
+          await navigator.serviceWorker.register("./sw.js");
+          await navigator.serviceWorker.ready;
+          offlineStatus.textContent = "Ready offline";
+          offlineStatus.classList.add("ready");
+        } catch {
+          offlineStatus.textContent = "Open online once more";
+        }
+      }
+
+      /* --------------------------------------------------------------------------
+       * Initial render
+       * ----------------------------------------------------------------------- */
+
+      buildCollectibles();
+      resetActors();
+      updateScoreboard();
+      prepareOfflineMode();
+      requestAnimationFrame(gameLoop);
+    </script>
+  </body>
+</html>
