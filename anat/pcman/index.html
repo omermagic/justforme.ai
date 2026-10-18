@@ -1032,7 +1032,9 @@
       }
 
       function resetActors() {
-        player = createActor(PLAYER_START, "left", 5.25 + Math.min(level - 1, 5) * 0.08);
+        // Speeds remain constant. Difficulty rises only because the ghosts make
+        // fewer navigation mistakes as the levels progress.
+        player = createActor(PLAYER_START, "left", 5.25);
         ghosts = GHOST_STYLES.map((style, index) => ({
           ...createActor(GHOST_STARTS[index], "up", 4.25),
           ...style,
@@ -1068,19 +1070,23 @@
 
       function beginNextLevel() {
         level += 1;
+        const lifeRestored = lives < 3;
+        lives = Math.min(3, lives + 1);
         buildCollectibles();
         resetActors();
         resetLevelBonuses();
         gameState = "playing";
         transitionTimer = 0;
         updateScoreboard();
-        showLevelSurprise();
+        showLevelSurprise(lifeRestored);
       }
 
-      function showLevelSurprise() {
+      function showLevelSurprise(lifeRestored = false) {
         const surprise = currentSurprise();
         surpriseTitle.textContent = surprise.title;
-        surpriseCopy.textContent = surprise.copy;
+        surpriseCopy.textContent = lifeRestored
+          ? `${surprise.copy} One life restored!`
+          : surprise.copy;
         surpriseToast.classList.add("visible");
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => surpriseToast.classList.remove("visible"), 3100);
@@ -1227,10 +1233,18 @@
           return frightened ? secondDistance - firstDistance : firstDistance - secondDistance;
         });
 
-        const randomTurn = ghost.personality === "wanderer" && Math.random() < 0.38;
-        ghost.requestedDirection = randomTurn
+        const makesMistake =
+          !ghost.leavingHouse && Math.random() < ghostMistakeChance(ghost);
+        ghost.requestedDirection = makesMistake
           ? options[Math.floor(Math.random() * options.length)]
           : options[0];
+      }
+
+      function ghostMistakeChance(ghost) {
+        // Every level reduces the chance of choosing a random turn by 14%.
+        // The wanderer stays the least predictable member of the team.
+        const startingChance = ghost.personality === "wanderer" ? 0.42 : 0.28;
+        return startingChance * 0.86 ** (level - 1);
       }
 
       function ghostTarget(ghost) {
