@@ -1,1 +1,912 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#09090a" />
+    <meta
+      name="description"
+      content="AI by Gazit — bold, useful and human artificial intelligence experiments."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23dfff00'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='36' font-style='italic' font-family='Georgia' fill='%2309090a'%3EG%3C/text%3E%3C/svg%3E"
+    />
+    <title>AI by Gazit — Human intelligence, amplified.</title>
 
+    <style>
+      /* Design tokens */
+      :root {
+        --black: #09090a;
+        --white: #f3f0e8;
+        --acid: #dfff00;
+        --purple: #9c7cff;
+        --orange: #ff593d;
+        --line: rgba(243, 240, 232, 0.18);
+        --muted: rgba(243, 240, 232, 0.62);
+        --page: min(calc(100% - 48px), 1320px);
+        --pointer-x: 72%;
+        --pointer-y: 35%;
+      }
+
+      /* Base */
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        overflow-x: clip;
+        background: var(--black);
+      }
+
+      body {
+        margin: 0;
+        overflow-x: clip;
+        color: var(--white);
+        background: var(--black);
+        font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        line-height: 1.4;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        pointer-events: none;
+        opacity: 0.035;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+
+      a {
+        color: inherit;
+      }
+
+      ::selection {
+        color: var(--black);
+        background: var(--acid);
+      }
+
+      .shell {
+        width: var(--page);
+        margin-inline: auto;
+      }
+
+      .skip-link {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 100;
+        padding: 10px 14px;
+        color: var(--black);
+        background: var(--acid);
+        transform: translateY(-150%);
+      }
+
+      .skip-link:focus {
+        transform: none;
+      }
+
+      /* Header */
+      .site-header {
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: var(--page);
+        margin-inline: auto;
+        padding: 22px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 11px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 780;
+        letter-spacing: -0.03em;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 32px;
+        aspect-ratio: 1;
+        place-items: center;
+        color: var(--black);
+        background: var(--acid);
+        border-radius: 50%;
+        font-family: Georgia, serif;
+        font-size: 18px;
+        font-style: italic;
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      .status::before {
+        content: "";
+        width: 7px;
+        aspect-ratio: 1;
+        background: var(--acid);
+        border-radius: 50%;
+        box-shadow: 0 0 18px var(--acid);
+        animation: pulse 1.8s ease-in-out infinite;
+      }
+
+      /* Hero */
+      .hero {
+        position: relative;
+        display: grid;
+        min-height: 100svh;
+        align-content: end;
+        overflow: hidden;
+        padding: 140px 0 56px;
+        isolation: isolate;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        top: var(--pointer-y);
+        left: var(--pointer-x);
+        z-index: -2;
+        width: min(62vw, 830px);
+        aspect-ratio: 1;
+        background: var(--purple);
+        border-radius: 50%;
+        opacity: 0.18;
+        filter: blur(7px);
+        transform: translate(-50%, -50%);
+        transition:
+          top 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+          left 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        top: 8%;
+        right: -14%;
+        z-index: -1;
+        width: min(70vw, 920px);
+        aspect-ratio: 1;
+        border: 1px solid rgba(243, 240, 232, 0.22);
+        border-radius: 50%;
+        box-shadow:
+          inset 0 0 0 11vw var(--black),
+          inset 0 0 0 calc(11vw + 1px) rgba(223, 255, 0, 0.32),
+          inset 0 0 0 22vw var(--black),
+          inset 0 0 0 calc(22vw + 1px) rgba(243, 240, 232, 0.18);
+        animation: breathe 7s ease-in-out infinite;
+      }
+
+      .hero-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0 0 28px;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 740;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .hero-label::before {
+        content: "✦";
+        color: var(--acid);
+        font-size: 16px;
+      }
+
+      h1 {
+        position: relative;
+        z-index: 2;
+        max-width: 1150px;
+        margin: 0;
+        font-size: clamp(4.8rem, 12.6vw, 11.7rem);
+        font-weight: 840;
+        letter-spacing: -0.09em;
+        line-height: 0.72;
+        text-transform: uppercase;
+      }
+
+      h1 span {
+        display: block;
+      }
+
+      h1 .human {
+        margin-left: 12vw;
+        color: var(--acid);
+        font-family: Georgia, "Times New Roman", serif;
+        font-weight: 400;
+        font-style: italic;
+        letter-spacing: -0.075em;
+        text-transform: none;
+        transform: rotate(-3deg);
+      }
+
+      .hero-bottom {
+        position: relative;
+        z-index: 3;
+        display: grid;
+        grid-template-columns: 1fr minmax(280px, 420px);
+        gap: 40px;
+        align-items: end;
+        margin-top: 48px;
+      }
+
+      .hero-index {
+        color: rgba(243, 240, 232, 0.36);
+        font-family: Georgia, serif;
+        font-size: 13px;
+        font-style: italic;
+      }
+
+      .hero-intro {
+        margin: 0;
+        color: var(--muted);
+        font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+        letter-spacing: -0.025em;
+      }
+
+      .hero-intro strong {
+        color: var(--white);
+        background: none !important;
+        -webkit-text-fill-color: var(--white) !important;
+      }
+
+      /* Kinetic strip */
+      .ticker {
+        position: relative;
+        z-index: 5;
+        overflow: hidden;
+        color: var(--black);
+        background: var(--acid);
+        transform: rotate(-1.2deg) scale(1.03);
+      }
+
+      .ticker-track {
+        display: flex;
+        width: max-content;
+        padding: 14px 0;
+        animation: ticker 20s linear infinite;
+      }
+
+      .ticker-track span {
+        padding-right: 30px;
+        font-size: 12px;
+        font-weight: 850;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      /* Featured experiment */
+      .project {
+        position: relative;
+        min-height: 92svh;
+        padding: clamp(110px, 13vw, 180px) 0;
+        color: var(--black);
+        background: var(--white);
+      }
+
+      .project-layout {
+        display: grid;
+        grid-template-columns: 0.82fr 1.18fr;
+        gap: clamp(50px, 8vw, 130px);
+        align-items: center;
+      }
+
+      .project-label {
+        margin: 0 0 24px;
+        font-size: 10px;
+        font-weight: 780;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .project h2 {
+        margin: 0;
+        font-size: clamp(4rem, 8vw, 8rem);
+        font-weight: 840;
+        letter-spacing: -0.085em;
+        line-height: 0.77;
+      }
+
+      .project h2 em {
+        color: #6d4ce8;
+        font-family: Georgia, serif;
+        font-weight: 400;
+      }
+
+      .project-description {
+        max-width: 410px;
+        margin: 34px 0;
+        color: rgba(9, 9, 10, 0.64);
+        font-size: 15px;
+      }
+
+      .launch-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        width: min(100%, 370px);
+        padding: 17px 0;
+        border-top: 1px solid var(--black);
+        border-bottom: 1px solid var(--black);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 800;
+        transition: padding 0.25s ease;
+      }
+
+      .launch-link:hover {
+        padding-inline: 12px;
+      }
+
+      .launch-link span:last-child {
+        font-size: 22px;
+      }
+
+      .world {
+        position: relative;
+        width: min(100%, 680px);
+        aspect-ratio: 1;
+        margin-inline: auto;
+        overflow: hidden;
+        background: #151420;
+        border-radius: 50%;
+        box-shadow:
+          0 35px 80px rgba(60, 39, 130, 0.28),
+          0 0 0 1px rgba(9, 9, 10, 0.14);
+      }
+
+      .world::before,
+      .world::after {
+        content: "";
+        position: absolute;
+        inset: 0 25%;
+        border: 1px solid rgba(243, 240, 232, 0.24);
+        border-radius: 50%;
+      }
+
+      .world::after {
+        inset: 25% 0;
+      }
+
+      .world-grid {
+        position: absolute;
+        inset: 8%;
+        border: 1px dashed rgba(223, 255, 0, 0.42);
+        border-radius: 50%;
+        transform: rotate(28deg);
+        animation: spin 18s linear infinite;
+      }
+
+      .world-mark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        color: var(--acid);
+        font-family: Georgia, serif;
+        font-size: clamp(7rem, 17vw, 14rem);
+        font-style: italic;
+        line-height: 1;
+        transform: translate(-50%, -52%) rotate(-13deg);
+        filter: drop-shadow(0 0 40px rgba(223, 255, 0, 0.22));
+      }
+
+      .world-tag {
+        position: absolute;
+        top: 12%;
+        left: 11%;
+        padding: 8px 10px;
+        color: var(--acid);
+        border: 1px solid rgba(223, 255, 0, 0.5);
+        font-size: 9px;
+        font-weight: 760;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      /* Interactive signal lab */
+      .lab {
+        padding: clamp(90px, 11vw, 150px) 0 34px;
+        background: var(--black);
+      }
+
+      .lab-layout {
+        display: grid;
+        grid-template-columns: 0.62fr 1.38fr;
+        gap: clamp(35px, 7vw, 100px);
+        align-items: center;
+      }
+
+      .lab h2 {
+        margin: 14px 0 22px;
+        font-size: clamp(3.2rem, 6.6vw, 6.6rem);
+        font-weight: 830;
+        letter-spacing: -0.08em;
+        line-height: 0.8;
+      }
+
+      .lab h2 em {
+        display: block;
+        color: var(--orange);
+        font-family: Georgia, serif;
+        font-weight: 400;
+      }
+
+      .lab-copy p {
+        max-width: 360px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .signal-stage {
+        position: relative;
+        min-height: 500px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: #111113;
+        cursor: crosshair;
+      }
+
+      #signal-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .signal-note,
+      .signal-value {
+        position: absolute;
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      .signal-note {
+        top: 22px;
+        left: 24px;
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 740;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      .signal-value {
+        right: 24px;
+        bottom: 20px;
+        color: var(--acid);
+        font-family: Georgia, serif;
+        font-size: 12px;
+        font-style: italic;
+      }
+
+      .footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 30px;
+        margin-top: clamp(80px, 10vw, 130px);
+        padding-top: 22px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .footer a {
+        text-decoration: none;
+      }
+
+      .footer a:hover {
+        color: var(--acid);
+      }
+
+      /* Motion */
+      .reveal {
+        opacity: 0;
+        transform: translateY(28px);
+        transition:
+          opacity 0.8s ease,
+          transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .reveal.visible {
+        opacity: 1;
+        transform: none;
+      }
+
+      @keyframes pulse {
+        50% {
+          opacity: 0.35;
+          transform: scale(0.7);
+        }
+      }
+
+      @keyframes breathe {
+        50% {
+          transform: scale(1.04);
+        }
+      }
+
+      @keyframes ticker {
+        to {
+          transform: translateX(-50%);
+        }
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(388deg);
+        }
+      }
+
+      /* Responsive */
+      @media (max-width: 860px) {
+        .project-layout,
+        .lab-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .project-copy {
+          position: relative;
+          z-index: 2;
+        }
+
+        .world {
+          width: min(90vw, 620px);
+        }
+
+        .lab-copy p {
+          max-width: 540px;
+        }
+      }
+
+      @media (max-width: 620px) {
+        :root {
+          --page: calc(100% - 30px);
+        }
+
+        .site-header {
+          padding: 17px 0;
+        }
+
+        .status {
+          font-size: 8px;
+          letter-spacing: 0.1em;
+        }
+
+        .hero {
+          min-height: 93svh;
+          padding: 115px 0 34px;
+        }
+
+        .hero::after {
+          top: 8%;
+          right: -74%;
+          width: 150vw;
+          box-shadow:
+            inset 0 0 0 23vw var(--black),
+            inset 0 0 0 calc(23vw + 1px) rgba(223, 255, 0, 0.32),
+            inset 0 0 0 46vw var(--black),
+            inset 0 0 0 calc(46vw + 1px) rgba(243, 240, 232, 0.18);
+        }
+
+        h1 {
+          font-size: clamp(4.7rem, 24vw, 7rem);
+        }
+
+        h1 .human {
+          margin-left: 5vw;
+        }
+
+        .hero-bottom {
+          grid-template-columns: 1fr;
+          gap: 18px;
+          margin-top: 40px;
+        }
+
+        .hero-index {
+          display: none;
+        }
+
+        .project {
+          min-height: auto;
+          padding: 100px 0;
+        }
+
+        .project-layout {
+          gap: 70px;
+        }
+
+        .world {
+          width: calc(100vw - 30px);
+        }
+
+        .signal-stage {
+          min-height: 420px;
+        }
+
+        .footer {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+
+        .reveal {
+          opacity: 1;
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Navigation -->
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="AI by Gazit, home">
+        <span class="brand-mark" aria-hidden="true">G</span>
+        <span>AI by Gazit</span>
+      </a>
+      <span class="status">Experiments live</span>
+    </header>
+
+    <main id="main">
+      <!-- Hero -->
+      <section class="hero shell" id="top" aria-labelledby="hero-title">
+        <p class="hero-label">Independent artificial intelligence studio</p>
+        <h1 id="hero-title">
+          <span>AI, but</span>
+          <span class="human">human.</span>
+        </h1>
+        <div class="hero-bottom">
+          <span class="hero-index">Intelligence / intuition / imagination</span>
+          <p class="hero-intro">
+            <strong>Useful enough to matter. Strange enough to remember.</strong>
+            Small AI experiments built with clarity, character and a little electricity.
+          </p>
+        </div>
+      </section>
+
+      <!-- Kinetic statement -->
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+          <span>Think boldly ✦ Build clearly ✦ Stay curious ✦ Make it human ✦</span>
+          <span>Think boldly ✦ Build clearly ✦ Stay curious ✦ Make it human ✦</span>
+        </div>
+      </div>
+
+      <!-- Featured experiment -->
+      <section class="project" id="work" aria-labelledby="project-title">
+        <div class="project-layout shell">
+          <div class="project-copy reveal">
+            <p class="project-label">Experiment 001 · Now live</p>
+            <h2 id="project-title">
+              Learn the
+              <br />
+              <em>world.</em>
+            </h2>
+            <p class="project-description">
+              Geography becomes a game: 159 questions, instant explanations, progress tracking and
+              challenges that adapt to every attempt.
+            </p>
+            <a class="launch-link" href="/ron/geo/">
+              <span>Launch the experience</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+
+          <div class="world reveal" aria-hidden="true">
+            <div class="world-grid"></div>
+            <span class="world-mark">G</span>
+            <span class="world-tag">Interactive · Portuguese</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Interactive signal lab -->
+      <section class="lab" aria-labelledby="lab-title">
+        <div class="lab-layout shell">
+          <div class="lab-copy reveal">
+            <p class="project-label">Tiny experiment · Your move</p>
+            <h2 id="lab-title">
+              Touch the
+              <br />
+              <em>signal.</em>
+            </h2>
+            <p>Move through the field. Watch a quiet system notice you—and come alive.</p>
+          </div>
+
+          <div class="signal-stage reveal" id="signal-stage">
+            <canvas
+              id="signal-canvas"
+              aria-label="Interactive animated field that follows your pointer"
+            ></canvas>
+            <span class="signal-note">Move your cursor / touch and drag</span>
+            <span class="signal-value" id="signal-value">signal: waiting</span>
+          </div>
+        </div>
+
+        <footer class="footer shell">
+          <span>
+            ©
+            <span id="year">2026</span>
+            AI by Gazit
+          </span>
+          <span>Made with curiosity in Lisbon</span>
+          <a href="#top">Again ↑</a>
+        </footer>
+      </section>
+    </main>
+
+    <script>
+      // Keep the footer date current.
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      // Let the hero's color field react gently to pointer movement.
+      if (!reducedMotion) {
+        document.addEventListener("pointermove", (event) => {
+          document.documentElement.style.setProperty("--pointer-x", `${event.clientX}px`);
+          document.documentElement.style.setProperty("--pointer-y", `${event.clientY}px`);
+        });
+      }
+
+      // Reveal the two lower sections as they enter the viewport.
+      const revealItems = document.querySelectorAll(".reveal");
+      if (reducedMotion || !("IntersectionObserver" in window)) {
+        revealItems.forEach((item) => item.classList.add("visible"));
+      } else {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("visible");
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.14 },
+        );
+        revealItems.forEach((item) => observer.observe(item));
+      }
+
+      // Interactive vector field.
+      const stage = document.getElementById("signal-stage");
+      const canvas = document.getElementById("signal-canvas");
+      const signalValue = document.getElementById("signal-value");
+      const context = canvas.getContext("2d");
+
+      let width = 0;
+      let height = 0;
+      let pointer = { x: 0.5, y: 0.5, active: false };
+      let animationFrame = 0;
+
+      function resizeCanvas() {
+        const box = stage.getBoundingClientRect();
+        const density = Math.min(devicePixelRatio || 1, 2);
+        width = box.width;
+        height = box.height;
+        canvas.width = Math.round(width * density);
+        canvas.height = Math.round(height * density);
+        context.setTransform(density, 0, 0, density, 0, 0);
+      }
+
+      function setPointer(clientX, clientY) {
+        const box = stage.getBoundingClientRect();
+        pointer.x = Math.max(0, Math.min(1, (clientX - box.left) / box.width));
+        pointer.y = Math.max(0, Math.min(1, (clientY - box.top) / box.height));
+        pointer.active = true;
+        signalValue.textContent = `signal: ${Math.round(pointer.x * 99)
+          .toString()
+          .padStart(2, "0")}·${Math.round(pointer.y * 99)
+          .toString()
+          .padStart(2, "0")}`;
+      }
+
+      stage.addEventListener("pointermove", (event) => {
+        setPointer(event.clientX, event.clientY);
+      });
+      stage.addEventListener("pointerdown", (event) => {
+        setPointer(event.clientX, event.clientY);
+      });
+      stage.addEventListener("pointerleave", () => {
+        pointer.active = false;
+        signalValue.textContent = "signal: drifting";
+      });
+
+      function draw(time = 0) {
+        context.clearRect(0, 0, width, height);
+
+        const columns = Math.max(9, Math.round(width / 46));
+        const rows = Math.max(9, Math.round(height / 46));
+        const gapX = width / (columns + 1);
+        const gapY = height / (rows + 1);
+        const targetX = pointer.active
+          ? pointer.x * width
+          : width * (0.5 + Math.sin(time * 0.0004) * 0.16);
+        const targetY = pointer.active
+          ? pointer.y * height
+          : height * (0.5 + Math.cos(time * 0.00035) * 0.13);
+
+        for (let row = 1; row <= rows; row++) {
+          for (let column = 1; column <= columns; column++) {
+            const x = column * gapX;
+            const y = row * gapY;
+            const deltaX = targetX - x;
+            const deltaY = targetY - y;
+            const distance = Math.hypot(deltaX, deltaY);
+            const influence = Math.max(0, 1 - (distance / Math.max(width, height)) * 2.1);
+            const angle = Math.atan2(deltaY, deltaX);
+            const lineLength = 5 + influence * 25;
+            const opacity = 0.15 + influence * 0.76;
+
+            context.beginPath();
+            context.moveTo(
+              x - Math.cos(angle) * lineLength * 0.5,
+              y - Math.sin(angle) * lineLength * 0.5,
+            );
+            context.lineTo(
+              x + Math.cos(angle) * lineLength * 0.5,
+              y + Math.sin(angle) * lineLength * 0.5,
+            );
+            context.strokeStyle =
+              influence > 0.55 ? `rgba(223,255,0,${opacity})` : `rgba(243,240,232,${opacity})`;
+            context.lineWidth = 1 + influence * 1.5;
+            context.stroke();
+          }
+        }
+
+        context.beginPath();
+        context.arc(targetX, targetY, 4, 0, Math.PI * 2);
+        context.fillStyle = "#ff593d";
+        context.fill();
+
+        if (!reducedMotion) {
+          animationFrame = requestAnimationFrame(draw);
+        }
+      }
+
+      resizeCanvas();
+      addEventListener("resize", resizeCanvas, { passive: true });
+      addEventListener("pagehide", () => cancelAnimationFrame(animationFrame));
+      draw();
+    </script>
+  </body>
+</html>
