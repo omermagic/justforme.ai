@@ -247,7 +247,7 @@
       #game-canvas {
         display: block;
         width: 100%;
-        aspect-ratio: 19 / 22;
+        aspect-ratio: 28 / 31;
         touch-action: none;
       }
 
@@ -539,7 +539,7 @@
           max-width: 100%;
           height: 100%;
           min-height: 0;
-          aspect-ratio: 19 / 22;
+          aspect-ratio: 28 / 31;
           justify-self: center;
           box-shadow: none;
         }
@@ -632,7 +632,7 @@
           height: 100%;
           min-height: 0;
           grid-row: 1 / -1;
-          aspect-ratio: 19 / 22;
+          aspect-ratio: 28 / 31;
           justify-self: center;
           box-shadow: none;
         }
@@ -745,8 +745,8 @@
           <div class="game-frame" id="game-frame">
             <canvas
               id="game-canvas"
-              width="570"
-              height="660"
+              width="560"
+              height="620"
               aria-label="Maze game. Use arrow keys, WASD, swipe, or the direction buttons to move Snoopy."
             ></canvas>
 
@@ -809,28 +809,37 @@
        * ----------------------------------------------------------------------- */
 
       const MAP = [
-        "###################",
-        "#........#........#",
-        "#.##.###.#.###.##.#",
-        "#o##.###.#.###.##o#",
-        "#.................#",
-        "#.##.#.#####.#.##.#",
-        "#....#...#...#....#",
-        "####.###...###.####",
-        "#....#.##D##.#....#",
-        "#.##.#.#GGG#.#.##.#",
-        "#......#GGG#......#",
-        "#.####.#####.####.#",
-        "#......#####......#",
-        "###.##.#####.##.###",
-        "#...##...#...##...#",
-        "#.##.###.#.###.##.#",
-        "#o.#.....S.....#.o#",
-        "##.#.#.#####.#.#.##",
-        "#....#...#...#....#",
-        "#.######.#.######.#",
-        "#.................#",
-        "###################",
+        "############################",
+        "#............##............#",
+        "#.####.#####.##.#####.####.#",
+        "#o####.#####.##.#####.####o#",
+        "#.####.#####.##.#####.####.#",
+        "#..........................#",
+        "#.####.##.########.##.####.#",
+        "#.####.##.########.##.####.#",
+        "#......##....##....##......#",
+        "######.##### ## #####.######",
+        "     #.##### ## #####.#     ",
+        "     #.##          ##.#     ",
+        "     #.## ###==### ##.#     ",
+        "######.## #      # ##.######",
+        "      .   #      #   .      ",
+        "######.## #      # ##.######",
+        "     #.## ######## ##.#     ",
+        "     #.##          ##.#     ",
+        "     #.## ######## ##.#     ",
+        "######.## ######## ##.######",
+        "#............##............#",
+        "#.####.#####.##.#####.####.#",
+        "#.####.#####.##.#####.####.#",
+        "#o..##.......  .......##..o#",
+        "###.##.##.########.##.##.###",
+        "###.##.##.########.##.##.###",
+        "#......##....##....##......#",
+        "#.##########.##.##########.#",
+        "#.##########.##.##########.#",
+        "#..........................#",
+        "############################",
       ];
 
       const DIRECTIONS = {
@@ -895,13 +904,24 @@
       const HIGH_SCORE_KEY = "anat_snoopy_maze_high_score_v1";
       const COLUMN_COUNT = MAP[0].length;
       const ROW_COUNT = MAP.length;
+      const TILE_CENTER_EPSILON = 1e-6;
+      const TUNNEL_ROW = 14;
+      const PLAYER_START = { x: 13, y: 23 };
+      const GHOST_STARTS = [
+        { x: 13, y: 14 },
+        { x: 12, y: 14 },
+        { x: 14, y: 14 },
+        { x: 15, y: 14 },
+      ];
+      const GHOST_RELEASE_DELAYS = [0.2, 0.85, 1.5, 2.15];
       const GHOST_HOUSE = {
-        left: 7,
-        top: 8,
-        right: 11,
-        bottom: 11,
-        doorX: 9,
-        doorY: 8,
+        left: 10,
+        top: 12,
+        right: 17,
+        bottom: 16,
+        doorLeft: 13,
+        doorRight: 14,
+        doorY: 12,
       };
 
       /* --------------------------------------------------------------------------
@@ -969,16 +989,6 @@
         }
       }
 
-      function findMapPositions(character) {
-        const positions = [];
-        MAP.forEach((row, y) => {
-          [...row].forEach((tile, x) => {
-            if (tile === character) positions.push({ x, y });
-          });
-        });
-        return positions;
-      }
-
       function buildCollectibles() {
         dots = new Set();
         powerDots = new Set();
@@ -1004,21 +1014,14 @@
       }
 
       function resetActors() {
-        const playerStart = findMapPositions("S")[0];
-        const ghostStarts = findMapPositions("G");
-        player = createActor(playerStart, "left", 5.25 + Math.min(level - 1, 5) * 0.08);
-        ghosts = GHOST_STYLES.slice(0, Math.min(3 + Math.floor(level / 3), 4)).map(
-          (style, index) => ({
-            ...createActor(
-              ghostStarts[index % ghostStarts.length],
-              index % 2 ? "left" : "right",
-              4.25,
-            ),
-            ...style,
-            index,
-            eaten: false,
-          }),
-        );
+        player = createActor(PLAYER_START, "left", 5.25 + Math.min(level - 1, 5) * 0.08);
+        ghosts = GHOST_STYLES.map((style, index) => ({
+          ...createActor(GHOST_STARTS[index], "up", 4.25),
+          ...style,
+          index,
+          leavingHouse: true,
+          releaseDelay: GHOST_RELEASE_DELAYS[index],
+        }));
         frightenedUntil = 0;
         trail = [];
       }
@@ -1079,9 +1082,11 @@
       function isBlocked(actor, x, y) {
         const tileX = Math.round(x);
         const tileY = Math.round(y);
+
+        if (tileY === TUNNEL_ROW && (tileX < 0 || tileX >= COLUMN_COUNT)) return false;
         if (tileY < 0 || tileY >= ROW_COUNT || tileX < 0 || tileX >= COLUMN_COUNT) return true;
         const tile = MAP[tileY][tileX];
-        return tile === "#" || (tile === "D" && actor === player);
+        return tile === "#" || (tile === "=" && (actor === player || !actor.leavingHouse));
       }
 
       function canMove(actor, directionName) {
@@ -1102,11 +1107,11 @@
 
       function moveActor(actor, elapsedSeconds, chooseDirection) {
         let remaining = actor.speed * elapsedSeconds;
-        while (remaining > 0) {
-          const step = Math.min(remaining, 0.075);
-          // Snap only when genuinely close to the tile center. A tolerance based
-          // on the movement step can pull the actor backward at high frame rates.
-          if (nearTileCenter(actor, 0.035)) {
+
+        while (remaining > TILE_CENTER_EPSILON) {
+          // Every movement segment ends exactly on a tile center. This guarantees
+          // that a slow mobile frame can never jump past the wall check.
+          if (nearTileCenter(actor, TILE_CENTER_EPSILON)) {
             actor.x = Math.round(actor.x);
             actor.y = Math.round(actor.y);
             if (chooseDirection) chooseDirection(actor);
@@ -1115,20 +1120,56 @@
             }
             if (!canMove(actor, actor.direction)) return;
           }
+
           const direction = DIRECTIONS[actor.direction];
-          actor.x += direction.x * step;
-          actor.y += direction.y * step;
-          remaining -= step;
+          const axis = direction.x ? "x" : "y";
+          const sign = direction[axis];
+          const position = actor[axis];
+          const nextCenter =
+            sign > 0
+              ? Math.floor(position + TILE_CENTER_EPSILON) + 1
+              : Math.ceil(position - TILE_CENTER_EPSILON) - 1;
+          const distanceToCenter = Math.abs(nextCenter - position);
+          const distance = Math.min(remaining, distanceToCenter);
+
+          actor.x += direction.x * distance;
+          actor.y += direction.y * distance;
+          remaining -= distance;
+
+          if (distanceToCenter - distance < TILE_CENTER_EPSILON) {
+            actor[axis] = nextCenter;
+            wrapActorInTunnel(actor);
+          }
         }
+      }
+
+      function wrapActorInTunnel(actor) {
+        if (Math.round(actor.y) !== TUNNEL_ROW) return;
+        if (actor.x <= -1) actor.x = COLUMN_COUNT - 1;
+        if (actor.x >= COLUMN_COUNT) actor.x = 0;
       }
 
       function requestDirection(directionName) {
         if (!player || !DIRECTIONS[directionName]) return;
+
+        // Starting from a direction button creates a fresh actor, so apply the
+        // requested turn after the reset instead of losing the first phone tap.
+        if (gameState === "ready" || gameState === "game-over") {
+          startNewGame();
+        } else if (gameState === "paused") {
+          resumeGame();
+        }
+
         player.requestedDirection = directionName;
-        if (gameState === "ready" || gameState === "paused") resumeGame();
       }
 
       function chooseGhostDirection(ghost) {
+        const reachedExit =
+          ghost.leavingHouse &&
+          Math.round(ghost.x) === GHOST_HOUSE.doorLeft &&
+          Math.round(ghost.y) <= GHOST_HOUSE.doorY - 1;
+        if (reachedExit) ghost.leavingHouse = false;
+
         const opposite = {
           left: "right",
           right: "left",
@@ -1143,7 +1184,7 @@
         }
         if (!options.length) return;
 
-        const frightened = performance.now() < frightenedUntil;
+        const frightened = !ghost.leavingHouse && performance.now() < frightenedUntil;
         const target = ghostTarget(ghost);
         options.sort((first, second) => {
           const firstVector = DIRECTIONS[first];
@@ -1166,6 +1207,9 @@
       }
 
       function ghostTarget(ghost) {
+        if (ghost.leavingHouse) {
+          return { x: GHOST_HOUSE.doorLeft, y: GHOST_HOUSE.doorY - 1 };
+        }
         if (ghost.personality === "ambusher") {
           const direction = DIRECTIONS[player.direction];
           return { x: player.x + direction.x * 3, y: player.y + direction.y * 3 };
@@ -1223,8 +1267,10 @@
             createBurst(ghost.x, ghost.y, ghost.color, 16);
             ghost.x = ghost.startX;
             ghost.y = ghost.startY;
-            ghost.direction = "left";
-            ghost.requestedDirection = "left";
+            ghost.direction = "up";
+            ghost.requestedDirection = "up";
+            ghost.leavingHouse = true;
+            ghost.releaseDelay = 0.65;
             playTone(980, 0.12, "square", 0.055);
             updateScoreboard();
           } else {
@@ -1272,7 +1318,12 @@
         }
 
         moveActor(player, elapsedSeconds);
-        ghosts.forEach((ghost) => moveActor(ghost, elapsedSeconds, chooseGhostDirection));
+        ghosts.forEach((ghost) => {
+          ghost.releaseDelay = Math.max(0, ghost.releaseDelay - elapsedSeconds);
+          if (ghost.releaseDelay === 0) {
+            moveActor(ghost, elapsedSeconds, chooseGhostDirection);
+          }
+        });
         collectAtPlayerPosition();
         checkGhostCollisions();
 
@@ -1306,11 +1357,17 @@
         drawBackground(time, surprise);
         drawGhostHouse();
         drawMaze(time, surprise);
+
+        // Actor positions are stored as tile indexes. Shift the gameplay layer
+        // by half a tile so every item is drawn at the center of its cell.
+        context.save();
+        context.translate(0.5, 0.5);
         drawCollectibles(time, surprise);
         drawTrail();
         ghosts.forEach((ghost) => drawGhost(ghost, time));
         drawSnoopy(player, time, surprise);
         drawParticles();
+        context.restore();
 
         context.restore();
       }
@@ -1381,8 +1438,8 @@
         context.lineCap = "round";
         context.setLineDash([0.12, 0.1]);
         context.beginPath();
-        context.moveTo(GHOST_HOUSE.doorX + 0.12, GHOST_HOUSE.doorY + 0.5);
-        context.lineTo(GHOST_HOUSE.doorX + 0.88, GHOST_HOUSE.doorY + 0.5);
+        context.moveTo(GHOST_HOUSE.doorLeft + 0.12, GHOST_HOUSE.doorY + 0.5);
+        context.lineTo(GHOST_HOUSE.doorRight + 0.88, GHOST_HOUSE.doorY + 0.5);
         context.stroke();
         context.restore();
       }
