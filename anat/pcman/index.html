@@ -901,12 +901,24 @@
         { color: "#f09b41", personality: "shy" },
       ];
 
+      const BONUS_FRUITS = [
+        { name: "Cherries", kind: "cherries", points: 100, color: "#ed3f38" },
+        { name: "Strawberry", kind: "strawberry", points: 300, color: "#ef4b5d" },
+        { name: "Orange", kind: "orange", points: 500, color: "#f39a2d" },
+        { name: "Apple", kind: "apple", points: 700, color: "#e83e3e" },
+        { name: "Melon", kind: "melon", points: 1000, color: "#7bcf68" },
+        { name: "Grapes", kind: "grapes", points: 2000, color: "#9a65e8" },
+      ];
+
       const HIGH_SCORE_KEY = "anat_snoopy_maze_high_score_v1";
       const COLUMN_COUNT = MAP[0].length;
       const ROW_COUNT = MAP.length;
       const TILE_CENTER_EPSILON = 1e-6;
       const TUNNEL_ROW = 14;
       const PLAYER_START = { x: 13, y: 23 };
+      const FRUIT_POSITION = { x: 13.5, y: 17 };
+      const FRUIT_SPAWN_COUNTS = [70, 170];
+      const FRUIT_VISIBLE_SECONDS = 9;
       const GHOST_STARTS = [
         { x: 13, y: 14 },
         { x: 12, y: 14 },
@@ -968,6 +980,10 @@
       let audioContext = null;
       let audioMasterGain = null;
       let pelletSoundHigh = false;
+      let pelletsEaten = 0;
+      let fruitAppearances = 0;
+      let bonusFruit = null;
+      let fruitScorePopup = null;
 
       /* --------------------------------------------------------------------------
        * Setup and persistence
@@ -1028,12 +1044,20 @@
         trail = [];
       }
 
+      function resetLevelBonuses() {
+        pelletsEaten = 0;
+        fruitAppearances = 0;
+        bonusFruit = null;
+        fruitScorePopup = null;
+      }
+
       function startNewGame() {
         score = 0;
         level = 1;
         lives = 3;
         buildCollectibles();
         resetActors();
+        resetLevelBonuses();
         gameState = "intro";
         overlay.classList.add("hidden");
         pauseButton.textContent = "Pause";
@@ -1046,6 +1070,7 @@
         level += 1;
         buildCollectibles();
         resetActors();
+        resetLevelBonuses();
         gameState = "playing";
         transitionTimer = 0;
         updateScoreboard();
@@ -1231,23 +1256,33 @@
         if (!nearTileCenter(player, 0.18)) return;
         const key = tileKey(x, y);
         const multiplier = currentSurprise().mode === "gold" ? 2 : 1;
+        let pelletCollected = false;
 
         if (dots.delete(key)) {
           score += 10 * multiplier;
+          pelletCollected = true;
           playPelletSound();
           createBurst(player.x, player.y, "#ffd83d", 2);
         }
 
         if (powerDots.delete(key)) {
           score += 50 * multiplier;
+          pelletCollected = true;
           frightenedUntil = performance.now() + 8000;
           playPowerPelletSound();
           createBurst(player.x, player.y, "#fffdf5", 12);
         }
 
+        if (pelletCollected) {
+          pelletsEaten += 1;
+          maybeSpawnBonusFruit();
+        }
+        collectBonusFruit();
+
         if (!dots.size && !powerDots.size && gameState === "playing") {
           gameState = "level-complete";
           transitionTimer = performance.now() + 1900;
+          bonusFruit = null;
           score += 500 * level;
           playCelebration();
           showOverlay(
@@ -1258,6 +1293,48 @@
           actionButton.disabled = true;
         }
         updateScoreboard();
+      }
+
+      function currentBonusFruit() {
+        return BONUS_FRUITS[Math.min(level - 1, BONUS_FRUITS.length - 1)];
+      }
+
+      function maybeSpawnBonusFruit() {
+        const nextSpawnCount = FRUIT_SPAWN_COUNTS[fruitAppearances];
+        if (nextSpawnCount === undefined || pelletsEaten < nextSpawnCount || bonusFruit) return;
+
+        bonusFruit = {
+          ...currentBonusFruit(),
+          secondsRemaining: FRUIT_VISIBLE_SECONDS,
+        };
+        fruitAppearances += 1;
+        playFruitAppearSound();
+      }
+
+      function collectBonusFruit() {
+        if (!bonusFruit) return;
+        if (Math.hypot(player.x - FRUIT_POSITION.x, player.y - FRUIT_POSITION.y) >= 0.65) return;
+
+        const collectedFruit = bonusFruit;
+        bonusFruit = null;
+        score += collectedFruit.points;
+        fruitScorePopup = {
+          points: collectedFruit.points,
+          secondsRemaining: 1.25,
+        };
+        createBurst(FRUIT_POSITION.x, FRUIT_POSITION.y, collectedFruit.color, 18);
+        playFruitEatenSound();
+      }
+
+      function updateBonusFruit(elapsedSeconds) {
+        if (bonusFruit) {
+          bonusFruit.secondsRemaining -= elapsedSeconds;
+          if (bonusFruit.secondsRemaining <= 0) bonusFruit = null;
+        }
+        if (fruitScorePopup) {
+          fruitScorePopup.secondsRemaining -= elapsedSeconds;
+          if (fruitScorePopup.secondsRemaining <= 0) fruitScorePopup = null;
+        }
       }
 
       function checkGhostCollisions() {
@@ -1331,6 +1408,7 @@
         });
         collectAtPlayerPosition();
         checkGhostCollisions();
+        updateBonusFruit(elapsedSeconds);
 
         if (currentSurprise().mode === "rainbow" && time % 45 < 18) {
           trail.push({ x: player.x, y: player.y, age: 0 });
@@ -1368,6 +1446,7 @@
         context.save();
         context.translate(0.5, 0.5);
         drawCollectibles(time, surprise);
+        drawBonusFruit(time);
         drawTrail();
         ghosts.forEach((ghost) => drawGhost(ghost, time));
         drawSnoopy(player, time, surprise);
@@ -1484,6 +1563,108 @@
           context.lineWidth = 0.06;
           context.stroke();
         });
+      }
+
+      function drawBonusFruit(time) {
+        if (bonusFruit) {
+          const pulse = 1 + Math.sin(time * 0.009) * 0.08;
+          context.save();
+          context.translate(FRUIT_POSITION.x, FRUIT_POSITION.y);
+          context.scale(pulse, pulse);
+          context.lineWidth = 0.055;
+          context.strokeStyle = "#111";
+
+          if (bonusFruit.kind === "cherries") {
+            drawFruitCircle(-0.2, 0.12, 0.23, bonusFruit.color);
+            drawFruitCircle(0.22, 0.17, 0.23, "#c92d39");
+            context.strokeStyle = "#62a844";
+            context.lineWidth = 0.075;
+            context.beginPath();
+            context.moveTo(-0.2, -0.08);
+            context.quadraticCurveTo(-0.1, -0.52, 0.18, -0.42);
+            context.moveTo(0.22, -0.04);
+            context.quadraticCurveTo(0.13, -0.35, 0.18, -0.42);
+            context.stroke();
+          } else if (bonusFruit.kind === "strawberry") {
+            context.fillStyle = bonusFruit.color;
+            context.beginPath();
+            context.moveTo(-0.38, -0.22);
+            context.quadraticCurveTo(0, -0.48, 0.38, -0.22);
+            context.quadraticCurveTo(0.3, 0.28, 0, 0.48);
+            context.quadraticCurveTo(-0.3, 0.28, -0.38, -0.22);
+            context.fill();
+            context.stroke();
+            drawFruitLeaf();
+            context.fillStyle = "#ffe873";
+            [-0.2, 0, 0.2].forEach((x, index) => {
+              context.beginPath();
+              context.arc(x, index === 1 ? 0.14 : -0.03, 0.035, 0, Math.PI * 2);
+              context.fill();
+            });
+          } else if (bonusFruit.kind === "grapes") {
+            const grapePositions = [
+              [-0.2, -0.2], [0, -0.24], [0.2, -0.2], [-0.12, 0], [0.12, 0], [0, 0.22],
+            ];
+            grapePositions.forEach(([x, y]) => drawFruitCircle(x, y, 0.18, bonusFruit.color));
+            drawFruitLeaf();
+          } else {
+            context.fillStyle = bonusFruit.color;
+            context.beginPath();
+            if (bonusFruit.kind === "melon") {
+              context.ellipse(0, 0.05, 0.43, 0.34, -0.12, 0, Math.PI * 2);
+            } else {
+              context.arc(0, 0.06, 0.4, 0, Math.PI * 2);
+            }
+            context.fill();
+            context.stroke();
+
+            if (bonusFruit.kind === "melon") {
+              context.strokeStyle = "rgba(255,255,255,0.5)";
+              context.lineWidth = 0.05;
+              [-0.18, 0, 0.18].forEach((x) => {
+                context.beginPath();
+                context.moveTo(x - 0.06, -0.22);
+                context.lineTo(x + 0.06, 0.32);
+                context.stroke();
+              });
+            }
+            drawFruitLeaf();
+          }
+          context.restore();
+        }
+
+        if (fruitScorePopup) {
+          const alpha = Math.min(1, fruitScorePopup.secondsRemaining * 2);
+          const rise = (1.25 - fruitScorePopup.secondsRemaining) * 0.35;
+          context.save();
+          context.globalAlpha = alpha;
+          context.fillStyle = "#ffd83d";
+          context.font = "800 0.62px Arial, sans-serif";
+          context.textAlign = "center";
+          context.textBaseline = "middle";
+          context.fillText(
+            fruitScorePopup.points.toLocaleString(),
+            FRUIT_POSITION.x,
+            FRUIT_POSITION.y - rise,
+          );
+          context.restore();
+        }
+      }
+
+      function drawFruitCircle(x, y, radius, color) {
+        context.fillStyle = color;
+        context.beginPath();
+        context.arc(x, y, radius, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+      }
+
+      function drawFruitLeaf() {
+        context.fillStyle = "#65b84f";
+        context.beginPath();
+        context.ellipse(0.13, -0.36, 0.22, 0.1, -0.45, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
       }
 
       function drawSnoopy(actor, time, surprise) {
@@ -1886,6 +2067,17 @@
       function playGhostEatenSound() {
         playTone(520, 0.22, "square", 0.04, 0, 1320);
         playTone(780, 0.18, "sawtooth", 0.018, 0.05, 1560);
+      }
+
+      function playFruitAppearSound() {
+        playTone(660, 0.08, "square", 0.022);
+        playTone(880, 0.1, "square", 0.025, 0.08);
+      }
+
+      function playFruitEatenSound() {
+        [784, 988, 1319].forEach((frequency, index) => {
+          playTone(frequency, 0.1, "square", 0.035, index * 0.07);
+        });
       }
 
       function playDeathSound() {
