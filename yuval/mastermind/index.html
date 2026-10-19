@@ -1041,15 +1041,17 @@
         }
 
         body.game-active {
-          height: 100dvh;
-          min-height: 0;
-          overflow: hidden;
-          overscroll-behavior: none;
+          height: auto;
+          min-height: 100dvh;
+          overflow-x: hidden;
+          overflow-y: auto;
+          overscroll-behavior-x: none;
         }
 
         body.game-active .page {
           width: 100%;
-          height: 100dvh;
+          height: auto;
+          min-height: 100dvh;
           padding: 0;
         }
 
@@ -1059,11 +1061,10 @@
         }
 
         body.game-active .layout,
-        body.game-active .game-card,
-        body.game-active #play-screen {
+        body.game-active .game-card {
           width: 100%;
-          height: 100%;
-          min-height: 0;
+          height: auto;
+          min-height: 100dvh;
         }
 
         body.game-active .layout {
@@ -1071,20 +1072,25 @@
         }
 
         body.game-active .game-card {
+          overflow: visible;
           border: 0;
           border-radius: 0;
           box-shadow: none;
         }
 
         body.game-active #play-screen {
-          display: flex;
-          flex-direction: column;
+          display: block;
+          width: 100%;
+          height: auto;
+          min-height: 100dvh;
         }
 
         body.game-active .match-header {
+          position: sticky;
+          top: 0;
+          z-index: 10;
           min-height: 48px;
           padding: max(5px, env(safe-area-inset-top)) 10px 5px;
-          flex: 0 0 auto;
         }
 
         body.game-active .player-score strong {
@@ -1100,11 +1106,9 @@
         }
 
         body.game-active .play-content {
-          display: flex;
+          display: block;
           min-height: 0;
           padding: 6px 7px max(6px, env(safe-area-inset-bottom));
-          flex: 1;
-          flex-direction: column;
         }
 
         body.game-active .play-controls {
@@ -1182,23 +1186,27 @@
           font-size: 7px;
         }
 
-        body.game-active .desktop-legend,
-        body.game-active #computer-board {
+        body.game-active .desktop-legend {
           display: none;
         }
 
         body.game-active .boards {
           display: block;
           min-height: 0;
-          flex: 1;
         }
 
         body.game-active #human-board {
-          height: 100%;
+          height: calc(100dvh - 205px);
           min-height: 0;
           padding: 6px;
           box-shadow: none;
           transform: none;
+        }
+
+        body.game-active #computer-board {
+          display: flex;
+          min-height: calc(100dvh - 60px);
+          margin-top: 8px;
         }
 
         body.game-active .board-heading {
@@ -1940,6 +1948,7 @@
         phase = "playing";
         turn = "human";
         document.body.classList.add("game-active");
+        window.scrollTo(0, 0);
         setupScreen.hidden = true;
         playScreen.hidden = false;
         resultOverlay.hidden = true;
