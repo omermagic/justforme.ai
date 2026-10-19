@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "anat-snoopy-maze-v12";
+const CACHE_NAME = "anat-snoopy-maze-v13";
 const GAME_ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
