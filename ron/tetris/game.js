@@ -868,7 +868,7 @@ function unleashDragon() {
   game.dragon = 0;
   const cleared = removeRows(occupiedRows);
   resolveClear(cleared, "dragon");
-  showBanner(`RON MODE — ${evolution.waveRows}-ROW DRAGON WAVE!`);
+  showBanner(`DRAGON MODE — ${evolution.waveRows}-ROW WAVE!`);
   playSound("power");
 }
 
@@ -970,7 +970,7 @@ function showUpgradeReward(completion) {
   showModal({
     icon: game.boss ? "♛" : "◆",
     kicker: game.boss ? "Boss defeated" : "Mission complete",
-    title: "Choose Ron's reward",
+    title: "Choose your reward",
     copy: `${WORLDS[game.worldIndex].missions[game.stage - 1]} is secure. Pick one upgrade—it stays with the dragon for every future mission.`,
     stats: [
       ["Score", formatNumber(game.score)],
@@ -1025,7 +1025,7 @@ function showCompletionModal(completion, reward = null) {
         ? "The Dragon Core lives!"
         : "Crystal secured!",
     copy: finalMission
-      ? "Ron restored every fragment and brought the Dragon Core home to Valbom. The worlds are open for replay."
+      ? "You restored every fragment and brought the Dragon Core home to Valbom. The worlds are open for replay."
       : reward
         ? `${reward.description} The next portal is ready.`
         : `${WORLDS[game.worldIndex].missions[game.stage - 1]} is complete. The next portal is ready.`,
