@@ -798,6 +798,10 @@
         display: inline-block;
       }
 
+      .mobile-legend {
+        display: none;
+      }
+
       .thinking {
         animation: pulse 0.75s ease-in-out infinite alternate;
       }
@@ -878,6 +882,7 @@
         width: 1px;
         height: 1px;
         padding: 0;
+        margin: -1px;
         overflow: hidden;
         clip: rect(0, 0, 0, 0);
         white-space: nowrap;
@@ -1033,6 +1038,222 @@
 
         .color-button .color-name {
           display: none;
+        }
+
+        body.game-active {
+          height: 100dvh;
+          min-height: 0;
+          overflow: hidden;
+          overscroll-behavior: none;
+        }
+
+        body.game-active .page {
+          width: 100%;
+          height: 100dvh;
+          padding: 0;
+        }
+
+        body.game-active .topbar,
+        body.game-active .intro {
+          display: none;
+        }
+
+        body.game-active .layout,
+        body.game-active .game-card,
+        body.game-active #play-screen {
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+        }
+
+        body.game-active .layout {
+          display: block;
+        }
+
+        body.game-active .game-card {
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
+        }
+
+        body.game-active #play-screen {
+          display: flex;
+          flex-direction: column;
+        }
+
+        body.game-active .match-header {
+          min-height: 48px;
+          padding: max(5px, env(safe-area-inset-top)) 10px 5px;
+          flex: 0 0 auto;
+        }
+
+        body.game-active .player-score strong {
+          font-size: 15px;
+        }
+
+        body.game-active .turn-center {
+          gap: 2px;
+        }
+
+        body.game-active .turn-badge {
+          padding: 5px 8px;
+        }
+
+        body.game-active .play-content {
+          display: flex;
+          min-height: 0;
+          padding: 6px 7px max(6px, env(safe-area-inset-bottom));
+          flex: 1;
+          flex-direction: column;
+        }
+
+        body.game-active .play-controls {
+          margin-bottom: 6px;
+          flex: 0 0 auto;
+        }
+
+        body.game-active .composer {
+          padding: 5px 6px;
+          grid-template-columns: auto minmax(0, 1fr) auto;
+          gap: 6px;
+        }
+
+        body.game-active .composer-label,
+        body.game-active .guess-slots,
+        body.game-active .composer .primary-button {
+          grid-row: 1;
+        }
+
+        body.game-active .composer-label {
+          width: auto;
+          grid-column: 1;
+        }
+
+        body.game-active .composer-label span {
+          display: none;
+        }
+
+        body.game-active .guess-slots {
+          min-width: 0;
+          grid-column: 2;
+          gap: 3px;
+        }
+
+        body.game-active .guess-slots .peg,
+        body.game-active .guess-slots .empty-peg {
+          width: clamp(22px, 6.5vw, 28px);
+        }
+
+        body.game-active .composer .primary-button {
+          padding: 8px 10px;
+          grid-column: 3;
+        }
+
+        body.game-active .play-palette {
+          margin-top: 5px;
+          gap: 4px;
+        }
+
+        body.game-active .color-button {
+          min-height: 28px;
+          padding: 3px;
+        }
+
+        body.game-active .color-dot {
+          width: 18px;
+          height: 18px;
+        }
+
+        body.game-active .play-tools {
+          margin-top: 5px;
+          gap: 0;
+        }
+
+        body.game-active .play-tools .button-row {
+          width: 100%;
+          margin: 0;
+          flex-wrap: nowrap;
+          justify-content: center;
+          gap: 5px;
+        }
+
+        body.game-active .small-button {
+          padding: 5px 8px;
+          font-size: 7px;
+        }
+
+        body.game-active .desktop-legend,
+        body.game-active #computer-board {
+          display: none;
+        }
+
+        body.game-active .boards {
+          display: block;
+          min-height: 0;
+          flex: 1;
+        }
+
+        body.game-active #human-board {
+          height: 100%;
+          min-height: 0;
+          padding: 6px;
+          box-shadow: none;
+          transform: none;
+        }
+
+        body.game-active .board-heading {
+          min-height: 22px;
+          margin-bottom: 3px;
+          padding-bottom: 3px;
+          flex: 0 0 auto;
+        }
+
+        body.game-active .board-heading h3 {
+          font-size: 10px;
+        }
+
+        body.game-active .board-heading span {
+          font-size: 7px;
+        }
+
+        body.game-active #human-history {
+          display: grid;
+          min-height: 0;
+          flex: 1;
+          grid-template-rows: repeat(12, minmax(0, 1fr));
+          gap: 2px;
+        }
+
+        body.game-active .guess-row {
+          min-height: 0;
+          padding: 0 4px;
+          border-radius: 5px;
+        }
+
+        body.game-active .code-pegs .peg,
+        body.game-active .empty-code-peg {
+          width: clamp(18px, 5.6vw, 23px);
+        }
+
+        body.game-active .mobile-legend {
+          display: flex;
+          margin: 4px 1px 0;
+          flex: 0 0 auto;
+          flex-wrap: nowrap;
+          justify-content: center;
+          gap: 8px;
+          font-size: 8px;
+        }
+
+        body.game-active .mobile-legend .legend-item {
+          gap: 4px;
+          white-space: nowrap;
+        }
+
+        body.game-active .mobile-legend .feedback-peg {
+          width: 9px;
+          height: 9px;
+          flex-basis: 9px;
         }
       }
 
@@ -1312,7 +1533,7 @@
                     <button class="small-button" id="new-match-button" type="button">New match</button>
                   </div>
 
-                  <div class="legend" aria-label="Feedback key">
+                  <div class="legend desktop-legend" aria-label="Feedback key">
                     <span class="legend-item">
                       <i class="feedback-peg exact" aria-hidden="true"></i>
                       Black: exact
@@ -1336,6 +1557,20 @@
                     <span>Computer's secret</span>
                   </div>
                   <div class="guess-list" id="human-history"></div>
+                  <div class="legend mobile-legend" aria-label="Feedback key">
+                    <span class="legend-item">
+                      <i class="feedback-peg exact" aria-hidden="true"></i>
+                      Black: exact
+                    </span>
+                    <span class="legend-item">
+                      <i class="feedback-peg color-only" aria-hidden="true"></i>
+                      White: wrong place
+                    </span>
+                    <span class="legend-item">
+                      <i class="feedback-peg empty" aria-hidden="true"></i>
+                      Empty: no match
+                    </span>
+                  </div>
                 </section>
 
                 <section class="board" id="computer-board" aria-labelledby="computer-board-title">
@@ -1704,6 +1939,7 @@
         computerCandidates = [...getAllCodes()];
         phase = "playing";
         turn = "human";
+        document.body.classList.add("game-active");
         setupScreen.hidden = true;
         playScreen.hidden = false;
         resultOverlay.hidden = true;
@@ -1790,6 +2026,7 @@
         matchStartedAt = 0;
         phase = "setup";
         turn = "human";
+        document.body.classList.remove("game-active");
         humanSecret = [];
         computerSecret = [];
         currentGuess = [];
