@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#071b4a" />
+    <meta
+      name="description"
+      content="Dragon Blocks — Ron's offline blue-and-white voxel block adventure."
+    />
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-E3JJGMR427"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-E3JJGMR427");
+    </script>
+
+    <title>Dragon Blocks — Ron's Adventure</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+
+  <body data-world="0">
+    <main class="app-shell">
+      <section class="menu-screen" id="menu-screen" aria-labelledby="game-title">
+        <header class="menu-header">
+          <a class="mini-brand" href="/" aria-label="Back to AI by Gazit">
+            <span class="brand-cube" aria-hidden="true">R</span>
+            <span>Ron's block lab</span>
+          </a>
+          <span class="offline-badge" id="offline-badge">Preparing offline mode</span>
+        </header>
+
+        <div class="menu-hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Adventure protocol · Valbom</p>
+            <h1 id="game-title">
+              Dragon
+              <span>Blocks</span>
+            </h1>
+            <p class="hero-intro">
+              The Dragon Core has shattered across six block worlds. Clear lines, recover every
+              crystal and bring its power home.
+            </p>
+
+            <div class="menu-actions">
+              <button class="primary-action" id="continue-button" type="button">
+                Start adventure
+              </button>
+              <button class="secondary-action" id="reset-progress-button" type="button">
+                Reset progress
+              </button>
+            </div>
+
+            <dl class="career-stats" aria-label="Saved adventure progress">
+              <div>
+                <dt>Best score</dt>
+                <dd id="menu-best-score">0</dd>
+              </div>
+              <div>
+                <dt>Crystals</dt>
+                <dd id="menu-crystals">0</dd>
+              </div>
+              <div>
+                <dt>Missions</dt>
+                <dd id="menu-missions">0 / 30</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="dragon-core" aria-hidden="true">
+            <div class="core-orbit orbit-one"></div>
+            <div class="core-orbit orbit-two"></div>
+            <div class="core-cube">
+              <span>R</span>
+            </div>
+            <div class="voxel voxel-one"></div>
+            <div class="voxel voxel-two"></div>
+            <div class="voxel voxel-three"></div>
+          </div>
+        </div>
+
+        <section class="world-map" aria-labelledby="world-map-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Choose a mission</p>
+              <h2 id="world-map-title">The block worlds</h2>
+            </div>
+            <p>Finish a mission to unlock the next path. Every fifth mission is a boss battle.</p>
+          </div>
+          <div class="world-grid" id="world-grid"></div>
+        </section>
+
+        <p class="menu-help">
+          Keyboard: arrows or WASD · Z/X rotate · Space drop · C hold · P pause
+        </p>
+      </section>
+
+      <section class="game-screen" id="game-screen" aria-label="Dragon Blocks game" hidden>
+        <header class="game-header">
+          <button class="icon-button" id="map-button" type="button" aria-label="Return to map">
+            ←
+          </button>
+          <div class="level-identity">
+            <span id="world-name">Valbom Base Camp</span>
+            <strong id="level-name">Mission 1</strong>
+          </div>
+          <div class="header-score">
+            <span>Score</span>
+            <strong id="score-value">0</strong>
+          </div>
+          <button class="icon-button" id="sound-button" type="button" aria-label="Turn sound off">
+            ♪
+          </button>
+          <button class="icon-button" id="pause-button" type="button" aria-label="Pause game">
+            ‖
+          </button>
+        </header>
+
+        <div class="game-stage">
+          <aside class="mission-panel side-panel" aria-label="Current mission">
+            <p class="panel-kicker">Mission</p>
+            <h2 id="mission-title">Restore the first crystal</h2>
+            <p class="mission-copy" id="mission-copy">Clear lines and recover the crystal blocks.</p>
+
+            <div class="mission-meter">
+              <div class="meter-label">
+                <span>Lines</span>
+                <strong id="line-progress">0 / 7</strong>
+              </div>
+              <div class="meter-track"><i id="line-meter"></i></div>
+            </div>
+
+            <div class="mission-meter">
+              <div class="meter-label">
+                <span>Crystals</span>
+                <strong id="crystal-progress">0 / 1</strong>
+              </div>
+              <div class="meter-track crystal-track"><i id="crystal-meter"></i></div>
+            </div>
+
+            <div class="combo-card">
+              <span>Combo</span>
+              <strong id="combo-value">×0</strong>
+            </div>
+
+            <p class="world-effect" id="world-effect">Training systems online.</p>
+          </aside>
+
+          <section class="board-column" aria-label="Block board">
+            <div class="board-frame" id="board-frame">
+              <canvas
+                id="game-canvas"
+                width="300"
+                height="600"
+                aria-label="Ten by twenty falling-block game board"
+              ></canvas>
+              <div class="event-banner" id="event-banner" aria-live="polite"></div>
+            </div>
+
+            <div class="dragon-meter" aria-label="Dragon power">
+              <div class="dragon-meter-copy">
+                <span>Dragon power</span>
+                <strong id="dragon-value">0%</strong>
+              </div>
+              <div class="dragon-track"><i id="dragon-fill"></i></div>
+              <button id="dragon-button" type="button" disabled>Unleash</button>
+            </div>
+          </section>
+
+          <aside class="gear-panel side-panel" aria-label="Pieces and power-ups">
+            <div class="preview-card">
+              <span>Next</span>
+              <canvas id="next-canvas" width="112" height="82" aria-label="Next block"></canvas>
+            </div>
+            <div class="preview-card">
+              <span>Hold</span>
+              <canvas id="hold-canvas" width="112" height="82" aria-label="Held block"></canvas>
+            </div>
+
+            <div class="power-grid" aria-label="Power-up inventory">
+              <button class="power-button" id="pickaxe-button" type="button">
+                <span aria-hidden="true">⛏</span>
+                <strong>Pickaxe</strong>
+                <small id="pickaxe-count">×1</small>
+              </button>
+              <button class="power-button" id="tnt-button" type="button">
+                <span aria-hidden="true">TNT</span>
+                <strong>Blast</strong>
+                <small id="tnt-count">×0</small>
+              </button>
+              <button class="power-button" id="diamond-button" type="button">
+                <span aria-hidden="true">◆</span>
+                <strong>Slow time</strong>
+                <small id="diamond-count">×0</small>
+              </button>
+            </div>
+          </aside>
+        </div>
+
+        <nav class="touch-controls" aria-label="Game controls">
+          <button data-control="left" type="button" aria-label="Move left">←</button>
+          <button data-control="rotate" type="button" aria-label="Rotate block">↻</button>
+          <button data-control="right" type="button" aria-label="Move right">→</button>
+          <button data-control="down" type="button" aria-label="Move down">↓</button>
+          <button class="drop-control" data-control="drop" type="button">Drop</button>
+          <button data-control="hold" type="button">Hold</button>
+        </nav>
+      </section>
+    </main>
+
+    <div class="modal" id="game-modal" role="dialog" aria-modal="true" hidden>
+      <div class="modal-card">
+        <span class="modal-icon" id="modal-icon" aria-hidden="true">◆</span>
+        <p class="eyebrow" id="modal-kicker">Mission complete</p>
+        <h2 id="modal-title">Crystal recovered!</h2>
+        <p id="modal-copy"></p>
+        <div class="modal-stats" id="modal-stats"></div>
+        <div class="modal-actions">
+          <button class="primary-action" id="modal-primary" type="button">Next mission</button>
+          <button class="secondary-action" id="modal-secondary" type="button">Mission map</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sr-only" id="announcer" aria-live="assertive"></div>
+    <script src="./game.js"></script>
+  </body>
+</html>

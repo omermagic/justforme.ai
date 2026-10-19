@@ -1,0 +1,19 @@
+{
+  "name": "Dragon Blocks — Ron's Adventure",
+  "short_name": "Dragon Blocks",
+  "description": "Ron's offline blue-and-white voxel block adventure.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#02091b",
+  "theme_color": "#071b4a",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

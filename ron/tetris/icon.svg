@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Dragon Blocks</title>
+  <rect width="512" height="512" rx="86" fill="#06183f"/>
+  <path fill="#0878e8" stroke="#f8fbff" stroke-width="18" d="M86 104h102v102H86zm102 102h102v102H188zm102-102h102v102H290zM188 308h102v102H188z"/>
+  <path fill="#ffcf3f" stroke="#fff" stroke-width="9" d="m256 191 31 31-31 31-31-31z"/>
+  <path fill="#f8fbff" d="M214 126h61c41 0 67 21 67 55 0 24-13 41-35 50l43 64h-49l-36-56h-10v56h-41zm41 35v43h18c17 0 26-7 26-22 0-14-9-21-27-21z"/>
+</svg>
