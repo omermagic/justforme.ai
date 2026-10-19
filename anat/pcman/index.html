@@ -249,6 +249,9 @@
         width: 100%;
         aspect-ratio: 28 / 31;
         touch-action: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
       }
 
       .game-overlay {
@@ -914,6 +917,7 @@
       const COLUMN_COUNT = MAP[0].length;
       const ROW_COUNT = MAP.length;
       const TILE_CENTER_EPSILON = 1e-6;
+      const SWIPE_THRESHOLD = 10;
       const TUNNEL_ROW = 14;
       const PLAYER_START = { x: 13, y: 23 };
       const FRUIT_POSITION = { x: 13.5, y: 17 };
@@ -1931,25 +1935,72 @@
         button.addEventListener("pointerdown", activate);
       });
 
-      canvas.addEventListener("pointerdown", (event) => {
-        swipeStart = { x: event.clientX, y: event.clientY };
-      });
+      function directionFromSwipe(deltaX, deltaY) {
+        if (Math.abs(deltaX) > Math.abs(deltaY)) return deltaX > 0 ? "right" : "left";
+        return deltaY > 0 ? "down" : "up";
+      }
 
-      canvas.addEventListener("pointerup", (event) => {
-        if (!swipeStart) return;
+      function recognizeSwipe(event) {
+        if (
+          !swipeStart ||
+          swipeStart.pointerId !== event.pointerId ||
+          swipeStart.recognized
+        ) {
+          return;
+        }
+
         const deltaX = event.clientX - swipeStart.x;
         const deltaY = event.clientY - swipeStart.y;
+        if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < SWIPE_THRESHOLD) return;
+
+        // Queue the turn immediately instead of waiting for pointerup. This is
+        // important on phones, where the browser can cancel a gesture early.
+        swipeStart.recognized = true;
+        requestDirection(directionFromSwipe(deltaX, deltaY));
+      }
+
+      function finishSwipe(event) {
+        if (!swipeStart || swipeStart.pointerId !== event.pointerId) return;
+        recognizeSwipe(event);
         swipeStart = null;
-        if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 18) return;
-        requestDirection(
-          Math.abs(deltaX) > Math.abs(deltaY)
-            ? deltaX > 0
-              ? "right"
-              : "left"
-            : deltaY > 0
-              ? "down"
-              : "up",
-        );
+        if (canvas.hasPointerCapture?.(event.pointerId)) {
+          canvas.releasePointerCapture(event.pointerId);
+        }
+      }
+
+      canvas.addEventListener(
+        "pointerdown",
+        (event) => {
+          if (event.isPrimary === false) return;
+          event.preventDefault();
+          swipeStart = {
+            x: event.clientX,
+            y: event.clientY,
+            pointerId: event.pointerId,
+            recognized: false,
+          };
+          try {
+            canvas.setPointerCapture(event.pointerId);
+          } catch {
+            // Pointer capture is an enhancement; live movement still detects the swipe.
+          }
+        },
+        { passive: false },
+      );
+
+      canvas.addEventListener(
+        "pointermove",
+        (event) => {
+          if (!swipeStart || swipeStart.pointerId !== event.pointerId) return;
+          event.preventDefault();
+          recognizeSwipe(event);
+        },
+        { passive: false },
+      );
+
+      canvas.addEventListener("pointerup", finishSwipe);
+      canvas.addEventListener("pointercancel", (event) => {
+        if (swipeStart?.pointerId === event.pointerId) swipeStart = null;
       });
 
       actionButton.addEventListener("click", handleActionButton);
