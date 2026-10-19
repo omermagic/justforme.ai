@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "ron-dragon-blocks-v3";
+const CACHE_NAME = "ron-dragon-blocks-v4";
 const GAME_ASSETS = [
   "./",
   "./index.html",

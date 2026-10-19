@@ -90,8 +90,6 @@ const gameCanvas = document.getElementById("game-canvas");
 const gameContext = gameCanvas.getContext("2d");
 const nextCanvas = document.getElementById("next-canvas");
 const nextContext = nextCanvas.getContext("2d");
-const holdCanvas = document.getElementById("hold-canvas");
-const holdContext = holdCanvas.getContext("2d");
 const boardFrame = document.getElementById("board-frame");
 const eventBanner = document.getElementById("event-banner");
 
@@ -185,8 +183,6 @@ function nextAdventureLevel() {
 let board = createEmptyBoard();
 let activePiece = null;
 let nextQueue = [];
-let heldType = null;
-let canHold = true;
 let animationFrame = 0;
 let lastFrameTime = 0;
 let lastHudUpdate = 0;
@@ -326,9 +322,9 @@ function chooseCrystalCell(matrix) {
   return filledCells[Math.floor(Math.random() * filledCells.length)] || null;
 }
 
-function spawnPiece(forcedType = null) {
+function spawnPiece() {
   fillQueue();
-  const type = forcedType || nextQueue.shift();
+  const type = nextQueue.shift();
   fillQueue();
   const matrix = cloneMatrix(PIECES[type].matrix);
   const crystalsStillNeeded = Math.max(
@@ -412,16 +408,6 @@ function hardDrop() {
   lockPiece();
 }
 
-function holdPiece() {
-  if (!game.running || game.paused || !activePiece || !canHold) return;
-  const currentType = activePiece.type;
-  const replacement = heldType;
-  heldType = currentType;
-  canHold = false;
-  spawnPiece(replacement);
-  playSound("rotate");
-}
-
 /* --------------------------------------------------------------------------
  * Board resolution and world events
  * ----------------------------------------------------------------------- */
@@ -445,7 +431,6 @@ function lockPiece() {
   });
 
   game.piecesLocked += 1;
-  canHold = true;
   playSound("lock");
   const cleared = clearCompletedLines();
   resolveClear(cleared);
@@ -667,8 +652,6 @@ function startLevel(levelIndex) {
 
   board = createEmptyBoard();
   nextQueue = [];
-  heldType = null;
-  canHold = true;
   seedWorldTerrain();
   spawnPiece();
   menuScreen.hidden = true;
@@ -927,7 +910,6 @@ function drawMiniPiece(context, canvas, type) {
 
 function drawPreviews() {
   drawMiniPiece(nextContext, nextCanvas, nextQueue[0]);
-  drawMiniPiece(holdContext, holdCanvas, heldType);
 }
 
 /* --------------------------------------------------------------------------
@@ -1096,7 +1078,6 @@ function runControl(control) {
     down: softDrop,
     rotate: rotatePiece,
     drop: hardDrop,
-    hold: holdPiece,
   };
   actions[control]?.();
   drawGame();
@@ -1125,7 +1106,6 @@ document.addEventListener("keydown", (event) => {
     x: "rotate",
     z: "rotate",
     " ": "drop",
-    c: "hold",
   };
   const control = controlByKey[key];
   if (control) {
