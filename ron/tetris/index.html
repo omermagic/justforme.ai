@@ -24,7 +24,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=6" />
   </head>
 
   <body data-world="0">
@@ -72,18 +72,47 @@
                 <dt>Missions</dt>
                 <dd id="menu-missions">0 / 30</dd>
               </div>
+              <div>
+                <dt>Dragon</dt>
+                <dd id="menu-dragon-name">Core egg</dd>
+              </div>
             </dl>
           </div>
 
-          <div class="dragon-core" aria-hidden="true">
+          <div class="dragon-core">
             <div class="core-orbit orbit-one"></div>
             <div class="core-orbit orbit-two"></div>
-            <div class="core-cube">
-              <span>R</span>
+            <div
+              class="dragon-avatar menu-dragon-avatar"
+              id="menu-dragon-avatar"
+              data-stage="0"
+              role="img"
+              aria-label="Core egg"
+            >
+              <div class="dragon-egg"><i></i><b></b></div>
+              <div class="dragon-creature">
+                <i class="dragon-wing wing-left"></i>
+                <i class="dragon-wing wing-right"></i>
+                <i class="dragon-tail"></i>
+                <i class="dragon-body"></i>
+                <div class="dragon-head">
+                  <i class="dragon-horn horn-left"></i>
+                  <i class="dragon-horn horn-right"></i>
+                  <i class="dragon-eye eye-left"></i>
+                  <i class="dragon-eye eye-right"></i>
+                  <b class="dragon-snout"></b>
+                  <b class="dragon-crown">R</b>
+                </div>
+              </div>
             </div>
             <div class="voxel voxel-one"></div>
             <div class="voxel voxel-two"></div>
             <div class="voxel voxel-three"></div>
+            <div class="dragon-evolution-card">
+              <strong id="dragon-evolution-name">Core egg</strong>
+              <span id="dragon-evolution-copy">Collect 3 crystals to hatch</span>
+              <div class="evolution-track"><i id="dragon-evolution-fill"></i></div>
+            </div>
           </div>
         </div>
 
@@ -152,6 +181,11 @@
             </div>
 
             <p class="world-effect" id="world-effect">Training systems online.</p>
+
+            <div class="boss-intel" id="boss-intel" hidden>
+              <span id="boss-name">Gate Guardian</span>
+              <strong id="boss-countdown">Attack charging</strong>
+            </div>
           </aside>
 
           <section class="board-column" aria-label="Block board">
@@ -162,12 +196,16 @@
                 height="600"
                 aria-label="Ten by twenty falling-block game board"
               ></canvas>
+              <div class="boss-strip" id="boss-strip" hidden>
+                <span>Boss battle</span>
+                <strong id="boss-strip-name">Gate Guardian</strong>
+              </div>
               <div class="event-banner" id="event-banner" aria-live="polite"></div>
             </div>
 
             <div class="dragon-meter" aria-label="Dragon power">
               <div class="dragon-meter-copy">
-                <span>Dragon power</span>
+                <span id="dragon-power-label">Dragon power</span>
                 <strong id="dragon-value">0%</strong>
               </div>
               <div class="dragon-track"><i id="dragon-fill"></i></div>
@@ -179,6 +217,11 @@
             <div class="preview-card">
               <span>Next</span>
               <canvas id="next-canvas" width="112" height="82" aria-label="Next block"></canvas>
+            </div>
+            <div class="companion-card">
+              <span>Companion</span>
+              <strong id="hud-dragon-name">Core egg</strong>
+              <small id="hud-shield-count">No shield</small>
             </div>
             <div class="power-grid" aria-label="Power-up inventory">
               <button class="power-button" id="pickaxe-button" type="button">
@@ -217,7 +260,11 @@
         <h2 id="modal-title">Crystal recovered!</h2>
         <p id="modal-copy"></p>
         <div class="modal-stats" id="modal-stats"></div>
-        <div class="modal-actions">
+        <div class="upgrade-rewards" id="upgrade-rewards" hidden>
+          <p>Choose one permanent upgrade</p>
+          <div class="upgrade-choices" id="upgrade-choices"></div>
+        </div>
+        <div class="modal-actions" id="modal-actions">
           <button class="primary-action" id="modal-primary" type="button">Next mission</button>
           <button class="secondary-action" id="modal-secondary" type="button">Mission map</button>
         </div>
@@ -225,6 +272,6 @@
     </div>
 
     <div class="sr-only" id="announcer" aria-live="assertive"></div>
-    <script src="./game.js"></script>
+    <script src="./game.js?v=6"></script>
   </body>
 </html>

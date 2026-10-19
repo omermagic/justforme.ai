@@ -72,6 +72,87 @@ const WORLDS = [
   },
 ];
 
+const DRAGON_STAGES = [
+  { name: "Core egg", threshold: 0, waveRows: 2 },
+  { name: "Cracking egg", threshold: 3, waveRows: 2 },
+  { name: "Blue hatchling", threshold: 8, waveRows: 3 },
+  { name: "Sky scout", threshold: 15, waveRows: 3 },
+  { name: "Storm dragon", threshold: 24, waveRows: 4 },
+  { name: "Core guardian", threshold: 36, waveRows: 4 },
+];
+
+const UPGRADE_CATALOG = {
+  forge: {
+    icon: "⛏",
+    name: "Master pickaxe",
+    description: "+1 pickaxe at the start of every mission.",
+  },
+  blast: {
+    icon: "TNT",
+    name: "Blast pack",
+    description: "+1 TNT blast at the start of every mission.",
+  },
+  frost: {
+    icon: "◆",
+    name: "Time crystal",
+    description: "+1 slow-time crystal at the start of every mission.",
+  },
+  fury: {
+    icon: "⚡",
+    name: "Dragon fury",
+    description: "Dragon Power charges 12% faster.",
+  },
+  fortune: {
+    icon: "✦",
+    name: "Crystal sense",
+    description: "Needed crystal blocks appear sooner.",
+  },
+  shield: {
+    icon: "▣",
+    name: "Guardian shield",
+    description: "Block one extra boss attack each mission.",
+  },
+};
+
+const BOSSES = [
+  {
+    name: "Gate Guardian",
+    description: "The Guardian chains open spaces every seven pieces. Break through the gate.",
+    status: "Gate chains",
+    interval: 7,
+  },
+  {
+    name: "Arena Champion",
+    description: "Clear a line within every six pieces or the Champion sends a pressure row.",
+    status: "Combo challenge",
+    interval: 6,
+  },
+  {
+    name: "Crystal Golem",
+    description: "The Golem drops stone clusters every seven pieces. Save tools for its attacks.",
+    status: "Stone fall",
+    interval: 7,
+  },
+  {
+    name: "Lava Titan",
+    description: "The Titan raises the lava floor every five pieces. Keep the board low.",
+    status: "Lava rising",
+    interval: 5,
+  },
+  {
+    name: "Cloud Serpent",
+    description: "The Serpent blows every new piece two spaces, changing direction each time.",
+    status: "Wind shifting",
+    interval: 1,
+  },
+  {
+    name: "Core Devourer",
+    description: "The final boss cycles through chains, lava and violent sky wind.",
+    status: "Chaos cycle",
+    interval: 5,
+  },
+];
+
 /* --------------------------------------------------------------------------
  * DOM references
  * ----------------------------------------------------------------------- */
@@ -84,6 +165,11 @@ const worldGrid = document.getElementById("world-grid");
 const menuBestScore = document.getElementById("menu-best-score");
 const menuCrystals = document.getElementById("menu-crystals");
 const menuMissions = document.getElementById("menu-missions");
+const menuDragonName = document.getElementById("menu-dragon-name");
+const menuDragonAvatar = document.getElementById("menu-dragon-avatar");
+const dragonEvolutionName = document.getElementById("dragon-evolution-name");
+const dragonEvolutionCopy = document.getElementById("dragon-evolution-copy");
+const dragonEvolutionFill = document.getElementById("dragon-evolution-fill");
 const offlineBadge = document.getElementById("offline-badge");
 
 const gameCanvas = document.getElementById("game-canvas");
@@ -92,6 +178,8 @@ const nextCanvas = document.getElementById("next-canvas");
 const nextContext = nextCanvas.getContext("2d");
 const boardFrame = document.getElementById("board-frame");
 const eventBanner = document.getElementById("event-banner");
+const bossStrip = document.getElementById("boss-strip");
+const bossStripName = document.getElementById("boss-strip-name");
 
 const worldName = document.getElementById("world-name");
 const levelName = document.getElementById("level-name");
@@ -104,9 +192,15 @@ const lineMeter = document.getElementById("line-meter");
 const crystalMeter = document.getElementById("crystal-meter");
 const comboValue = document.getElementById("combo-value");
 const worldEffect = document.getElementById("world-effect");
+const bossIntel = document.getElementById("boss-intel");
+const bossName = document.getElementById("boss-name");
+const bossCountdown = document.getElementById("boss-countdown");
 const dragonValue = document.getElementById("dragon-value");
 const dragonFill = document.getElementById("dragon-fill");
 const dragonButton = document.getElementById("dragon-button");
+const dragonPowerLabel = document.getElementById("dragon-power-label");
+const hudDragonName = document.getElementById("hud-dragon-name");
+const hudShieldCount = document.getElementById("hud-shield-count");
 
 const pickaxeButton = document.getElementById("pickaxe-button");
 const tntButton = document.getElementById("tnt-button");
@@ -124,6 +218,9 @@ const modalKicker = document.getElementById("modal-kicker");
 const modalTitle = document.getElementById("modal-title");
 const modalCopy = document.getElementById("modal-copy");
 const modalStats = document.getElementById("modal-stats");
+const upgradeRewards = document.getElementById("upgrade-rewards");
+const upgradeChoices = document.getElementById("upgrade-choices");
+const modalActions = document.getElementById("modal-actions");
 const modalPrimary = document.getElementById("modal-primary");
 const modalSecondary = document.getElementById("modal-secondary");
 const announcer = document.getElementById("announcer");
@@ -136,6 +233,8 @@ function defaultSave() {
   return {
     maxUnlocked: 0,
     completed: [],
+    rewardedLevels: [],
+    upgrades: Object.fromEntries(Object.keys(UPGRADE_CATALOG).map((key) => [key, 0])),
     highScore: 0,
     totalCrystals: 0,
     sound: true,
@@ -149,6 +248,11 @@ function readSave() {
       ...defaultSave(),
       ...stored,
       completed: Array.isArray(stored?.completed) ? stored.completed : [],
+      rewardedLevels: Array.isArray(stored?.rewardedLevels) ? stored.rewardedLevels : [],
+      upgrades: {
+        ...defaultSave().upgrades,
+        ...(stored?.upgrades && typeof stored.upgrades === "object" ? stored.upgrades : {}),
+      },
     };
   } catch {
     return defaultSave();
@@ -167,6 +271,23 @@ function persistSave() {
 
 function completedMissionCount() {
   return new Set(save.completed).size;
+}
+
+function dragonEvolution() {
+  let stageIndex = 0;
+  DRAGON_STAGES.forEach((stage, index) => {
+    if (save.totalCrystals >= stage.threshold) stageIndex = index;
+  });
+  const stage = DRAGON_STAGES[stageIndex];
+  const next = DRAGON_STAGES[stageIndex + 1] || null;
+  const progress = next
+    ? (save.totalCrystals - stage.threshold) / (next.threshold - stage.threshold)
+    : 1;
+  return { ...stage, stageIndex, next, progress: Math.max(0, Math.min(1, progress)) };
+}
+
+function upgradeRank(name) {
+  return Math.max(0, Number(save.upgrades[name]) || 0);
 }
 
 function nextAdventureLevel() {
@@ -205,6 +326,10 @@ const game = {
   combo: -1,
   dragon: 0,
   piecesLocked: 0,
+  lastClearPiece: 0,
+  bossAttackCount: 0,
+  shieldCharges: 0,
+  windBurst: 0,
   running: false,
   paused: false,
   slowUntil: 0,
@@ -331,8 +456,11 @@ function spawnPiece() {
     0,
     game.targetCrystals - game.levelCrystals - countBoardCrystals(),
   );
+  const fortuneRank = upgradeRank("fortune");
+  const crystalCadence = fortuneRank >= 3 ? 1 : 2;
   const shouldCarryCrystal =
-    crystalsStillNeeded > 0 && (game.piecesLocked % 2 === 0 || Math.random() < 0.42);
+    crystalsStillNeeded > 0 &&
+    (game.piecesLocked % crystalCadence === 0 || Math.random() < 0.42 + fortuneRank * 0.06);
 
   activePiece = {
     type,
@@ -343,9 +471,29 @@ function spawnPiece() {
   };
 
   if ((game.worldIndex === 4 || game.worldIndex === 5) && game.piecesLocked > 0) {
-    const direction = Math.random() < 0.5 ? -1 : 1;
-    if (!collides(activePiece, 0, direction)) activePiece.column += direction;
-    showBanner(direction < 0 ? "Sky wind ←" : "Sky wind →");
+    const serpentWind = game.boss && game.worldIndex === 4;
+    const finalWind = game.boss && game.worldIndex === 5 && game.windBurst > 0;
+    const direction = serpentWind
+      ? game.piecesLocked % 2 === 0
+        ? -1
+        : 1
+      : Math.random() < 0.5
+        ? -1
+        : 1;
+    const strength = serpentWind || finalWind ? 2 : 1;
+    for (let step = 0; step < strength; step += 1) {
+      if (!collides(activePiece, 0, direction)) activePiece.column += direction;
+    }
+    if (finalWind) game.windBurst -= 1;
+    showBanner(
+      strength > 1
+        ? direction < 0
+          ? "Serpent storm ⇐"
+          : "Serpent storm ⇒"
+        : direction < 0
+          ? "Sky wind ←"
+          : "Sky wind →",
+    );
   }
 
   if (collides(activePiece)) {
@@ -466,12 +614,18 @@ function removeRows(rowIndexes) {
 function resolveClear({ count, crystals }, source = "lines") {
   if (count > 0) {
     game.combo += 1;
+    game.lastClearPiece = game.piecesLocked;
     game.levelLines += count;
     const lineScores = [0, 100, 300, 500, 800];
     const comboBonus = game.combo > 0 ? game.combo * 75 : 0;
     game.score += (lineScores[Math.min(count, 4)] + comboBonus) * (game.levelIndex + 1);
     const arenaMultiplier = game.worldIndex === 1 ? 1.5 : 1;
-    game.dragon = Math.min(100, game.dragon + Math.round((count * 18 + game.combo * 7) * arenaMultiplier));
+    const furyMultiplier = 1 + upgradeRank("fury") * 0.12;
+    game.dragon = Math.min(
+      100,
+      game.dragon +
+        Math.round((count * 18 + game.combo * 7) * arenaMultiplier * furyMultiplier),
+    );
     showBanner(count >= 4 ? "Dragon clear!" : game.combo > 0 ? `Combo ×${game.combo + 1}` : "Line secured");
     playSound("clear");
   } else if (source === "lines") {
@@ -484,6 +638,7 @@ function resolveClear({ count, crystals }, source = "lines") {
 }
 
 function collectCrystals(amount) {
+  const previousEvolution = dragonEvolution();
   for (let index = 0; index < amount; index += 1) {
     game.levelCrystals += 1;
     save.totalCrystals += 1;
@@ -493,8 +648,14 @@ function collectCrystals(amount) {
     if (rewardCycle === 0) game.inventory.diamond += 1;
   }
   persistSave();
-  showBanner(amount > 1 ? `${amount} crystals recovered` : "Crystal recovered");
-  playSound("crystal");
+  const currentEvolution = dragonEvolution();
+  if (currentEvolution.stageIndex > previousEvolution.stageIndex) {
+    showBanner(`${currentEvolution.name} unlocked!`);
+    playSound("win");
+  } else {
+    showBanner(amount > 1 ? `${amount} crystals recovered` : "Crystal recovered");
+    playSound("crystal");
+  }
 }
 
 function addGarbageRow() {
@@ -511,9 +672,101 @@ function addGarbageRow() {
   );
 }
 
+function bossAttackBlocked(attackName) {
+  if (game.shieldCharges <= 0) return false;
+  game.shieldCharges -= 1;
+  showBanner(`Shield blocked ${attackName}`);
+  tone(720, 0.16, "square", 0.04);
+  tone(980, 0.18, "sine", 0.03, 0.08);
+  updateHUD();
+  return true;
+}
+
+function dropBossBlocks(count, color, type) {
+  const columns = Array.from({ length: BOARD_COLUMNS }, (_, index) => index);
+  for (let index = columns.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [columns[index], columns[swapIndex]] = [columns[swapIndex], columns[index]];
+  }
+
+  let placed = 0;
+  columns.some((column) => {
+    let row = BOARD_ROWS - 1;
+    while (row >= 0 && board[row][column]) row -= 1;
+    if (row >= 2) {
+      board[row][column] = { type, color, crystal: false };
+      placed += 1;
+    }
+    return placed >= count;
+  });
+}
+
+function triggerBossEvent() {
+  const boss = BOSSES[game.worldIndex];
+
+  if (game.worldIndex === 0 && game.piecesLocked % boss.interval === 0) {
+    if (bossAttackBlocked("gate chains")) return;
+    dropBossBlocks(4, "#d34263", "chain");
+    showBanner("Gate chains locked in!");
+    tone(86, 0.3, "sawtooth", 0.045);
+  }
+
+  if (
+    game.worldIndex === 1 &&
+    game.piecesLocked - game.lastClearPiece >= boss.interval
+  ) {
+    game.lastClearPiece = game.piecesLocked;
+    if (bossAttackBlocked("arena pressure")) return;
+    addGarbageRow();
+    showBanner("Champion pressure row!");
+    tone(92, 0.32, "square", 0.045);
+  }
+
+  if (game.worldIndex === 2 && game.piecesLocked % boss.interval === 0) {
+    if (bossAttackBlocked("golem stones")) return;
+    dropBossBlocks(5, "#778398", "golem");
+    showBanner("Golem stonefall!");
+    tone(62, 0.4, "triangle", 0.055);
+  }
+
+  if (game.worldIndex === 3 && game.piecesLocked % boss.interval === 0) {
+    if (bossAttackBlocked("rising lava")) return;
+    addGarbageRow();
+    showBanner("Lava Titan rises!");
+    tone(68, 0.42, "sawtooth", 0.055);
+  }
+
+  if (game.worldIndex === 4 && game.piecesLocked % 5 === 0) {
+    showBanner(game.piecesLocked % 2 === 0 ? "Serpent turns west!" : "Serpent turns east!");
+  }
+
+  if (game.worldIndex === 5 && game.piecesLocked % boss.interval === 0) {
+    const attackIndex = game.bossAttackCount % 3;
+    game.bossAttackCount += 1;
+    if (attackIndex === 0) {
+      if (bossAttackBlocked("citadel chains")) return;
+      dropBossBlocks(4, "#8d4fe8", "rune");
+      showBanner("Devourer: rune chains!");
+    } else if (attackIndex === 1) {
+      if (bossAttackBlocked("citadel lava")) return;
+      addGarbageRow();
+      showBanner("Devourer: lava surge!");
+    } else {
+      if (bossAttackBlocked("citadel storm")) return;
+      game.windBurst = 3;
+      showBanner("Devourer: storm armed!");
+    }
+    tone(72, 0.4, "sawtooth", 0.055);
+  }
+}
+
 function triggerWorldEvent() {
+  if (game.boss) {
+    triggerBossEvent();
+    return;
+  }
   const isLavaWorld = game.worldIndex === 3 || game.worldIndex === 5;
-  const interval = game.boss ? 6 : Math.max(7, 11 - game.stage);
+  const interval = Math.max(7, 11 - game.stage);
   if (isLavaWorld && game.piecesLocked % interval === 0) {
     addGarbageRow();
     showBanner("The floor rises!");
@@ -605,16 +858,17 @@ function useDiamond() {
 
 function unleashDragon() {
   if (!game.running || game.paused || game.dragon < 100) return;
+  const evolution = dragonEvolution();
   const occupiedRows = board
     .map((row, index) => ({ row, index }))
     .filter((entry) => entry.row.some(Boolean))
-    .slice(-2)
+    .slice(-evolution.waveRows)
     .map((entry) => entry.index);
   if (!occupiedRows.length) return;
   game.dragon = 0;
   const cleared = removeRows(occupiedRows);
   resolveClear(cleared, "dragon");
-  showBanner("RON MODE — DRAGON WAVE!");
+  showBanner(`RON MODE — ${evolution.waveRows}-ROW DRAGON WAVE!`);
   playSound("power");
 }
 
@@ -639,14 +893,18 @@ function startLevel(levelIndex) {
     combo: -1,
     dragon: 0,
     piecesLocked: 0,
+    lastClearPiece: 0,
+    bossAttackCount: 0,
+    shieldCharges: upgradeRank("shield"),
+    windBurst: 0,
     running: true,
     paused: false,
     slowUntil: 0,
     startedAt: performance.now(),
     inventory: {
-      pickaxe: 1 + (config.worldIndex >= 2 ? 1 : 0),
-      tnt: config.worldIndex >= 2 ? 1 : 0,
-      diamond: config.worldIndex >= 4 ? 1 : 0,
+      pickaxe: 1 + (config.worldIndex >= 2 ? 1 : 0) + upgradeRank("forge"),
+      tnt: (config.worldIndex >= 2 ? 1 : 0) + upgradeRank("blast"),
+      diamond: (config.worldIndex >= 4 ? 1 : 0) + upgradeRank("frost"),
     },
   });
 
@@ -662,6 +920,7 @@ function startLevel(levelIndex) {
   updateHUD();
   drawGame();
   playSound("power");
+  if (config.boss) showBanner(`${BOSSES[config.worldIndex].name} awakens!`);
   announce(`${WORLDS[game.worldIndex].name}, mission ${game.stage}.`);
   lastFrameTime = performance.now();
   lastHudUpdate = lastFrameTime;
@@ -690,13 +949,86 @@ function checkMissionComplete() {
   playSound("win");
 
   const finalMission = game.levelIndex === TOTAL_LEVELS - 1;
+  const completion = { finalMission, elapsedSeconds };
+  if (!save.rewardedLevels.includes(game.levelIndex)) {
+    showUpgradeReward(completion);
+  } else {
+    showCompletionModal(completion);
+  }
+}
+
+function chooseUpgradeOptions() {
+  const keys = Object.keys(UPGRADE_CATALOG);
+  for (let index = keys.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [keys[index], keys[swapIndex]] = [keys[swapIndex], keys[index]];
+  }
+  return keys.slice(0, 3);
+}
+
+function showUpgradeReward(completion) {
+  showModal({
+    icon: game.boss ? "♛" : "◆",
+    kicker: game.boss ? "Boss defeated" : "Mission complete",
+    title: "Choose Ron's reward",
+    copy: `${WORLDS[game.worldIndex].missions[game.stage - 1]} is secure. Pick one upgrade—it stays with the dragon for every future mission.`,
+    stats: [
+      ["Score", formatNumber(game.score)],
+      ["Lines", game.levelLines],
+      ["Time", formatTime(completion.elapsedSeconds)],
+    ],
+    primaryLabel: "Next mission",
+    primaryAction: () => {},
+    secondaryLabel: "Mission map",
+    secondaryAction: returnToMenu,
+  });
+
+  modalActions.hidden = true;
+  upgradeRewards.hidden = false;
+  gameModal.querySelector(".modal-card").classList.add("reward-mode");
+  upgradeChoices.replaceChildren();
+
+  chooseUpgradeOptions().forEach((upgradeKey) => {
+    const upgrade = UPGRADE_CATALOG[upgradeKey];
+    const button = document.createElement("button");
+    button.className = "upgrade-choice";
+    button.type = "button";
+    button.innerHTML = `
+      <span aria-hidden="true">${upgrade.icon}</span>
+      <strong>${upgrade.name}</strong>
+      <small>${upgrade.description}</small>
+      <em>Rank ${upgradeRank(upgradeKey)} → ${upgradeRank(upgradeKey) + 1}</em>
+    `;
+    button.addEventListener("click", () => claimUpgrade(upgradeKey, completion));
+    upgradeChoices.append(button);
+  });
+
+  upgradeChoices.querySelector("button")?.focus();
+}
+
+function claimUpgrade(upgradeKey, completion) {
+  save.upgrades[upgradeKey] = upgradeRank(upgradeKey) + 1;
+  if (!save.rewardedLevels.includes(game.levelIndex)) save.rewardedLevels.push(game.levelIndex);
+  persistSave();
+  playSound("power");
+  showCompletionModal(completion, UPGRADE_CATALOG[upgradeKey]);
+}
+
+function showCompletionModal(completion, reward = null) {
+  const { finalMission, elapsedSeconds } = completion;
   showModal({
     icon: finalMission ? "R" : "◆",
-    kicker: finalMission ? "Adventure complete" : "Mission complete",
-    title: finalMission ? "The Dragon Core lives!" : "Crystal secured!",
+    kicker: reward ? "Permanent upgrade secured" : finalMission ? "Adventure complete" : "Mission complete",
+    title: reward
+      ? `${reward.name} upgraded!`
+      : finalMission
+        ? "The Dragon Core lives!"
+        : "Crystal secured!",
     copy: finalMission
       ? "Ron restored every fragment and brought the Dragon Core home to Valbom. The worlds are open for replay."
-      : `${WORLDS[game.worldIndex].missions[game.stage - 1]} is complete. The next portal is ready.`,
+      : reward
+        ? `${reward.description} The next portal is ready.`
+        : `${WORLDS[game.worldIndex].missions[game.stage - 1]} is complete. The next portal is ready.`,
     stats: [
       ["Score", formatNumber(game.score)],
       ["Lines", game.levelLines],
@@ -916,27 +1248,54 @@ function drawPreviews() {
  * Rendering and overlays
  * ----------------------------------------------------------------------- */
 
+function bossStatusMessage() {
+  const boss = BOSSES[game.worldIndex];
+  if (game.worldIndex === 4) {
+    return game.piecesLocked % 2 === 0 ? "Next wind: east ⇒" : "Next wind: west ⇐";
+  }
+  const progress =
+    game.worldIndex === 1
+      ? game.piecesLocked - game.lastClearPiece
+      : game.piecesLocked % boss.interval;
+  const remaining = Math.max(1, boss.interval - progress);
+  return `${boss.status} in ${remaining} ${remaining === 1 ? "piece" : "pieces"}`;
+}
+
 function updateHUD() {
   const world = WORLDS[game.worldIndex];
+  const evolution = dragonEvolution();
+  const boss = BOSSES[game.worldIndex];
   worldName.textContent = world.name;
   levelName.textContent = `${game.boss ? "Boss" : "Mission"} ${game.levelIndex + 1} · ${world.missions[game.stage - 1]}`;
   scoreValue.textContent = formatNumber(game.score);
   missionTitle.textContent = world.missions[game.stage - 1];
   missionCopy.textContent = game.boss
-    ? "Boss mission: secure every target before the block storm closes the portal."
+    ? boss.description
     : "Clear lines and recover the glowing crystal blocks to open the next portal.";
   worldEffect.textContent = world.effect;
+  bossIntel.hidden = !game.boss;
+  bossStrip.hidden = !game.boss;
+  if (game.boss) {
+    bossName.textContent = boss.name;
+    bossStripName.textContent = boss.name;
+    bossCountdown.textContent = bossStatusMessage();
+  }
   lineProgress.textContent = `${game.levelLines} / ${game.targetLines}`;
   crystalProgress.textContent = `${game.levelCrystals} / ${game.targetCrystals}`;
   lineMeter.style.width = `${Math.min(100, (game.levelLines / game.targetLines) * 100)}%`;
   crystalMeter.style.width = `${Math.min(100, (game.levelCrystals / game.targetCrystals) * 100)}%`;
   comboValue.textContent = `×${Math.max(0, game.combo + 1)}`;
+  dragonPowerLabel.textContent = `${evolution.name} power`;
   dragonValue.textContent = `${game.dragon}%`;
   dragonFill.style.width = `${game.dragon}%`;
   dragonButton.disabled = game.dragon < 100 || !game.running || game.paused;
   pickaxeCount.textContent = `×${game.inventory.pickaxe}`;
   tntCount.textContent = `×${game.inventory.tnt}`;
   diamondCount.textContent = `×${game.inventory.diamond}`;
+  hudDragonName.textContent = evolution.name;
+  hudShieldCount.textContent = game.shieldCharges
+    ? `${game.shieldCharges} boss ${game.shieldCharges === 1 ? "shield" : "shields"}`
+    : "No shield";
   pickaxeButton.disabled = !canUsePower("pickaxe") || !board.flat().some(Boolean);
   tntButton.disabled = !canUsePower("tnt") || !board.flat().some(Boolean);
   diamondButton.disabled = !canUsePower("diamond") || game.slowUntil > performance.now();
@@ -947,9 +1306,18 @@ function updateHUD() {
 
 function renderMenu() {
   const completed = completedMissionCount();
+  const evolution = dragonEvolution();
   menuBestScore.textContent = formatNumber(save.highScore);
   menuCrystals.textContent = formatNumber(save.totalCrystals);
   menuMissions.textContent = `${completed} / ${TOTAL_LEVELS}`;
+  menuDragonName.textContent = evolution.name;
+  menuDragonAvatar.dataset.stage = String(evolution.stageIndex);
+  menuDragonAvatar.setAttribute("aria-label", evolution.name);
+  dragonEvolutionName.textContent = evolution.name;
+  dragonEvolutionFill.style.width = `${evolution.progress * 100}%`;
+  dragonEvolutionCopy.textContent = evolution.next
+    ? `Collect ${evolution.next.threshold - save.totalCrystals} more ${evolution.next.threshold - save.totalCrystals === 1 ? "crystal" : "crystals"} to evolve`
+    : "Maximum evolution unlocked";
   continueButton.textContent = completed ? "Continue adventure" : "Start adventure";
   worldGrid.replaceChildren();
 
@@ -998,6 +1366,9 @@ function showBanner(message) {
 }
 
 function showModal(options) {
+  upgradeRewards.hidden = true;
+  modalActions.hidden = false;
+  gameModal.querySelector(".modal-card").classList.remove("reward-mode");
   modalIcon.textContent = options.icon;
   modalKicker.textContent = options.kicker;
   modalTitle.textContent = options.title;
@@ -1020,6 +1391,9 @@ function showModal(options) {
 
 function hideModal() {
   gameModal.hidden = true;
+  upgradeRewards.hidden = true;
+  modalActions.hidden = false;
+  gameModal.querySelector(".modal-card").classList.remove("reward-mode");
   primaryModalAction = null;
   secondaryModalAction = null;
 }

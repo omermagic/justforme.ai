@@ -1,13 +1,13 @@
 "use strict";
 
-const CACHE_NAME = "ron-dragon-blocks-v4";
+const CACHE_NAME = "ron-dragon-blocks-v6";
 const GAME_ASSETS = [
   "./",
   "./index.html",
-  "./styles.css",
-  "./game.js",
+  "./styles.css?v=6",
+  "./game.js?v=6",
   "./manifest.webmanifest",
-  "./icon.svg"
+  "./icon.svg",
 ];
 
 self.addEventListener("install", (event) => {
@@ -28,29 +28,22 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-
-  if (event.request.mode === "navigate") {
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          const copy = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
-          return networkResponse;
-        })
-        .catch(() => caches.match("./index.html")),
-    );
-    return;
-  }
+  if (new URL(event.request.url).origin !== self.location.origin) return;
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200) return networkResponse;
-        const copy = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse?.status === 200) {
+          const cacheKey = event.request.mode === "navigate" ? "./index.html" : event.request;
+          const copy = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(cacheKey, copy));
+        }
         return networkResponse;
-      });
-    }),
+      })
+      .catch(() =>
+        event.request.mode === "navigate"
+          ? caches.match("./index.html")
+          : caches.match(event.request),
+      ),
   );
 });

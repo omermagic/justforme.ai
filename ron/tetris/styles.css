@@ -249,9 +249,9 @@ h1 span {
 
 .career-stats {
   display: grid;
-  max-width: 560px;
+  max-width: 650px;
   margin: 35px 0 0;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   border: 1px solid var(--line);
 }
 
@@ -277,6 +277,11 @@ h1 span {
   font-weight: 1000;
 }
 
+#menu-dragon-name {
+  color: var(--gold);
+  font-size: 15px;
+}
+
 .dragon-core {
   position: relative;
   display: grid;
@@ -285,6 +290,296 @@ h1 span {
   place-items: center;
   justify-self: center;
   perspective: 700px;
+}
+
+.dragon-avatar {
+  --dragon-color: #1689e8;
+  --dragon-light: #8fdfff;
+  position: relative;
+  z-index: 3;
+  width: 46%;
+  aspect-ratio: 1;
+  filter: drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.36));
+  animation: dragon-float 3.2s ease-in-out infinite;
+}
+
+.dragon-avatar[data-stage="1"] {
+  --dragon-color: #24a9ff;
+}
+
+.dragon-avatar[data-stage="3"] {
+  --dragon-color: #137eea;
+  --dragon-light: #b5efff;
+}
+
+.dragon-avatar[data-stage="4"] {
+  --dragon-color: #6657f4;
+  --dragon-light: #d2c7ff;
+  filter: drop-shadow(0 0 28px rgba(90, 204, 255, 0.8)) drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.36));
+}
+
+.dragon-avatar[data-stage="5"] {
+  --dragon-color: #7848ed;
+  --dragon-light: #fff0a8;
+  filter: drop-shadow(0 0 34px rgba(255, 210, 61, 0.78)) drop-shadow(10px 12px 0 rgba(0, 0, 0, 0.36));
+}
+
+.dragon-egg {
+  position: absolute;
+  inset: 11% 18% 4%;
+  overflow: hidden;
+  background: linear-gradient(145deg, var(--white), #8bd7ff 60%, var(--dragon-color));
+  border: 4px solid var(--white);
+  border-radius: 48% 48% 42% 42%;
+  box-shadow:
+    inset 12px 5px 0 rgba(255, 255, 255, 0.42),
+    inset -12px -9px 0 rgba(0, 42, 115, 0.25);
+}
+
+.dragon-egg::before,
+.dragon-egg::after,
+.dragon-egg i {
+  position: absolute;
+  width: 24%;
+  aspect-ratio: 1;
+  background: var(--dragon-color);
+  content: "";
+  transform: rotate(45deg);
+}
+
+.dragon-egg::before {
+  top: 26%;
+  left: 17%;
+}
+
+.dragon-egg::after {
+  right: 14%;
+  bottom: 20%;
+}
+
+.dragon-egg i {
+  right: 27%;
+  top: 15%;
+  width: 13%;
+}
+
+.dragon-egg b {
+  display: none;
+}
+
+.dragon-avatar[data-stage="1"] .dragon-egg b {
+  position: absolute;
+  top: 3%;
+  left: 43%;
+  display: block;
+  width: 7px;
+  height: 52%;
+  background: var(--navy);
+  clip-path: polygon(0 0, 100% 0, 48% 27%, 100% 43%, 25% 70%, 74% 100%, 0 100%, 34% 72%, 0 51%, 59% 26%);
+}
+
+.dragon-creature {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+
+.dragon-avatar:not([data-stage="0"]):not([data-stage="1"]) .dragon-egg {
+  display: none;
+}
+
+.dragon-avatar:not([data-stage="0"]):not([data-stage="1"]) .dragon-creature {
+  display: block;
+}
+
+.dragon-body,
+.dragon-head,
+.dragon-wing,
+.dragon-tail {
+  position: absolute;
+  background: var(--dragon-color);
+  border: 4px solid var(--white);
+  box-shadow: inset -8px -8px 0 rgba(0, 26, 92, 0.24);
+}
+
+.dragon-body {
+  right: 23%;
+  bottom: 10%;
+  left: 23%;
+  height: 48%;
+  clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
+}
+
+.dragon-head {
+  top: 12%;
+  right: 16%;
+  left: 16%;
+  height: 45%;
+}
+
+.dragon-eye {
+  position: absolute;
+  top: 34%;
+  width: 11%;
+  aspect-ratio: 1;
+  background: var(--gold);
+  border: 2px solid var(--white);
+  box-shadow: inset 3px 0 0 var(--navy);
+}
+
+.eye-left {
+  left: 18%;
+}
+
+.eye-right {
+  right: 18%;
+}
+
+.dragon-snout {
+  position: absolute;
+  right: 27%;
+  bottom: -12%;
+  left: 27%;
+  height: 32%;
+  background: var(--dragon-light);
+  border: 3px solid var(--white);
+}
+
+.dragon-snout::before,
+.dragon-snout::after {
+  position: absolute;
+  top: 35%;
+  width: 5px;
+  height: 5px;
+  background: var(--navy);
+  content: "";
+}
+
+.dragon-snout::before {
+  left: 25%;
+}
+
+.dragon-snout::after {
+  right: 25%;
+}
+
+.dragon-tail {
+  right: 3%;
+  bottom: 9%;
+  width: 38%;
+  height: 17%;
+  clip-path: polygon(0 0, 100% 32%, 70% 100%, 0 78%);
+}
+
+.dragon-wing {
+  top: 38%;
+  display: none;
+  width: 34%;
+  height: 42%;
+  background: var(--dragon-light);
+}
+
+.wing-left {
+  left: -4%;
+  clip-path: polygon(100% 0, 72% 100%, 40% 68%, 0 76%, 22% 14%);
+}
+
+.wing-right {
+  right: -4%;
+  clip-path: polygon(0 0, 28% 100%, 60% 68%, 100% 76%, 78% 14%);
+}
+
+.dragon-avatar[data-stage="3"] .dragon-wing,
+.dragon-avatar[data-stage="4"] .dragon-wing,
+.dragon-avatar[data-stage="5"] .dragon-wing {
+  display: block;
+}
+
+.dragon-horn {
+  position: absolute;
+  top: -28%;
+  display: none;
+  width: 22%;
+  height: 34%;
+  background: var(--gold);
+  border: 3px solid var(--white);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.horn-left {
+  left: 7%;
+}
+
+.horn-right {
+  right: 7%;
+}
+
+.dragon-avatar[data-stage="4"] .dragon-horn,
+.dragon-avatar[data-stage="5"] .dragon-horn {
+  display: block;
+}
+
+.dragon-crown {
+  position: absolute;
+  top: -34%;
+  left: 35%;
+  display: none;
+  width: 30%;
+  padding: 5px 0;
+  color: var(--navy);
+  background: var(--gold);
+  border: 3px solid var(--white);
+  font-size: 17px;
+  text-align: center;
+}
+
+.dragon-avatar[data-stage="5"] .dragon-crown {
+  display: block;
+}
+
+.dragon-evolution-card {
+  position: absolute;
+  right: 12%;
+  bottom: 2%;
+  left: 12%;
+  z-index: 5;
+  padding: 10px 12px;
+  background: rgba(2, 9, 27, 0.88);
+  border: 1px solid var(--line);
+  text-align: center;
+}
+
+.dragon-evolution-card strong,
+.dragon-evolution-card span {
+  display: block;
+}
+
+.dragon-evolution-card strong {
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.dragon-evolution-card span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.evolution-track {
+  height: 5px;
+  margin-top: 7px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.evolution-track i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue-bright), var(--gold));
+  transition: width 300ms ease;
 }
 
 .core-cube,
@@ -684,6 +979,32 @@ h1 span {
   color: var(--world-accent);
 }
 
+.boss-intel {
+  margin-top: 13px;
+  padding: 9px;
+  background: rgba(255, 73, 73, 0.1);
+  border: 1px solid rgba(255, 112, 92, 0.58);
+}
+
+.boss-intel span,
+.boss-intel strong {
+  display: block;
+}
+
+.boss-intel span {
+  color: #ff8f77;
+  font-size: 8px;
+  font-weight: 1000;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.boss-intel strong {
+  margin-top: 4px;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
 .board-column {
   width: min(100%, 330px);
 }
@@ -729,6 +1050,34 @@ h1 span {
 
 .event-banner.show {
   animation: banner-pass 1.25s ease both;
+}
+
+.boss-strip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 4;
+  display: flex;
+  padding: 6px 8px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: linear-gradient(90deg, rgba(110, 8, 35, 0.94), rgba(255, 73, 73, 0.84));
+  border-bottom: 2px solid #ffcc58;
+  pointer-events: none;
+  text-transform: uppercase;
+}
+
+.boss-strip span {
+  color: #ffd6cc;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.boss-strip strong {
+  font-size: 9px;
 }
 
 .dragon-meter {
@@ -801,6 +1150,39 @@ h1 span {
   max-width: 112px;
   height: auto;
   margin: 3px auto 0;
+}
+
+.companion-card {
+  margin-top: 9px;
+  padding: 9px;
+  background: linear-gradient(135deg, rgba(35, 155, 255, 0.16), rgba(255, 207, 63, 0.07));
+  border: 1px solid var(--line);
+}
+
+.companion-card span,
+.companion-card strong,
+.companion-card small {
+  display: block;
+}
+
+.companion-card span {
+  color: var(--muted);
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.companion-card strong {
+  margin-top: 4px;
+  color: var(--gold);
+  font-size: 10px;
+}
+
+.companion-card small {
+  margin-top: 3px;
+  color: var(--ice);
+  font-size: 8px;
 }
 
 .power-grid {
@@ -902,6 +1284,10 @@ h1 span {
   text-align: center;
 }
 
+.modal-card.reward-mode {
+  width: min(100%, 720px);
+}
+
 .modal-icon {
   display: grid;
   width: 70px;
@@ -964,6 +1350,79 @@ h1 span {
   justify-content: center;
 }
 
+.upgrade-rewards {
+  margin-top: 20px;
+}
+
+.upgrade-rewards > p {
+  margin-bottom: 10px;
+  color: var(--gold);
+  font-size: 9px;
+  font-weight: 1000;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.upgrade-choices {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.upgrade-choice {
+  min-height: 145px;
+  padding: 13px 10px;
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  text-align: left;
+}
+
+.upgrade-choice:hover,
+.upgrade-choice:focus-visible {
+  background: rgba(33, 143, 255, 0.2);
+  border-color: var(--gold);
+  transform: translateY(-3px);
+}
+
+.upgrade-choice > span,
+.upgrade-choice strong,
+.upgrade-choice small,
+.upgrade-choice em {
+  display: block;
+}
+
+.upgrade-choice > span {
+  min-height: 32px;
+  color: var(--world-accent);
+  font-size: 22px;
+  font-weight: 1000;
+}
+
+.upgrade-choice strong {
+  margin-top: 7px;
+  font-size: 11px;
+}
+
+.upgrade-choice small {
+  min-height: 38px;
+  margin-top: 5px;
+  color: #afc2df;
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.upgrade-choice em {
+  margin-top: 8px;
+  color: var(--gold);
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -979,6 +1438,12 @@ h1 span {
 @keyframes core-float {
   50% {
     transform: translateY(-14px) rotateX(56deg) rotateZ(45deg);
+  }
+}
+
+@keyframes dragon-float {
+  50% {
+    transform: translateY(-14px) rotate(-2deg);
   }
 }
 
@@ -1090,7 +1555,8 @@ h1 span {
 
   .mission-panel .panel-kicker,
   .mission-copy,
-  .world-effect {
+  .world-effect,
+  .boss-intel {
     display: none;
   }
 
@@ -1138,6 +1604,21 @@ h1 span {
 
   .preview-card canvas {
     width: 70px;
+  }
+
+  .companion-card {
+    padding: 5px;
+    text-align: center;
+  }
+
+  .companion-card span,
+  .companion-card small {
+    display: none;
+  }
+
+  .companion-card strong {
+    margin: 0;
+    font-size: 8px;
   }
 
   .power-grid {
@@ -1247,7 +1728,37 @@ h1 span {
   }
 
   .modal-card {
+    max-height: calc(100dvh - 24px);
     padding: 24px 17px;
+    overflow-y: auto;
+  }
+
+  .upgrade-choices {
+    grid-template-columns: 1fr;
+  }
+
+  .upgrade-choice {
+    display: grid;
+    min-height: 78px;
+    padding: 10px;
+    grid-template-columns: 38px 1fr;
+    align-items: center;
+    gap: 1px 8px;
+  }
+
+  .upgrade-choice > span {
+    min-height: 0;
+    grid-row: 1 / span 3;
+  }
+
+  .upgrade-choice strong,
+  .upgrade-choice small,
+  .upgrade-choice em {
+    margin-top: 0;
+  }
+
+  .upgrade-choice small {
+    min-height: 0;
   }
 }
 
