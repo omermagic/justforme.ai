@@ -578,7 +578,11 @@
       }
 
       .play-content {
-        padding: clamp(18px, 3vw, 32px);
+        padding: clamp(12px, 2vw, 22px);
+      }
+
+      .play-controls {
+        margin-bottom: 12px;
       }
 
       .boards {
@@ -589,10 +593,9 @@
 
       .board {
         display: flex;
-        min-height: 320px;
-        max-height: 440px;
+        min-height: 0;
         flex-direction: column;
-        padding: 16px;
+        padding: 10px;
         background: var(--card);
         border: 2px solid var(--ink);
         border-radius: 14px;
@@ -608,8 +611,8 @@
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        margin-bottom: 12px;
-        padding-bottom: 11px;
+        margin-bottom: 7px;
+        padding-bottom: 7px;
         border-bottom: 1px solid var(--line);
       }
 
@@ -627,32 +630,30 @@
 
       .guess-list {
         display: flex;
-        min-height: 0;
         flex: 1;
         flex-direction: column;
-        gap: 8px;
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        scrollbar-width: thin;
-      }
-
-      .empty-history {
-        display: grid;
-        min-height: 150px;
-        place-items: center;
-        color: var(--muted);
-        font-size: 11px;
-        text-align: center;
+        gap: 3px;
+        overflow: visible;
       }
 
       .guess-row {
         display: grid;
-        padding: 7px;
-        grid-template-columns: 20px minmax(0, 1fr) 50px;
+        min-height: 29px;
+        padding: 2px 6px;
+        grid-template-columns: 20px minmax(0, 1fr) 75px;
         align-items: center;
         gap: 8px;
         background: rgba(21, 22, 43, 0.035);
         border-radius: 9px;
+      }
+
+      .guess-row.placeholder {
+        background: transparent;
+        box-shadow: inset 0 0 0 1px rgba(21, 22, 43, 0.06);
+      }
+
+      .guess-row.placeholder .guess-number {
+        opacity: 0.5;
       }
 
       .guess-number {
@@ -667,14 +668,24 @@
       }
 
       .code-pegs .peg {
-        width: clamp(22px, 3.4vw, 31px);
+        width: clamp(19px, 2.2vw, 23px);
         border-width: 2px;
       }
 
+      .empty-code-peg {
+        width: clamp(19px, 2.2vw, 23px);
+        aspect-ratio: 1;
+        border: 1px dashed rgba(21, 22, 43, 0.17);
+        border-radius: 50%;
+        flex: 0 0 auto;
+      }
+
       .feedback {
-        display: grid;
-        width: 50px;
-        grid-template-columns: repeat(3, 11px);
+        display: flex;
+        width: 71px;
+        flex: 0 0 71px;
+        flex-flow: row nowrap;
+        align-items: center;
         justify-content: center;
         gap: 4px;
       }
@@ -683,6 +694,7 @@
         display: block;
         width: 11px;
         height: 11px;
+        flex: 0 0 11px;
         background: transparent;
         border: 2px solid rgba(21, 22, 43, 0.28);
         border-radius: 50%;
@@ -706,8 +718,8 @@
 
       .composer {
         display: grid;
-        margin-top: 18px;
-        padding: 16px;
+        margin-top: 0;
+        padding: 9px 12px;
         grid-template-columns: auto minmax(220px, 1fr) auto;
         align-items: center;
         gap: 15px;
@@ -751,7 +763,20 @@
       }
 
       .play-palette {
-        margin-top: 12px;
+        margin-top: 8px;
+      }
+
+      .play-tools {
+        display: flex;
+        margin-top: 8px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .play-tools .button-row,
+      .play-tools .legend {
+        margin: 0;
       }
 
       .legend {
@@ -950,8 +975,22 @@
         }
 
         .board {
-          min-height: 230px;
-          max-height: 330px;
+          min-height: 555px;
+          padding: 12px;
+        }
+
+        .board-heading {
+          margin-bottom: 10px;
+          padding-bottom: 9px;
+        }
+
+        .guess-list {
+          gap: 5px;
+        }
+
+        .guess-row {
+          min-height: 37px;
+          padding: 4px 7px;
         }
 
         .composer {
@@ -981,6 +1020,12 @@
           grid-template-columns: repeat(4, 1fr);
         }
 
+        .play-tools {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 8px;
+        }
+
         .color-button {
           justify-content: center;
           padding: 9px 4px;
@@ -988,6 +1033,51 @@
 
         .color-button .color-name {
           display: none;
+        }
+      }
+
+      @media (min-width: 721px) and (max-height: 850px) {
+        .page {
+          padding-block: 8px 0;
+        }
+
+        .topbar {
+          margin-bottom: 10px;
+        }
+
+        .brand-mark {
+          width: 32px;
+          height: 32px;
+        }
+
+        .intro {
+          top: 10px;
+          padding-block: 10px;
+        }
+
+        .game-card {
+          min-height: 0;
+        }
+
+        .match-header {
+          padding: 9px 20px;
+        }
+
+        .play-content {
+          padding: 10px 12px 12px;
+        }
+
+        .play-controls {
+          margin-bottom: 8px;
+        }
+
+        .guess-list {
+          gap: 2px;
+        }
+
+        .guess-row {
+          min-height: 27px;
+          padding-block: 1px;
         }
       }
 
@@ -1032,7 +1122,7 @@
         }
 
         .guess-row {
-          grid-template-columns: 17px minmax(0, 1fr) 50px;
+          grid-template-columns: 17px minmax(0, 1fr) 75px;
           gap: 4px;
         }
 
@@ -1197,6 +1287,48 @@
             </header>
 
             <div class="play-content">
+              <div class="play-controls">
+                <div class="composer" id="composer">
+                  <div class="composer-label">
+                    <strong id="composer-title">Your guess</strong>
+                    <span id="composer-note">Choose five colors</span>
+                  </div>
+                  <div class="guess-slots" id="guess-slots" aria-label="Current guess"></div>
+                  <button class="primary-button" id="guess-button" type="button" disabled>
+                    Guess
+                  </button>
+                </div>
+
+                <div
+                  class="palette play-palette"
+                  id="play-palette"
+                  aria-label="Choose guess colors"
+                ></div>
+
+                <div class="play-tools">
+                  <div class="button-row">
+                    <button class="small-button" id="undo-guess-button" type="button">Undo color</button>
+                    <button class="small-button" id="clear-guess-button" type="button">Clear guess</button>
+                    <button class="small-button" id="new-match-button" type="button">New match</button>
+                  </div>
+
+                  <div class="legend" aria-label="Feedback key">
+                    <span class="legend-item">
+                      <i class="feedback-peg exact" aria-hidden="true"></i>
+                      Black: exact
+                    </span>
+                    <span class="legend-item">
+                      <i class="feedback-peg color-only" aria-hidden="true"></i>
+                      White: right color, wrong position
+                    </span>
+                    <span class="legend-item">
+                      <i class="feedback-peg empty" aria-hidden="true"></i>
+                      Empty: no match
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               <div class="boards">
                 <section class="board active" id="human-board" aria-labelledby="human-board-title">
                   <div class="board-heading">
@@ -1213,40 +1345,6 @@
                   </div>
                   <div class="guess-list" id="computer-history"></div>
                 </section>
-              </div>
-
-              <div class="composer" id="composer">
-                <div class="composer-label">
-                  <strong id="composer-title">Your guess</strong>
-                  <span id="composer-note">Choose five colors</span>
-                </div>
-                <div class="guess-slots" id="guess-slots" aria-label="Current guess"></div>
-                <button class="primary-button" id="guess-button" type="button" disabled>
-                  Guess
-                </button>
-              </div>
-
-              <div class="palette play-palette" id="play-palette" aria-label="Choose guess colors"></div>
-
-              <div class="button-row">
-                <button class="small-button" id="undo-guess-button" type="button">Undo color</button>
-                <button class="small-button" id="clear-guess-button" type="button">Clear guess</button>
-                <button class="small-button" id="new-match-button" type="button">New match</button>
-              </div>
-
-              <div class="legend" aria-label="Feedback key">
-                <span class="legend-item">
-                  <i class="feedback-peg exact" aria-hidden="true"></i>
-                  Black: exact
-                </span>
-                <span class="legend-item">
-                  <i class="feedback-peg color-only" aria-hidden="true"></i>
-                  White: right color, wrong position
-                </span>
-                <span class="legend-item">
-                  <i class="feedback-peg empty" aria-hidden="true"></i>
-                  Empty: no match
-                </span>
               </div>
             </div>
           </div>
@@ -1289,6 +1387,7 @@
 
       const CODE_LENGTH = 5;
       const COLOR_COUNT = 8;
+      const BOARD_ROW_COUNT = 12;
       const STATS_KEY = "yuval_code_duel_stats_v1";
 
       const COLORS = [
@@ -1770,19 +1869,15 @@
         return container;
       }
 
-      function renderHistory(container, history, emptyMessage) {
+      function renderHistory(container, history) {
         container.replaceChildren();
-        if (!history.length) {
-          const empty = document.createElement("div");
-          empty.className = "empty-history";
-          empty.textContent = emptyMessage;
-          container.append(empty);
-          return;
-        }
+        const rowCount = Math.max(BOARD_ROW_COUNT, history.length);
 
-        history.forEach((entry, index) => {
+        for (let index = 0; index < rowCount; index += 1) {
+          const entry = history[index];
           const row = document.createElement("div");
-          row.className = "guess-row";
+          row.className = `guess-row${entry ? "" : " placeholder"}`;
+          row.setAttribute("aria-label", entry ? `Guess ${index + 1}` : `Guess ${index + 1}, empty`);
 
           const number = document.createElement("span");
           number.className = "guess-number";
@@ -1790,12 +1885,19 @@
 
           const code = document.createElement("div");
           code.className = "code-pegs";
-          entry.guess.forEach((colorIndex) => code.append(createPeg(colorIndex)));
+          if (entry) {
+            entry.guess.forEach((colorIndex) => code.append(createPeg(colorIndex)));
+          } else {
+            for (let position = 0; position < CODE_LENGTH; position += 1) {
+              const emptyPeg = document.createElement("span");
+              emptyPeg.className = "empty-code-peg";
+              code.append(emptyPeg);
+            }
+          }
 
-          row.append(number, code, createFeedback(entry.feedback));
+          row.append(number, code, createFeedback(entry?.feedback || { exact: 0, colorOnly: 0 }));
           container.append(row);
-        });
-        container.scrollTop = container.scrollHeight;
+        }
       }
 
       function renderSetup() {
@@ -1819,12 +1921,8 @@
         computerTurnCount.textContent = computerHistory.length;
 
         renderCode(guessSlots, currentGuess, "light");
-        renderHistory(humanHistoryElement, humanHistory, "Your first guess will appear here.");
-        renderHistory(
-          computerHistoryElement,
-          computerHistory,
-          "The computer answers after your first turn.",
-        );
+        renderHistory(humanHistoryElement, humanHistory);
+        renderHistory(computerHistoryElement, computerHistory);
 
         const guessComplete = currentGuess.length === CODE_LENGTH;
         guessButton.disabled = !isHumanTurn || !guessComplete;

@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "yuval-code-duel-v2";
+const CACHE_NAME = "yuval-code-duel-v6";
 const GAME_ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
