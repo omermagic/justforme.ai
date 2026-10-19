@@ -1489,25 +1489,55 @@ document.addEventListener("keydown", (event) => {
 });
 
 let repeatTimer = 0;
+let repeatDelayTimer = 0;
+let activeControlPointer = null;
+
+function stopControlRepeat(pointerId = null) {
+  if (
+    pointerId !== null &&
+    activeControlPointer !== null &&
+    pointerId !== activeControlPointer
+  ) {
+    return;
+  }
+  clearTimeout(repeatDelayTimer);
+  clearInterval(repeatTimer);
+  repeatDelayTimer = 0;
+  repeatTimer = 0;
+  activeControlPointer = null;
+  document
+    .querySelectorAll("[data-control].is-pressed")
+    .forEach((button) => button.classList.remove("is-pressed"));
+}
+
 document.querySelectorAll("[data-control]").forEach((button) => {
   const control = button.dataset.control;
-  const repeatable = ["left", "right", "down"].includes(control);
+  const repeatable = ["left", "right"].includes(control);
   button.addEventListener("pointerdown", (event) => {
     event.preventDefault();
+    stopControlRepeat();
+    activeControlPointer = event.pointerId;
+    button.classList.add("is-pressed");
+    button.setPointerCapture?.(event.pointerId);
     runControl(control);
     if (repeatable) {
-      clearInterval(repeatTimer);
-      window.setTimeout(() => {
-        if (button.matches(":active")) {
+      repeatDelayTimer = window.setTimeout(() => {
+        if (activeControlPointer === event.pointerId) {
           repeatTimer = window.setInterval(() => runControl(control), 85);
         }
       }, 210);
     }
   });
+
+  const releaseControl = (event) => stopControlRepeat(event.pointerId);
+  button.addEventListener("pointerup", releaseControl);
+  button.addEventListener("pointercancel", releaseControl);
+  button.addEventListener("lostpointercapture", releaseControl);
 });
 
-addEventListener("pointerup", () => clearInterval(repeatTimer));
-addEventListener("pointercancel", () => clearInterval(repeatTimer));
+addEventListener("pointerup", (event) => stopControlRepeat(event.pointerId));
+addEventListener("pointercancel", (event) => stopControlRepeat(event.pointerId));
+addEventListener("blur", () => stopControlRepeat());
 
 let gestureStart = null;
 gameCanvas.addEventListener("pointerdown", (event) => {
@@ -1533,6 +1563,14 @@ gameCanvas.addEventListener("pointerup", (event) => {
   gestureStart = null;
   drawGame();
   updateHUD();
+});
+
+gameCanvas.addEventListener("pointercancel", () => {
+  gestureStart = null;
+});
+
+gameCanvas.addEventListener("lostpointercapture", () => {
+  gestureStart = null;
 });
 
 /* --------------------------------------------------------------------------
@@ -1568,6 +1606,7 @@ modalPrimary.addEventListener("click", () => primaryModalAction?.());
 modalSecondary.addEventListener("click", () => secondaryModalAction?.());
 
 document.addEventListener("visibilitychange", () => {
+  if (document.hidden) stopControlRepeat();
   if (document.hidden && game.running && !game.paused) pauseGame();
 });
 
