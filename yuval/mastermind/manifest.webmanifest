@@ -1,0 +1,19 @@
+{
+  "name": "Code Duel for Yuval",
+  "short_name": "Code Duel",
+  "description": "An offline five-color code-breaking duel for Yuval.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#15162b",
+  "theme_color": "#15162b",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

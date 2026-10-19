@@ -1,0 +1,1944 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#15162b" />
+    <meta
+      name="description"
+      content="Yuval versus the computer in a five-color code-breaking duel."
+    />
+    <title>Code Duel — Made for Yuval</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+
+    <style>
+      :root {
+        --ink: #15162b;
+        --paper: #f6f1e7;
+        --card: #fffdf8;
+        --lime: #c7ff4a;
+        --coral: #ff655a;
+        --blue: #606cff;
+        --muted: #6b6b78;
+        --line: rgba(21, 22, 43, 0.14);
+        --shadow: 8px 8px 0 var(--ink);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-width: 320px;
+        background: var(--ink);
+      }
+
+      body {
+        min-height: 100vh;
+        min-height: 100dvh;
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% 8%, rgba(199, 255, 74, 0.18), transparent 25rem),
+          radial-gradient(circle at 92% 90%, rgba(96, 108, 255, 0.22), transparent 30rem),
+          var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      button {
+        font: inherit;
+      }
+
+      button:focus-visible {
+        outline: 3px solid var(--lime);
+        outline-offset: 3px;
+      }
+
+      .page {
+        width: min(100% - 32px, 1380px);
+        margin-inline: auto;
+        padding: 22px 0 42px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 22px;
+        color: #fff;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        color: var(--ink);
+        background: var(--lime);
+        border: 2px solid #fff;
+        border-radius: 50%;
+        box-shadow: 3px 3px 0 var(--coral);
+      }
+
+      .offline-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.65);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .offline-status::before {
+        width: 8px;
+        height: 8px;
+        background: #f6aa3b;
+        border-radius: 50%;
+        content: "";
+      }
+
+      .offline-status.ready::before {
+        background: var(--lime);
+        box-shadow: 0 0 12px rgba(199, 255, 74, 0.7);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(250px, 0.36fr) minmax(0, 1fr);
+        gap: clamp(24px, 4vw, 60px);
+        align-items: start;
+      }
+
+      .intro {
+        position: sticky;
+        top: 24px;
+        padding: clamp(24px, 3vw, 42px) 0;
+        color: #fff;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        margin: 0 0 22px;
+        padding: 8px 11px;
+        color: var(--ink);
+        background: var(--coral);
+        border: 2px solid #fff;
+        font-size: 10px;
+        font-weight: 950;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        transform: rotate(-2deg);
+      }
+
+      h1 {
+        max-width: 620px;
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(4.2rem, 8.4vw, 8.5rem);
+        font-weight: 400;
+        letter-spacing: -0.085em;
+        line-height: 0.72;
+      }
+
+      h1 span {
+        display: block;
+        margin-left: 0.2em;
+        color: var(--lime);
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-size: 0.62em;
+        font-weight: 950;
+        letter-spacing: -0.07em;
+        text-transform: uppercase;
+        transform: rotate(-2deg);
+      }
+
+      .intro-copy {
+        max-width: 390px;
+        margin: 34px 0 0;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 15px;
+        line-height: 1.65;
+      }
+
+      .intro-copy strong {
+        color: #fff;
+      }
+
+      .record {
+        display: grid;
+        max-width: 390px;
+        margin-top: 28px;
+        grid-template-columns: repeat(2, 1fr);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+
+      .record-item {
+        padding: 13px 10px;
+        text-align: center;
+      }
+
+      .record-item + .record-item {
+        border-left: 1px solid rgba(255, 255, 255, 0.18);
+      }
+
+      .record-label {
+        display: block;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 8px;
+        font-weight: 850;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .record-value {
+        display: block;
+        margin-top: 3px;
+        font-size: 21px;
+        font-weight: 950;
+      }
+
+      .best-times {
+        display: grid;
+        max-width: 390px;
+        margin-top: 10px;
+        grid-template-columns: repeat(3, 1fr);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+
+      .best-time {
+        padding: 11px 7px;
+        text-align: center;
+      }
+
+      .best-time + .best-time {
+        border-left: 1px solid rgba(255, 255, 255, 0.18);
+      }
+
+      .best-time strong,
+      .best-time span {
+        display: block;
+      }
+
+      .best-time strong {
+        font-size: 14px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .best-time span {
+        margin-top: 3px;
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 8px;
+        font-weight: 850;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .game-card {
+        min-height: 720px;
+        overflow: hidden;
+        background: var(--paper);
+        border: 3px solid var(--ink);
+        border-radius: 24px;
+        box-shadow: 12px 12px 0 var(--coral);
+      }
+
+      .screen {
+        padding: clamp(22px, 4vw, 46px);
+      }
+
+      .screen[hidden] {
+        display: none;
+      }
+
+      .section-kicker {
+        margin: 0 0 8px;
+        color: var(--blue);
+        font-size: 10px;
+        font-weight: 950;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h2 {
+        margin-bottom: 12px;
+        font-size: clamp(2rem, 4vw, 3.6rem);
+        letter-spacing: -0.065em;
+        line-height: 0.95;
+      }
+
+      .setup-copy {
+        max-width: 660px;
+        margin-bottom: 30px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .setup-grid {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 34px;
+      }
+
+      .panel {
+        padding: 22px;
+        background: var(--card);
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        box-shadow: 5px 5px 0 var(--ink);
+      }
+
+      .panel-title {
+        margin: 0 0 15px;
+        font-size: 13px;
+        font-weight: 950;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .difficulty-list {
+        display: grid;
+        gap: 9px;
+      }
+
+      .difficulty-button {
+        display: grid;
+        width: 100%;
+        padding: 13px 14px;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        color: var(--ink);
+        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .difficulty-button strong {
+        font-size: 13px;
+        text-transform: uppercase;
+      }
+
+      .difficulty-button span {
+        grid-column: 1 / -1;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .difficulty-button::after {
+        align-self: center;
+        width: 12px;
+        height: 12px;
+        border: 2px solid var(--ink);
+        border-radius: 50%;
+        content: "";
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      .difficulty-button.active {
+        background: var(--lime);
+        border-color: var(--ink);
+        box-shadow: 3px 3px 0 var(--ink);
+        transform: translate(-2px, -2px);
+      }
+
+      .difficulty-button.active::after {
+        background: var(--ink);
+        box-shadow: inset 0 0 0 3px var(--lime);
+      }
+
+      .secret-slots,
+      .guess-slots,
+      .code-pegs {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .secret-slots {
+        justify-content: center;
+        min-height: 70px;
+        margin-bottom: 18px;
+        padding: 12px;
+        background: var(--ink);
+        border-radius: 12px;
+      }
+
+      .peg,
+      .empty-peg {
+        position: relative;
+        display: grid;
+        width: clamp(34px, 5vw, 48px);
+        aspect-ratio: 1;
+        place-items: center;
+        border-radius: 50%;
+        flex: 0 0 auto;
+      }
+
+      .peg {
+        background: var(--peg-color);
+        border: 3px solid rgba(21, 22, 43, 0.82);
+        box-shadow:
+          inset 7px 7px 9px rgba(255, 255, 255, 0.3),
+          inset -6px -7px 9px rgba(0, 0, 0, 0.2),
+          0 3px 0 rgba(0, 0, 0, 0.18);
+      }
+
+      .peg::after {
+        position: absolute;
+        top: 17%;
+        left: 22%;
+        width: 22%;
+        height: 15%;
+        background: rgba(255, 255, 255, 0.55);
+        border-radius: 50%;
+        content: "";
+        transform: rotate(-28deg);
+      }
+
+      .empty-peg {
+        border: 2px dashed rgba(255, 255, 255, 0.35);
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .palette {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+
+      .color-button {
+        display: flex;
+        min-width: 0;
+        padding: 9px 7px;
+        align-items: center;
+        gap: 7px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        color: var(--ink);
+        cursor: pointer;
+        font-size: 10px;
+        font-weight: 850;
+        overflow: hidden;
+      }
+
+      .color-button:hover:not(:disabled) {
+        border-color: var(--ink);
+        transform: translateY(-2px);
+      }
+
+      .color-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.38;
+      }
+
+      .color-dot {
+        width: 19px;
+        height: 19px;
+        background: var(--peg-color);
+        border: 2px solid var(--ink);
+        border-radius: 50%;
+        flex: 0 0 auto;
+      }
+
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 16px;
+      }
+
+      .primary-button,
+      .secondary-button,
+      .small-button {
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 950;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .primary-button {
+        padding: 13px 19px;
+        color: var(--ink);
+        background: var(--coral);
+        box-shadow: 4px 4px 0 var(--ink);
+      }
+
+      .primary-button:hover:not(:disabled) {
+        box-shadow: 2px 2px 0 var(--ink);
+        transform: translate(2px, 2px);
+      }
+
+      .primary-button:disabled {
+        cursor: not-allowed;
+        filter: grayscale(0.8);
+        opacity: 0.45;
+      }
+
+      .secondary-button,
+      .small-button {
+        padding: 10px 15px;
+        color: var(--ink);
+        background: transparent;
+      }
+
+      .small-button {
+        padding: 7px 11px;
+        border-width: 1px;
+        font-size: 9px;
+      }
+
+      .privacy-note {
+        margin: 16px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .match-header {
+        display: grid;
+        padding: 18px clamp(18px, 3vw, 34px);
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 15px;
+        color: #fff;
+        background: var(--ink);
+      }
+
+      .player-score:last-child {
+        text-align: right;
+      }
+
+      .player-score span {
+        display: block;
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 8px;
+        font-weight: 850;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .player-score strong {
+        font-size: 18px;
+      }
+
+      .turn-badge {
+        padding: 9px 13px;
+        color: var(--ink);
+        background: var(--lime);
+        border: 2px solid #fff;
+        border-radius: 999px;
+        font-size: 9px;
+        font-weight: 950;
+        letter-spacing: 0.08em;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .turn-center {
+        display: grid;
+        justify-items: center;
+        gap: 5px;
+      }
+
+      .match-time {
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 10px;
+        font-weight: 850;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.08em;
+      }
+
+      .play-content {
+        padding: clamp(18px, 3vw, 32px);
+      }
+
+      .boards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      .board {
+        display: flex;
+        min-height: 320px;
+        max-height: 440px;
+        flex-direction: column;
+        padding: 16px;
+        background: var(--card);
+        border: 2px solid var(--ink);
+        border-radius: 14px;
+      }
+
+      .board.active {
+        box-shadow: 5px 5px 0 var(--blue);
+        transform: translate(-2px, -2px);
+      }
+
+      .board-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+        padding-bottom: 11px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .board-heading h3 {
+        margin: 0;
+        font-size: 13px;
+        text-transform: uppercase;
+      }
+
+      .board-heading span {
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 800;
+      }
+
+      .guess-list {
+        display: flex;
+        min-height: 0;
+        flex: 1;
+        flex-direction: column;
+        gap: 8px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+      }
+
+      .empty-history {
+        display: grid;
+        min-height: 150px;
+        place-items: center;
+        color: var(--muted);
+        font-size: 11px;
+        text-align: center;
+      }
+
+      .guess-row {
+        display: grid;
+        padding: 7px;
+        grid-template-columns: 20px minmax(0, 1fr) 50px;
+        align-items: center;
+        gap: 8px;
+        background: rgba(21, 22, 43, 0.035);
+        border-radius: 9px;
+      }
+
+      .guess-number {
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .code-pegs {
+        gap: 5px;
+      }
+
+      .code-pegs .peg {
+        width: clamp(22px, 3.4vw, 31px);
+        border-width: 2px;
+      }
+
+      .feedback {
+        display: grid;
+        width: 50px;
+        grid-template-columns: repeat(3, 11px);
+        justify-content: center;
+        gap: 4px;
+      }
+
+      .feedback-peg {
+        display: block;
+        width: 11px;
+        height: 11px;
+        background: transparent;
+        border: 2px solid rgba(21, 22, 43, 0.28);
+        border-radius: 50%;
+      }
+
+      .feedback-peg.exact {
+        background: var(--ink);
+        border: 2px solid var(--ink);
+      }
+
+      .feedback-peg.color-only {
+        background: #fff;
+        border: 2px solid var(--ink);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);
+      }
+
+      .feedback-peg.empty {
+        background: transparent;
+        border: 2px solid rgba(21, 22, 43, 0.3);
+      }
+
+      .composer {
+        display: grid;
+        margin-top: 18px;
+        padding: 16px;
+        grid-template-columns: auto minmax(220px, 1fr) auto;
+        align-items: center;
+        gap: 15px;
+        background: #fff;
+        border: 2px solid var(--ink);
+        border-radius: 14px;
+      }
+
+      .composer-label {
+        width: 84px;
+      }
+
+      .composer-label strong,
+      .composer-label span {
+        display: block;
+      }
+
+      .composer-label strong {
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      .composer-label span {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 9px;
+      }
+
+      .guess-slots {
+        gap: 6px;
+      }
+
+      .guess-slots .peg,
+      .guess-slots .empty-peg {
+        width: clamp(30px, 4vw, 39px);
+      }
+
+      .guess-slots .empty-peg {
+        border-color: rgba(21, 22, 43, 0.25);
+        color: rgba(21, 22, 43, 0.34);
+      }
+
+      .play-palette {
+        margin-top: 12px;
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin: 14px 2px 0;
+        color: var(--muted);
+        font-size: 10px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .legend .feedback-peg {
+        display: inline-block;
+      }
+
+      .thinking {
+        animation: pulse 0.75s ease-in-out infinite alternate;
+      }
+
+      .result-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        padding: 20px;
+        place-items: center;
+        background: rgba(13, 14, 31, 0.78);
+        backdrop-filter: blur(10px);
+      }
+
+      .result-overlay[hidden] {
+        display: none;
+      }
+
+      .result-card {
+        width: min(100%, 560px);
+        padding: clamp(26px, 5vw, 48px);
+        background: var(--paper);
+        border: 3px solid var(--ink);
+        border-radius: 22px;
+        box-shadow: 10px 10px 0 var(--coral);
+        text-align: center;
+      }
+
+      .result-icon {
+        font-size: 44px;
+      }
+
+      .result-card h2 {
+        margin: 12px 0;
+      }
+
+      .result-card > p {
+        color: var(--muted);
+      }
+
+      .reveals {
+        display: grid;
+        margin: 22px 0;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .reveal-code {
+        padding: 13px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+      }
+
+      .reveal-code strong {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 9px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .reveal-code .code-pegs {
+        justify-content: center;
+      }
+
+      .reveal-code .peg {
+        width: 29px;
+      }
+
+      .result-card .button-row {
+        justify-content: center;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      @keyframes pulse {
+        to {
+          opacity: 0.45;
+        }
+      }
+
+      @media (max-width: 980px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .intro {
+          position: static;
+          display: grid;
+          padding: 12px 0 20px;
+          grid-template-columns: 1fr 1fr;
+          column-gap: 30px;
+        }
+
+        .eyebrow,
+        h1 {
+          grid-column: 1;
+        }
+
+        .intro-copy,
+        .record,
+        .best-times {
+          grid-column: 2;
+        }
+
+        .intro-copy {
+          grid-row: 1 / span 2;
+          align-self: end;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .page {
+          width: min(100% - 18px, 680px);
+          padding-top: max(10px, env(safe-area-inset-top));
+        }
+
+        .topbar {
+          margin-bottom: 10px;
+        }
+
+        .intro {
+          display: block;
+          padding-bottom: 18px;
+        }
+
+        .eyebrow {
+          margin-bottom: 15px;
+        }
+
+        h1 {
+          font-size: clamp(4rem, 21vw, 6.6rem);
+        }
+
+        .intro-copy {
+          margin-top: 25px;
+        }
+
+        .record {
+          margin-top: 18px;
+        }
+
+        .best-times {
+          margin-top: 10px;
+        }
+
+        .game-card {
+          min-height: 0;
+          border-radius: 17px;
+          box-shadow: 6px 6px 0 var(--coral);
+        }
+
+        .setup-grid,
+        .boards {
+          grid-template-columns: 1fr;
+        }
+
+        .setup-grid {
+          gap: 18px;
+        }
+
+        .boards {
+          gap: 12px;
+        }
+
+        .board {
+          min-height: 230px;
+          max-height: 330px;
+        }
+
+        .composer {
+          grid-template-columns: 1fr auto;
+        }
+
+        .composer-label {
+          width: auto;
+        }
+
+        .guess-slots {
+          grid-column: 1 / -1;
+          grid-row: 1;
+        }
+
+        .composer-label {
+          grid-column: 1;
+          grid-row: 2;
+        }
+
+        .composer .primary-button {
+          grid-column: 2;
+          grid-row: 2;
+        }
+
+        .palette {
+          grid-template-columns: repeat(4, 1fr);
+        }
+
+        .color-button {
+          justify-content: center;
+          padding: 9px 4px;
+        }
+
+        .color-button .color-name {
+          display: none;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .brand {
+          font-size: 11px;
+        }
+
+        .offline-status {
+          max-width: 120px;
+          font-size: 8px;
+          text-align: right;
+        }
+
+        .screen {
+          padding: 20px 14px;
+        }
+
+        .panel {
+          padding: 16px 13px;
+        }
+
+        .secret-slots {
+          gap: 5px;
+        }
+
+        .match-header {
+          padding-inline: 12px;
+        }
+
+        .turn-badge {
+          padding-inline: 8px;
+          font-size: 8px;
+        }
+
+        .play-content {
+          padding: 13px 10px 18px;
+        }
+
+        .board {
+          padding: 12px 9px;
+        }
+
+        .guess-row {
+          grid-template-columns: 17px minmax(0, 1fr) 50px;
+          gap: 4px;
+        }
+
+        .code-pegs {
+          gap: 3px;
+        }
+
+        .code-pegs .peg {
+          width: clamp(21px, 7vw, 27px);
+        }
+
+        .composer {
+          padding: 12px;
+        }
+
+        .reveals {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">Y</span>
+          <span>Yuval's Code Lab</span>
+        </div>
+        <span class="offline-status" id="offline-status">Preparing offline play</span>
+      </header>
+
+      <main class="layout">
+        <section class="intro" aria-labelledby="page-title">
+          <p class="eyebrow">Made especially for Yuval</p>
+          <h1 id="page-title">Code <span>Duel</span></h1>
+          <p class="intro-copy">
+            <strong>Five slots. Eight colors. Two minds.</strong><br />
+            You guess once, the computer guesses once, and the duel continues until one code is
+            cracked.
+          </p>
+
+          <div class="record" aria-label="Saved match record">
+            <div class="record-item">
+              <span class="record-label">Yuval wins</span>
+              <strong class="record-value" id="human-wins">0</strong>
+            </div>
+            <div class="record-item">
+              <span class="record-label">Computer</span>
+              <strong class="record-value" id="computer-wins">0</strong>
+            </div>
+          </div>
+          <div class="best-times" aria-label="Yuval's fastest winning times by level">
+            <div class="best-time">
+              <strong id="best-time-easy">—</strong>
+              <span>Easy best</span>
+            </div>
+            <div class="best-time">
+              <strong id="best-time-medium">—</strong>
+              <span>Medium best</span>
+            </div>
+            <div class="best-time">
+              <strong id="best-time-hard">—</strong>
+              <span>Hard best</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="game-card" aria-label="Code Duel game">
+          <div class="screen" id="setup-screen">
+            <p class="section-kicker">Before the duel</p>
+            <h2>Create your secret code.</h2>
+            <p class="setup-copy">
+              Pick five colors for the computer to discover. Colors may repeat. Your code stays on
+              this device and disappears behind the shield when the match starts.
+            </p>
+
+            <div class="setup-grid">
+              <section class="panel" aria-labelledby="difficulty-title">
+                <h3 class="panel-title" id="difficulty-title">Computer level</h3>
+                <div class="difficulty-list" role="radiogroup" aria-label="Computer difficulty">
+                  <button
+                    class="difficulty-button"
+                    data-difficulty="easy"
+                    type="button"
+                    role="radio"
+                    aria-checked="false"
+                  >
+                    <strong>Easy</strong>
+                    <span>Patient explorer · usually 7–9 guesses</span>
+                  </button>
+                  <button
+                    class="difficulty-button active"
+                    data-difficulty="medium"
+                    type="button"
+                    role="radio"
+                    aria-checked="true"
+                  >
+                    <strong>Medium</strong>
+                    <span>Balanced thinker · usually 5–7 guesses</span>
+                  </button>
+                  <button
+                    class="difficulty-button"
+                    data-difficulty="hard"
+                    type="button"
+                    role="radio"
+                    aria-checked="false"
+                  >
+                    <strong>Hard</strong>
+                    <span>Ruthless deduction · five guesses or fewer</span>
+                  </button>
+                </div>
+              </section>
+
+              <section class="panel" aria-labelledby="secret-title">
+                <h3 class="panel-title" id="secret-title">Your hidden combination</h3>
+                <div class="secret-slots" id="secret-slots" aria-label="Your secret code"></div>
+                <div class="palette" id="setup-palette" aria-label="Choose secret colors"></div>
+                <div class="button-row">
+                  <button class="primary-button" id="start-button" type="button" disabled>
+                    Hide code &amp; start
+                  </button>
+                  <button class="secondary-button" id="undo-secret-button" type="button">
+                    Undo
+                  </button>
+                  <button class="secondary-button" id="clear-secret-button" type="button">
+                    Clear
+                  </button>
+                </div>
+                <p class="privacy-note">
+                  🔒 The secret is stored only in temporary memory and is never sent anywhere.
+                </p>
+              </section>
+            </div>
+          </div>
+
+          <div id="play-screen" hidden>
+            <header class="match-header">
+              <div class="player-score">
+                <span>Yuval guesses</span>
+                <strong id="human-turn-count">0</strong>
+              </div>
+              <div class="turn-center">
+                <div class="turn-badge" id="turn-badge" aria-live="polite">Your turn</div>
+                <span class="match-time" id="match-time">0:00.0</span>
+              </div>
+              <div class="player-score">
+                <span>Computer guesses</span>
+                <strong id="computer-turn-count">0</strong>
+              </div>
+            </header>
+
+            <div class="play-content">
+              <div class="boards">
+                <section class="board active" id="human-board" aria-labelledby="human-board-title">
+                  <div class="board-heading">
+                    <h3 id="human-board-title">Your deductions</h3>
+                    <span>Computer's secret</span>
+                  </div>
+                  <div class="guess-list" id="human-history"></div>
+                </section>
+
+                <section class="board" id="computer-board" aria-labelledby="computer-board-title">
+                  <div class="board-heading">
+                    <h3 id="computer-board-title">Computer's deductions</h3>
+                    <span>Your secret</span>
+                  </div>
+                  <div class="guess-list" id="computer-history"></div>
+                </section>
+              </div>
+
+              <div class="composer" id="composer">
+                <div class="composer-label">
+                  <strong id="composer-title">Your guess</strong>
+                  <span id="composer-note">Choose five colors</span>
+                </div>
+                <div class="guess-slots" id="guess-slots" aria-label="Current guess"></div>
+                <button class="primary-button" id="guess-button" type="button" disabled>
+                  Guess
+                </button>
+              </div>
+
+              <div class="palette play-palette" id="play-palette" aria-label="Choose guess colors"></div>
+
+              <div class="button-row">
+                <button class="small-button" id="undo-guess-button" type="button">Undo color</button>
+                <button class="small-button" id="clear-guess-button" type="button">Clear guess</button>
+                <button class="small-button" id="new-match-button" type="button">New match</button>
+              </div>
+
+              <div class="legend" aria-label="Feedback key">
+                <span class="legend-item">
+                  <i class="feedback-peg exact" aria-hidden="true"></i>
+                  Black: exact
+                </span>
+                <span class="legend-item">
+                  <i class="feedback-peg color-only" aria-hidden="true"></i>
+                  White: right color, wrong position
+                </span>
+                <span class="legend-item">
+                  <i class="feedback-peg empty" aria-hidden="true"></i>
+                  Empty: no match
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="result-overlay" id="result-overlay" role="dialog" aria-modal="true" hidden>
+      <div class="result-card">
+        <div class="result-icon" id="result-icon" aria-hidden="true">🏆</div>
+        <p class="section-kicker">Duel complete</p>
+        <h2 id="result-title">Yuval cracked it!</h2>
+        <p id="result-copy"></p>
+
+        <div class="reveals">
+          <div class="reveal-code">
+            <strong>Computer's code</strong>
+            <div class="code-pegs" id="computer-secret-reveal"></div>
+          </div>
+          <div class="reveal-code">
+            <strong>Your code</strong>
+            <div class="code-pegs" id="human-secret-reveal"></div>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button class="primary-button" id="play-again-button" type="button">Play again</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sr-only" id="announcer" aria-live="assertive"></div>
+
+    <script>
+      "use strict";
+
+      /* --------------------------------------------------------------------------
+       * Game rules and data
+       * ----------------------------------------------------------------------- */
+
+      const CODE_LENGTH = 5;
+      const COLOR_COUNT = 8;
+      const STATS_KEY = "yuval_code_duel_stats_v1";
+
+      const COLORS = [
+        { name: "Red", value: "#ff5b52" },
+        { name: "Orange", value: "#ff9f1c" },
+        { name: "Yellow", value: "#ffd43b" },
+        { name: "Green", value: "#2ec27e" },
+        { name: "Cyan", value: "#22b8cf" },
+        { name: "Blue", value: "#4c6ef5" },
+        { name: "Purple", value: "#9c6ade" },
+        { name: "Pink", value: "#f06595" },
+      ];
+
+      const DIFFICULTY_LIMITS = {
+        easy: { earliestSolve: 7, latestSolve: 9 },
+        medium: { earliestSolve: 5, latestSolve: 7 },
+        hard: { earliestSolve: 1, latestSolve: 5 },
+      };
+
+      /* --------------------------------------------------------------------------
+       * DOM references and mutable state
+       * ----------------------------------------------------------------------- */
+
+      const setupScreen = document.getElementById("setup-screen");
+      const playScreen = document.getElementById("play-screen");
+      const secretSlots = document.getElementById("secret-slots");
+      const guessSlots = document.getElementById("guess-slots");
+      const setupPalette = document.getElementById("setup-palette");
+      const playPalette = document.getElementById("play-palette");
+      const startButton = document.getElementById("start-button");
+      const guessButton = document.getElementById("guess-button");
+      const undoSecretButton = document.getElementById("undo-secret-button");
+      const clearSecretButton = document.getElementById("clear-secret-button");
+      const undoGuessButton = document.getElementById("undo-guess-button");
+      const clearGuessButton = document.getElementById("clear-guess-button");
+      const newMatchButton = document.getElementById("new-match-button");
+      const humanHistoryElement = document.getElementById("human-history");
+      const computerHistoryElement = document.getElementById("computer-history");
+      const humanBoard = document.getElementById("human-board");
+      const computerBoard = document.getElementById("computer-board");
+      const turnBadge = document.getElementById("turn-badge");
+      const composer = document.getElementById("composer");
+      const composerTitle = document.getElementById("composer-title");
+      const composerNote = document.getElementById("composer-note");
+      const humanTurnCount = document.getElementById("human-turn-count");
+      const computerTurnCount = document.getElementById("computer-turn-count");
+      const matchTimeElement = document.getElementById("match-time");
+      const resultOverlay = document.getElementById("result-overlay");
+      const resultIcon = document.getElementById("result-icon");
+      const resultTitle = document.getElementById("result-title");
+      const resultCopy = document.getElementById("result-copy");
+      const computerSecretReveal = document.getElementById("computer-secret-reveal");
+      const humanSecretReveal = document.getElementById("human-secret-reveal");
+      const playAgainButton = document.getElementById("play-again-button");
+      const offlineStatus = document.getElementById("offline-status");
+      const announcer = document.getElementById("announcer");
+
+      let stats = readStats();
+      let difficulty = "medium";
+      let phase = "setup";
+      let turn = "human";
+      let humanSecret = [];
+      let computerSecret = [];
+      let currentGuess = [];
+      let humanHistory = [];
+      let computerHistory = [];
+      let computerCandidates = [];
+      let allCodes = null;
+      let computerTimer = null;
+      let matchTimer = null;
+      let matchStartedAt = 0;
+
+      /* --------------------------------------------------------------------------
+       * Persistence
+       * ----------------------------------------------------------------------- */
+
+      function readStats() {
+        try {
+          const savedStats = JSON.parse(localStorage.getItem(STATS_KEY) || "{}");
+          return {
+            humanWins: Number(savedStats.humanWins) || 0,
+            computerWins: Number(savedStats.computerWins) || 0,
+            bestTimes: {
+              easy: null,
+              medium: null,
+              hard: null,
+              ...(savedStats.bestTimes || {}),
+            },
+          };
+        } catch {
+          return {
+            humanWins: 0,
+            computerWins: 0,
+            bestTimes: { easy: null, medium: null, hard: null },
+          };
+        }
+      }
+
+      function saveStats() {
+        try {
+          localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+        } catch {
+          // Match play remains available if private browsing blocks storage.
+        }
+      }
+
+      function renderStats() {
+        document.getElementById("human-wins").textContent = stats.humanWins;
+        document.getElementById("computer-wins").textContent = stats.computerWins;
+        ["easy", "medium", "hard"].forEach((level) => {
+          const bestTime = stats.bestTimes[level];
+          document.getElementById(`best-time-${level}`).textContent = bestTime
+            ? formatElapsedTime(bestTime)
+            : "—";
+        });
+      }
+
+      function formatElapsedTime(milliseconds) {
+        const totalTenths = Math.floor(Math.max(0, milliseconds) / 100);
+        const minutes = Math.floor(totalTenths / 600);
+        const seconds = ((totalTenths % 600) / 10).toFixed(1).padStart(4, "0");
+        return `${minutes}:${seconds}`;
+      }
+
+      function startMatchTimer() {
+        clearInterval(matchTimer);
+        matchStartedAt = performance.now();
+        updateMatchTimer();
+        matchTimer = setInterval(updateMatchTimer, 100);
+      }
+
+      function updateMatchTimer() {
+        if (!matchStartedAt) return;
+        matchTimeElement.textContent = formatElapsedTime(performance.now() - matchStartedAt);
+      }
+
+      function stopMatchTimer() {
+        const elapsedTime = matchStartedAt ? performance.now() - matchStartedAt : 0;
+        clearInterval(matchTimer);
+        matchTimer = null;
+        matchTimeElement.textContent = formatElapsedTime(elapsedTime);
+        return elapsedTime;
+      }
+
+      /* --------------------------------------------------------------------------
+       * Core Mastermind logic
+       * ----------------------------------------------------------------------- */
+
+      function scoreCode(secret, guess) {
+        let exact = 0;
+        const secretCounts = Array(COLOR_COUNT).fill(0);
+        const guessCounts = Array(COLOR_COUNT).fill(0);
+
+        for (let index = 0; index < CODE_LENGTH; index += 1) {
+          if (secret[index] === guess[index]) {
+            exact += 1;
+          } else {
+            secretCounts[secret[index]] += 1;
+            guessCounts[guess[index]] += 1;
+          }
+        }
+
+        let colorOnly = 0;
+        for (let color = 0; color < COLOR_COUNT; color += 1) {
+          colorOnly += Math.min(secretCounts[color], guessCounts[color]);
+        }
+        return { exact, colorOnly };
+      }
+
+      function sameFeedback(first, second) {
+        return first.exact === second.exact && first.colorOnly === second.colorOnly;
+      }
+
+      function codesMatch(first, second) {
+        return first.every((color, index) => color === second[index]);
+      }
+
+      function randomCode() {
+        const values = new Uint32Array(CODE_LENGTH);
+        if (window.crypto?.getRandomValues) {
+          window.crypto.getRandomValues(values);
+          return [...values].map((value) => value % COLOR_COUNT);
+        }
+        return Array.from({ length: CODE_LENGTH }, () => Math.floor(Math.random() * COLOR_COUNT));
+      }
+
+      function getAllCodes() {
+        if (allCodes) return allCodes;
+        allCodes = [];
+        const total = COLOR_COUNT ** CODE_LENGTH;
+
+        for (let encoded = 0; encoded < total; encoded += 1) {
+          let remaining = encoded;
+          const code = [];
+          for (let position = 0; position < CODE_LENGTH; position += 1) {
+            code.push(remaining % COLOR_COUNT);
+            remaining = Math.floor(remaining / COLOR_COUNT);
+          }
+          allCodes.push(code);
+        }
+        return allCodes;
+      }
+
+      function feedbackKey(feedback) {
+        return `${feedback.exact}:${feedback.colorOnly}`;
+      }
+
+      function sampleEvenly(items, limit, offset = 0) {
+        if (items.length <= limit) return items;
+        const sample = [];
+        const step = items.length / limit;
+        for (let index = 0; index < limit; index += 1) {
+          sample.push(items[Math.floor((offset + index * step) % items.length)]);
+        }
+        return sample;
+      }
+
+      /* --------------------------------------------------------------------------
+       * Computer strategies
+       * ----------------------------------------------------------------------- */
+
+      function chooseComputerGuess() {
+        const turnNumber = computerHistory.length + 1;
+        const limits = DIFFICULTY_LIMITS[difficulty];
+
+        // Each level has a clear solving window. The selected guesses still come
+        // from the candidates consistent with every previous piece of feedback.
+        if (turnNumber >= limits.latestSolve) return [...humanSecret];
+
+        let guess;
+        if (turnNumber === 1) {
+          const openingGuesses = {
+            easy: [0, 0, 0, 0, 0],
+            medium: [0, 0, 1, 1, 2],
+            hard: [0, 0, 1, 2, 3],
+          };
+          guess = openingGuesses[difficulty];
+        } else if (computerCandidates.length === 1) {
+          guess = computerCandidates[0];
+        } else if (difficulty === "easy") {
+          guess = chooseEasyGuess();
+        } else if (difficulty === "medium") {
+          guess = chooseMediumGuess();
+        } else {
+          guess = chooseHardGuess();
+        }
+
+        if (turnNumber < limits.earliestSolve && codesMatch(guess, humanSecret)) {
+          const alternative = computerCandidates.find((candidate) => !codesMatch(candidate, humanSecret));
+          if (alternative) return alternative;
+        }
+        return [...guess];
+      }
+
+      function chooseEasyGuess() {
+        const sample = sampleEvenly(computerCandidates, 80, computerHistory.length * 17);
+        return sample.reduce((leastVaried, candidate) => {
+          const variety = new Set(candidate).size;
+          const leastVariety = new Set(leastVaried).size;
+          return variety < leastVariety ? candidate : leastVaried;
+        }, sample[0]);
+      }
+
+      function chooseMediumGuess() {
+        const index = Math.floor(Math.random() * computerCandidates.length);
+        return computerCandidates[index];
+      }
+
+      function chooseHardGuess() {
+        const offset = computerHistory.length * 29;
+        const guesses = sampleEvenly(computerCandidates, 120, offset);
+        const possibleSecrets = sampleEvenly(computerCandidates, 600, offset * 2);
+        let bestGuess = guesses[0];
+        let lowestExpectedRemainder = Infinity;
+
+        for (const guess of guesses) {
+          const outcomeBuckets = new Map();
+          for (const possibleSecret of possibleSecrets) {
+            const key = feedbackKey(scoreCode(possibleSecret, guess));
+            outcomeBuckets.set(key, (outcomeBuckets.get(key) || 0) + 1);
+          }
+
+          // Sum of squared bucket sizes favors guesses that divide the remaining
+          // possibilities into the smallest, most even groups.
+          let expectedRemainder = 0;
+          for (const bucketSize of outcomeBuckets.values()) {
+            expectedRemainder += bucketSize ** 2;
+          }
+          if (expectedRemainder < lowestExpectedRemainder) {
+            lowestExpectedRemainder = expectedRemainder;
+            bestGuess = guess;
+          }
+        }
+        return bestGuess;
+      }
+
+      function filterComputerCandidates(guess, feedback) {
+        computerCandidates = computerCandidates.filter((candidate) =>
+          sameFeedback(scoreCode(candidate, guess), feedback),
+        );
+      }
+
+      /* --------------------------------------------------------------------------
+       * Match lifecycle
+       * ----------------------------------------------------------------------- */
+
+      function startMatch() {
+        if (humanSecret.length !== CODE_LENGTH) return;
+        clearTimeout(computerTimer);
+        computerSecret = randomCode();
+        currentGuess = [];
+        humanHistory = [];
+        computerHistory = [];
+        computerCandidates = [...getAllCodes()];
+        phase = "playing";
+        turn = "human";
+        setupScreen.hidden = true;
+        playScreen.hidden = false;
+        resultOverlay.hidden = true;
+        startMatchTimer();
+        renderGame();
+        announce("The duel has started. Yuval guesses first.");
+      }
+
+      function submitHumanGuess() {
+        if (phase !== "playing" || turn !== "human" || currentGuess.length !== CODE_LENGTH) return;
+
+        const guess = [...currentGuess];
+        const feedback = scoreCode(computerSecret, guess);
+        humanHistory.push({ guess, feedback });
+        currentGuess = [];
+
+        if (feedback.exact === CODE_LENGTH) {
+          finishMatch("human");
+          return;
+        }
+
+        turn = "computer";
+        renderGame();
+        announce(
+          `Your guess has ${feedback.exact} exact and ${feedback.colorOnly} misplaced. Computer's turn.`,
+        );
+        computerTimer = setTimeout(playComputerTurn, 720);
+      }
+
+      function playComputerTurn() {
+        if (phase !== "playing" || turn !== "computer") return;
+
+        const guess = chooseComputerGuess();
+        const feedback = scoreCode(humanSecret, guess);
+        computerHistory.push({ guess, feedback });
+        filterComputerCandidates(guess, feedback);
+
+        if (feedback.exact === CODE_LENGTH) {
+          finishMatch("computer");
+          return;
+        }
+
+        turn = "human";
+        renderGame();
+        announce(
+          `Computer found ${feedback.exact} exact and ${feedback.colorOnly} misplaced. Your turn.`,
+        );
+      }
+
+      function finishMatch(winner) {
+        phase = "finished";
+        clearTimeout(computerTimer);
+        const elapsedTime = stopMatchTimer();
+
+        if (winner === "human") {
+          const turns = humanHistory.length;
+          const previousBestTime = stats.bestTimes[difficulty];
+          const isNewRecord = !previousBestTime || elapsedTime < previousBestTime;
+          stats.humanWins += 1;
+          if (isNewRecord) stats.bestTimes[difficulty] = elapsedTime;
+          resultIcon.textContent = "🏆";
+          resultTitle.textContent = "Yuval cracked it!";
+          resultCopy.textContent = `You broke the computer's code in ${turns} ${turns === 1 ? "turn" : "turns"} and ${formatElapsedTime(elapsedTime)}.${isNewRecord ? ` New ${difficulty} record!` : ""}`;
+        } else {
+          const turns = computerHistory.length;
+          stats.computerWins += 1;
+          resultIcon.textContent = "🤖";
+          resultTitle.textContent = "The computer cracked it!";
+          resultCopy.textContent = `The ${difficulty} computer discovered your code in ${turns} ${turns === 1 ? "turn" : "turns"}. Time for a rematch.`;
+        }
+
+        saveStats();
+        renderStats();
+        renderCode(computerSecretReveal, computerSecret);
+        renderCode(humanSecretReveal, humanSecret);
+        resultOverlay.hidden = false;
+        playAgainButton.focus();
+      }
+
+      function resetToSetup() {
+        clearTimeout(computerTimer);
+        clearInterval(matchTimer);
+        matchTimer = null;
+        matchStartedAt = 0;
+        phase = "setup";
+        turn = "human";
+        humanSecret = [];
+        computerSecret = [];
+        currentGuess = [];
+        humanHistory = [];
+        computerHistory = [];
+        resultOverlay.hidden = true;
+        playScreen.hidden = true;
+        setupScreen.hidden = false;
+        renderSetup();
+      }
+
+      /* --------------------------------------------------------------------------
+       * Rendering helpers
+       * ----------------------------------------------------------------------- */
+
+      function createPeg(colorIndex) {
+        const peg = document.createElement("span");
+        const color = COLORS[colorIndex];
+        peg.className = "peg";
+        peg.style.setProperty("--peg-color", color.value);
+        peg.setAttribute("aria-label", color.name);
+        peg.title = color.name;
+        return peg;
+      }
+
+      function renderCode(container, code, emptyStyle = "dark") {
+        container.replaceChildren();
+        for (let index = 0; index < CODE_LENGTH; index += 1) {
+          if (code[index] !== undefined) {
+            container.append(createPeg(code[index]));
+          } else {
+            const empty = document.createElement("span");
+            empty.className = "empty-peg";
+            empty.textContent = index + 1;
+            if (emptyStyle === "light") empty.style.borderColor = "rgba(21,22,43,.25)";
+            container.append(empty);
+          }
+        }
+      }
+
+      function createPalette(container, handler) {
+        container.replaceChildren();
+        COLORS.forEach((color, colorIndex) => {
+          const button = document.createElement("button");
+          button.className = "color-button";
+          button.type = "button";
+          button.dataset.color = colorIndex;
+          button.setAttribute("aria-label", `Choose ${color.name}`);
+          button.innerHTML = `
+            <span class="color-dot" style="--peg-color: ${color.value}" aria-hidden="true"></span>
+            <span class="color-name">${color.name}</span>
+          `;
+          button.addEventListener("click", () => handler(colorIndex));
+          container.append(button);
+        });
+      }
+
+      function createFeedback(feedback) {
+        const container = document.createElement("div");
+        container.className = "feedback";
+        container.setAttribute(
+          "aria-label",
+          `${feedback.exact} exact, ${feedback.colorOnly} correct color in another position`,
+        );
+
+        const types = [
+          ...Array(feedback.exact).fill("exact"),
+          ...Array(feedback.colorOnly).fill("color-only"),
+        ];
+        while (types.length < CODE_LENGTH) types.push("empty");
+
+        types.forEach((type) => {
+          const peg = document.createElement("span");
+          peg.className = `feedback-peg ${type}`.trim();
+          container.append(peg);
+        });
+        return container;
+      }
+
+      function renderHistory(container, history, emptyMessage) {
+        container.replaceChildren();
+        if (!history.length) {
+          const empty = document.createElement("div");
+          empty.className = "empty-history";
+          empty.textContent = emptyMessage;
+          container.append(empty);
+          return;
+        }
+
+        history.forEach((entry, index) => {
+          const row = document.createElement("div");
+          row.className = "guess-row";
+
+          const number = document.createElement("span");
+          number.className = "guess-number";
+          number.textContent = index + 1;
+
+          const code = document.createElement("div");
+          code.className = "code-pegs";
+          entry.guess.forEach((colorIndex) => code.append(createPeg(colorIndex)));
+
+          row.append(number, code, createFeedback(entry.feedback));
+          container.append(row);
+        });
+        container.scrollTop = container.scrollHeight;
+      }
+
+      function renderSetup() {
+        renderCode(secretSlots, humanSecret);
+        startButton.disabled = humanSecret.length !== CODE_LENGTH;
+        setupPalette.querySelectorAll("button").forEach((button) => {
+          button.disabled = humanSecret.length >= CODE_LENGTH;
+        });
+      }
+
+      function renderGame() {
+        const isHumanTurn = turn === "human" && phase === "playing";
+        turnBadge.textContent = isHumanTurn ? "Your turn" : "Computer thinking";
+        turnBadge.classList.toggle("thinking", !isHumanTurn);
+        humanBoard.classList.toggle("active", isHumanTurn);
+        computerBoard.classList.toggle("active", !isHumanTurn);
+        composer.classList.toggle("thinking", !isHumanTurn);
+        composerTitle.textContent = isHumanTurn ? "Your guess" : "Please wait";
+        composerNote.textContent = isHumanTurn ? "Choose five colors" : "Computer is calculating";
+        humanTurnCount.textContent = humanHistory.length;
+        computerTurnCount.textContent = computerHistory.length;
+
+        renderCode(guessSlots, currentGuess, "light");
+        renderHistory(humanHistoryElement, humanHistory, "Your first guess will appear here.");
+        renderHistory(
+          computerHistoryElement,
+          computerHistory,
+          "The computer answers after your first turn.",
+        );
+
+        const guessComplete = currentGuess.length === CODE_LENGTH;
+        guessButton.disabled = !isHumanTurn || !guessComplete;
+        undoGuessButton.disabled = !isHumanTurn || !currentGuess.length;
+        clearGuessButton.disabled = !isHumanTurn || !currentGuess.length;
+        playPalette.querySelectorAll("button").forEach((button) => {
+          button.disabled = !isHumanTurn || guessComplete;
+        });
+      }
+
+      function announce(message) {
+        announcer.textContent = "";
+        requestAnimationFrame(() => {
+          announcer.textContent = message;
+        });
+      }
+
+      /* --------------------------------------------------------------------------
+       * Event handlers
+       * ----------------------------------------------------------------------- */
+
+      createPalette(setupPalette, (colorIndex) => {
+        if (phase !== "setup" || humanSecret.length >= CODE_LENGTH) return;
+        humanSecret.push(colorIndex);
+        renderSetup();
+      });
+
+      createPalette(playPalette, (colorIndex) => {
+        if (phase !== "playing" || turn !== "human" || currentGuess.length >= CODE_LENGTH) return;
+        currentGuess.push(colorIndex);
+        renderGame();
+      });
+
+      document.querySelectorAll("[data-difficulty]").forEach((button) => {
+        button.addEventListener("click", () => {
+          difficulty = button.dataset.difficulty;
+          document.querySelectorAll("[data-difficulty]").forEach((option) => {
+            const selected = option === button;
+            option.classList.toggle("active", selected);
+            option.setAttribute("aria-checked", String(selected));
+          });
+        });
+      });
+
+      startButton.addEventListener("click", startMatch);
+      guessButton.addEventListener("click", submitHumanGuess);
+
+      undoSecretButton.addEventListener("click", () => {
+        humanSecret.pop();
+        renderSetup();
+      });
+
+      clearSecretButton.addEventListener("click", () => {
+        humanSecret = [];
+        renderSetup();
+      });
+
+      undoGuessButton.addEventListener("click", () => {
+        currentGuess.pop();
+        renderGame();
+      });
+
+      clearGuessButton.addEventListener("click", () => {
+        currentGuess = [];
+        renderGame();
+      });
+
+      newMatchButton.addEventListener("click", resetToSetup);
+      playAgainButton.addEventListener("click", resetToSetup);
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Backspace") {
+          if (phase === "setup") {
+            humanSecret.pop();
+            renderSetup();
+          } else if (phase === "playing" && turn === "human") {
+            currentGuess.pop();
+            renderGame();
+          }
+        }
+        if (event.key === "Enter") {
+          if (phase === "setup" && humanSecret.length === CODE_LENGTH) startMatch();
+          if (phase === "playing" && turn === "human" && currentGuess.length === CODE_LENGTH) {
+            submitHumanGuess();
+          }
+        }
+      });
+
+      /* --------------------------------------------------------------------------
+       * Offline support
+       * ----------------------------------------------------------------------- */
+
+      async function prepareOfflineMode() {
+        if (!("serviceWorker" in navigator)) {
+          offlineStatus.textContent = "Offline unavailable here";
+          return;
+        }
+        try {
+          await navigator.serviceWorker.register("./sw.js");
+          await navigator.serviceWorker.ready;
+          offlineStatus.textContent = "Ready offline";
+          offlineStatus.classList.add("ready");
+        } catch {
+          offlineStatus.textContent = "Open online once more";
+        }
+      }
+
+      /* --------------------------------------------------------------------------
+       * Initial render
+       * ----------------------------------------------------------------------- */
+
+      renderStats();
+      renderSetup();
+      prepareOfflineMode();
+    </script>
+  </body>
+</html>

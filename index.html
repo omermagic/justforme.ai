@@ -457,10 +457,20 @@
         font-size: 14px;
       }
 
-      .lab-launch-link {
+      .lab-links {
+        display: grid;
+        width: min(100%, 370px);
         margin-top: 28px;
+      }
+
+      .lab-launch-link {
+        width: 100%;
         color: var(--white);
         border-color: var(--line);
+      }
+
+      .lab-launch-link + .lab-launch-link {
+        border-top: 0;
       }
 
       .lab-launch-link:hover {
@@ -761,10 +771,16 @@
               <em>signal.</em>
             </h2>
             <p>Move through the field. Watch a quiet system notice you—and come alive.</p>
-            <a class="launch-link lab-launch-link" href="/anat/pcman/">
-              <span>Play Snoopy’s Maze</span>
-              <span aria-hidden="true">↗</span>
-            </a>
+            <div class="lab-links">
+              <a class="launch-link lab-launch-link" href="/anat/pcman/">
+                <span>Play Snoopy’s Maze</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+              <a class="launch-link lab-launch-link" href="/yuval/mastermind/">
+                <span>Play Yuval’s Code Duel</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            </div>
           </div>
 
           <div class="signal-stage reveal" id="signal-stage">
