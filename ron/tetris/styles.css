@@ -1227,38 +1227,8 @@ h1 span {
   opacity: 0.3;
 }
 
-.touch-controls {
+.swipe-guide {
   display: none;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-}
-
-.touch-controls button {
-  min-height: 48px;
-  color: var(--white);
-  background: #0b2864;
-  border: 1px solid #6bbfff;
-  border-bottom-width: 4px;
-  cursor: pointer;
-  font-size: 17px;
-  font-weight: 1000;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.touch-controls button:active,
-.touch-controls button.is-pressed {
-  border-bottom-width: 1px;
-  transform: translateY(3px);
-}
-
-.touch-controls .drop-control {
-  color: var(--navy);
-  background: var(--gold);
-  font-size: 9px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
 }
 
 /* Modal */
@@ -1641,9 +1611,18 @@ h1 span {
     display: none;
   }
 
-  .touch-controls {
-    display: grid;
+  .swipe-guide {
+    display: flex;
+    margin: 7px 0 0;
     padding-bottom: max(0px, env(safe-area-inset-bottom));
+    justify-content: space-between;
+    gap: 6px;
+    color: #a8cfff;
+    font-size: 7px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .dragon-meter {
@@ -1721,13 +1700,8 @@ h1 span {
     font-size: 7px;
   }
 
-  .touch-controls {
-    gap: 4px;
-  }
-
-  .touch-controls button {
-    min-height: 43px;
-    font-size: 15px;
+  .swipe-guide {
+    font-size: 6.5px;
   }
 
   .modal-card {

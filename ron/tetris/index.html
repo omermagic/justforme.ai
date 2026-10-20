@@ -24,7 +24,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=9" />
+    <link rel="stylesheet" href="./styles.css?v=10" />
   </head>
 
   <body data-world="0">
@@ -211,6 +211,13 @@
               <div class="dragon-track"><i id="dragon-fill"></i></div>
               <button id="dragon-button" type="button" disabled>Unleash</button>
             </div>
+
+            <p class="swipe-guide" aria-label="Touch controls">
+              <span>← → move</span>
+              <span>↑ rotate</span>
+              <span>↓ boost</span>
+              <span>flick ↓ drop</span>
+            </p>
           </section>
 
           <aside class="gear-panel side-panel" aria-label="Pieces and power-ups">
@@ -242,13 +249,6 @@
             </div>
           </aside>
         </div>
-
-        <nav class="touch-controls" aria-label="Game controls">
-          <button data-control="left" type="button" aria-label="Move left">←</button>
-          <button data-control="rotate" type="button" aria-label="Rotate block">↻</button>
-          <button data-control="right" type="button" aria-label="Move right">→</button>
-          <button class="drop-control" data-control="drop" type="button">Drop</button>
-        </nav>
       </section>
     </main>
 
@@ -271,6 +271,6 @@
     </div>
 
     <div class="sr-only" id="announcer" aria-live="assertive"></div>
-    <script src="./game.js?v=9"></script>
+    <script src="./game.js?v=10"></script>
   </body>
 </html>

@@ -545,6 +545,25 @@ function softDrop() {
   }
 }
 
+function softDropRows(requestedRows) {
+  if (!game.running || game.paused || !activePiece) return 0;
+  const rows = Math.max(1, Math.floor(requestedRows));
+  let movedRows = 0;
+
+  while (movedRows < rows && movePiece(0, 1)) {
+    movedRows += 1;
+  }
+
+  if (movedRows > 0) {
+    game.score += movedRows;
+    dropAccumulator = 0;
+  }
+
+  // A swipe boost never locks the piece. This leaves time for a sideways
+  // swipe into an opening, even when the piece reaches the stack.
+  return movedRows;
+}
+
 function hardDrop() {
   if (!game.running || game.paused || !activePiece) return;
   let distance = 0;
@@ -1488,89 +1507,75 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-let repeatTimer = 0;
-let repeatDelayTimer = 0;
-let activeControlPointer = null;
+let gestureStart = null;
 
-function stopControlRepeat(pointerId = null) {
-  if (
-    pointerId !== null &&
-    activeControlPointer !== null &&
-    pointerId !== activeControlPointer
-  ) {
-    return;
-  }
-  clearTimeout(repeatDelayTimer);
-  clearInterval(repeatTimer);
-  repeatDelayTimer = 0;
-  repeatTimer = 0;
-  activeControlPointer = null;
-  document
-    .querySelectorAll("[data-control].is-pressed")
-    .forEach((button) => button.classList.remove("is-pressed"));
+function clearGesture(pointerId = null) {
+  if (pointerId !== null && gestureStart?.pointerId !== pointerId) return;
+  gestureStart = null;
 }
 
-document.querySelectorAll("[data-control]").forEach((button) => {
-  const control = button.dataset.control;
-  const repeatable = ["left", "right"].includes(control);
-  button.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    stopControlRepeat();
-    activeControlPointer = event.pointerId;
-    button.classList.add("is-pressed");
-    button.setPointerCapture?.(event.pointerId);
-    runControl(control);
-    if (repeatable) {
-      repeatDelayTimer = window.setTimeout(() => {
-        if (activeControlPointer === event.pointerId) {
-          repeatTimer = window.setInterval(() => runControl(control), 85);
-        }
-      }, 210);
-    }
-  });
-
-  const releaseControl = (event) => stopControlRepeat(event.pointerId);
-  button.addEventListener("pointerup", releaseControl);
-  button.addEventListener("pointercancel", releaseControl);
-  button.addEventListener("lostpointercapture", releaseControl);
-});
-
-addEventListener("pointerup", (event) => stopControlRepeat(event.pointerId));
-addEventListener("pointercancel", (event) => stopControlRepeat(event.pointerId));
-addEventListener("blur", () => stopControlRepeat());
-
-let gestureStart = null;
 gameCanvas.addEventListener("pointerdown", (event) => {
-  gestureStart = { x: event.clientX, y: event.clientY, time: performance.now() };
+  if (!event.isPrimary) return;
+  event.preventDefault();
+  clearGesture();
+  gestureStart = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    lastX: event.clientX,
+    lastY: event.clientY,
+    startTime: performance.now(),
+  };
   gameCanvas.setPointerCapture?.(event.pointerId);
 });
 
+gameCanvas.addEventListener("pointermove", (event) => {
+  if (gestureStart?.pointerId !== event.pointerId) return;
+  event.preventDefault();
+  gestureStart.lastX = event.clientX;
+  gestureStart.lastY = event.clientY;
+});
+
 gameCanvas.addEventListener("pointerup", (event) => {
-  if (!gestureStart) return;
-  const deltaX = event.clientX - gestureStart.x;
-  const deltaY = event.clientY - gestureStart.y;
-  const distance = Math.hypot(deltaX, deltaY);
-  if (distance < 18) {
-    rotatePiece();
-  } else if (Math.abs(deltaX) > Math.abs(deltaY)) {
-    const moves = Math.max(1, Math.min(4, Math.round(Math.abs(deltaX) / 34)));
+  if (gestureStart?.pointerId !== event.pointerId) return;
+  event.preventDefault();
+  gestureStart.lastX = event.clientX;
+  gestureStart.lastY = event.clientY;
+
+  const deltaX = gestureStart.lastX - gestureStart.startX;
+  const deltaY = gestureStart.lastY - gestureStart.startY;
+  const horizontalDistance = Math.abs(deltaX);
+  const verticalDistance = Math.abs(deltaY);
+  const elapsed = Math.max(1, performance.now() - gestureStart.startTime);
+  const downwardSpeed = deltaY / elapsed;
+  const minimumSwipe = 12;
+
+  if (horizontalDistance >= minimumSwipe && horizontalDistance >= verticalDistance) {
+    const moves = Math.max(1, Math.min(5, Math.round(horizontalDistance / 28)));
     for (let move = 0; move < moves; move += 1) movePiece(Math.sign(deltaX));
-  } else if (deltaY > 65) {
-    hardDrop();
-  } else if (deltaY > 20) {
-    softDrop();
+  } else if (deltaY <= -minimumSwipe) {
+    rotatePiece();
+  } else if (deltaY >= minimumSwipe) {
+    const isFullDrop = deltaY >= 130 || (deltaY >= 82 && downwardSpeed >= 0.85);
+    if (isFullDrop) {
+      hardDrop();
+    } else {
+      const rows = Math.max(2, Math.min(8, Math.round(deltaY / 16)));
+      softDropRows(rows);
+    }
   }
-  gestureStart = null;
+
+  clearGesture(event.pointerId);
   drawGame();
   updateHUD();
 });
 
-gameCanvas.addEventListener("pointercancel", () => {
-  gestureStart = null;
+gameCanvas.addEventListener("pointercancel", (event) => {
+  clearGesture(event.pointerId);
 });
 
-gameCanvas.addEventListener("lostpointercapture", () => {
-  gestureStart = null;
+gameCanvas.addEventListener("lostpointercapture", (event) => {
+  clearGesture(event.pointerId);
 });
 
 /* --------------------------------------------------------------------------
@@ -1606,7 +1611,7 @@ modalPrimary.addEventListener("click", () => primaryModalAction?.());
 modalSecondary.addEventListener("click", () => secondaryModalAction?.());
 
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) stopControlRepeat();
+  if (document.hidden) clearGesture();
   if (document.hidden && game.running && !game.paused) pauseGame();
 });
 
