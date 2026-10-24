@@ -12,6 +12,13 @@ const STEEL = 2;
 const SAVE_KEY = "jellylemmy_save_v1";
 const SKILLS = ["turn", "build", "dig", "bash", "float"];
 
+// High-resolution character art is drawn onto the canvas at runtime. Keeping
+// it as a real RGBA asset gives the tiny explorers proper hair, fabric, skin
+// and boot materials while the canvas still controls movement and effects.
+const lemmySprite = new Image();
+lemmySprite.decoding = "async";
+lemmySprite.src = "./assets/lemmy-explorer.png?v=7";
+
 const THEMES = {
   rose: { sky: "#39234f", glow: "#ff8fb8", soil: "#b55f8d", soilTop: "#ffb4d0" },
   mint: { sky: "#123e45", glow: "#8ce5c3", soil: "#347f77", soilTop: "#9cf3d3" },
@@ -1064,6 +1071,7 @@ function drawPlush(item, cellWidth, cellHeight, time) {
   context.rotate(0.08);
   roundedPath(size * 0.06, size * 0.24, size * 0.22, size * 0.42, size * 0.11);
   context.fill(); context.stroke();
+  context.restore();
   context.save();
   context.rotate(-0.42);
   roundedPath(-size * 0.43, -size * 0.03, size * 0.19, size * 0.42, size * 0.1);
@@ -1207,7 +1215,7 @@ function drawPlush(item, cellWidth, cellHeight, time) {
   context.restore();
 }
 
-function drawUnit(unit, cellWidth, cellHeight, time) {
+function drawUnitFallback(unit, cellWidth, cellHeight, time) {
   const x = unit.x * cellWidth;
   const y = unit.y * cellHeight;
   const cellSize = Math.min(cellWidth, cellHeight);
@@ -1367,6 +1375,109 @@ function drawUnit(unit, cellWidth, cellHeight, time) {
     context.fill(); context.stroke();
     context.beginPath(); context.moveTo(0, -size * 0.9); context.lineTo(0, -size * 0.27); context.stroke();
   }
+  context.restore();
+}
+
+function drawUnit(unit, cellWidth, cellHeight, time) {
+  if (!lemmySprite.complete || !lemmySprite.naturalWidth) {
+    drawUnitFallback(unit, cellWidth, cellHeight, time);
+    return;
+  }
+
+  const x = unit.x * cellWidth;
+  const ground = unit.y * cellHeight;
+  const cellSize = Math.min(cellWidth, cellHeight);
+  const compact = cellSize < 18;
+  const height = cellSize * (compact ? 3.15 : 2.6);
+  const width = height * (lemmySprite.naturalWidth / lemmySprite.naturalHeight);
+  const stride = Math.sin(time * 0.012 + unit.phase);
+  const walking = unit.state === "walk";
+  const falling = unit.state === "fall";
+  const bob = walking ? -Math.abs(stride) * height * 0.025 : 0;
+  const lean = falling ? -unit.dir * 0.13 : walking ? stride * 0.025 : unit.state === "bash" ? 0.1 : 0;
+  const actionColor = unit.state === "build" ? "#ffd55e" : unit.state === "bash" ? "#ff65af" : "#67f0c5";
+
+  context.save();
+
+  // Soft contact shadow changes shape as a Lemmy leaves the ground.
+  context.fillStyle = falling ? "rgba(4,2,14,0.16)" : "rgba(4,2,14,0.45)";
+  context.beginPath();
+  context.ellipse(x, ground - cellSize * 0.03, width * (falling ? 0.24 : 0.34), cellSize * 0.11, 0, 0, Math.PI * 2);
+  context.fill();
+
+  if (selectedSkill) {
+    const selectPulse = 0.52 + Math.sin(time * 0.009) * 0.16;
+    context.strokeStyle = `rgba(255,224,112,${selectPulse})`;
+    context.lineWidth = compact ? 1.4 : 2;
+    context.setLineDash([5, 4]);
+    context.beginPath();
+    context.ellipse(x, ground - height * 0.47, width * 0.62, height * 0.58, 0, 0, Math.PI * 2);
+    context.stroke();
+    context.setLineDash([]);
+  }
+
+  context.translate(x, ground + bob - height * 0.03);
+  context.scale(unit.dir, 1);
+  context.rotate(lean);
+
+  // A subtle live rim light ties the rendered character into every world.
+  context.shadowColor = actionColor;
+  context.shadowBlur = unit.state === "walk" ? (compact ? 3 : 6) : (compact ? 7 : 13);
+  context.drawImage(lemmySprite, -width / 2, -height, width, height);
+  context.shadowBlur = 0;
+
+  if (unit.state === "build") {
+    // Translucent construction hologram appears just beyond the leading hand.
+    const brickWidth = width * 0.35;
+    const brickHeight = height * 0.09;
+    context.fillStyle = "rgba(255,218,92,0.76)";
+    context.strokeStyle = "rgba(255,255,255,0.9)";
+    context.lineWidth = Math.max(1, cellSize * 0.05);
+    context.shadowColor = "#ffd65d";
+    context.shadowBlur = 10;
+    roundedPath(width * 0.3, -height * 0.57, brickWidth, brickHeight, brickHeight * 0.25);
+    context.fill(); context.stroke();
+    context.shadowBlur = 0;
+  } else if (unit.state === "bash") {
+    // Modern impact flare, kept outside the character so the art stays crisp.
+    const impactX = width * 0.58;
+    const impactY = -height * 0.47;
+    context.fillStyle = "#fff4a6";
+    context.shadowColor = "#ff65af";
+    context.shadowBlur = 13;
+    context.beginPath();
+    for (let ray = 0; ray < 12; ray += 1) {
+      const angle = ray * Math.PI / 6;
+      const radius = ray % 2 ? cellSize * 0.12 : cellSize * 0.3;
+      const px = impactX + Math.cos(angle) * radius;
+      const py = impactY + Math.sin(angle) * radius;
+      if (ray === 0) context.moveTo(px, py); else context.lineTo(px, py);
+    }
+    context.closePath(); context.fill();
+    context.shadowBlur = 0;
+  }
+
+  if (falling && unit.float) {
+    // A dimensional canopy replaces the old flat umbrella symbol.
+    const canopyY = -height * 1.06;
+    const canopy = context.createLinearGradient(0, canopyY - height * 0.22, 0, canopyY + height * 0.08);
+    canopy.addColorStop(0, "#fff6a8");
+    canopy.addColorStop(0.48, "#ff81b8");
+    canopy.addColorStop(1, "#9f4de2");
+    context.fillStyle = canopy;
+    context.strokeStyle = "rgba(255,255,255,0.9)";
+    context.lineWidth = Math.max(1.2, cellSize * 0.06);
+    context.shadowColor = "#ff79bd";
+    context.shadowBlur = 12;
+    context.beginPath();
+    context.arc(0, canopyY, width * 0.66, Math.PI, Math.PI * 2);
+    context.quadraticCurveTo(width * 0.32, canopyY + height * 0.08, 0, canopyY);
+    context.quadraticCurveTo(-width * 0.32, canopyY + height * 0.08, -width * 0.66, canopyY);
+    context.closePath(); context.fill(); context.stroke();
+    context.shadowBlur = 0;
+    context.beginPath(); context.moveTo(0, canopyY); context.lineTo(0, -height * 0.52); context.stroke();
+  }
+
   context.restore();
 }
 
