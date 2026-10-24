@@ -6,8 +6,9 @@
     <meta name="theme-color" content="#09090a" />
     <meta
       name="description"
-      content="AI by Gazit — bold, useful and human artificial intelligence experiments."
+      content="AI by Gazit — personal games and playful learning experiences."
     />
+
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-E3JJGMR427"></script>
     <script>
@@ -18,28 +19,28 @@
       gtag("js", new Date());
       gtag("config", "G-E3JJGMR427");
     </script>
+
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23dfff00'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='36' font-style='italic' font-family='Georgia' fill='%2309090a'%3EG%3C/text%3E%3C/svg%3E"
     />
-    <title>AI by Gazit — Human intelligence, amplified.</title>
+    <title>AI by Gazit — Play. Learn. Explore.</title>
 
     <style>
-      /* Design tokens */
+      /* ---------- Design tokens ---------- */
       :root {
         --black: #09090a;
-        --white: #f3f0e8;
+        --white: #f4f1e9;
         --acid: #dfff00;
         --purple: #9c7cff;
-        --orange: #ff593d;
-        --line: rgba(243, 240, 232, 0.18);
-        --muted: rgba(243, 240, 232, 0.62);
-        --page: min(calc(100% - 48px), 1320px);
+        --line: rgba(244, 241, 233, 0.18);
+        --muted: rgba(244, 241, 233, 0.64);
+        --page: min(calc(100% - 48px), 1280px);
         --pointer-x: 72%;
         --pointer-y: 35%;
       }
 
-      /* Base */
+      /* ---------- Base ---------- */
       * {
         box-sizing: border-box;
       }
@@ -63,9 +64,9 @@
         content: "";
         position: fixed;
         inset: 0;
-        z-index: 20;
+        z-index: 30;
         pointer-events: none;
-        opacity: 0.035;
+        opacity: 0.032;
         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
       }
 
@@ -98,7 +99,7 @@
         transform: none;
       }
 
-      /* Header */
+      /* ---------- Header ---------- */
       .site-header {
         position: absolute;
         top: 0;
@@ -120,7 +121,7 @@
         gap: 11px;
         text-decoration: none;
         font-size: 14px;
-        font-weight: 780;
+        font-weight: 800;
         letter-spacing: -0.03em;
       }
 
@@ -137,35 +138,32 @@
         font-style: italic;
       }
 
-      .status {
+      .site-nav {
         display: flex;
-        align-items: center;
-        gap: 12px;
+        gap: 28px;
+      }
+
+      .site-nav a {
         color: var(--muted);
+        text-decoration: none;
         font-size: 10px;
-        font-weight: 700;
+        font-weight: 760;
         letter-spacing: 0.15em;
         text-transform: uppercase;
       }
 
-      .status::before {
-        content: "";
-        width: 7px;
-        aspect-ratio: 1;
-        background: var(--acid);
-        border-radius: 50%;
-        box-shadow: 0 0 18px var(--acid);
-        animation: pulse 1.8s ease-in-out infinite;
+      .site-nav a:hover {
+        color: var(--acid);
       }
 
-      /* Hero */
+      /* ---------- Hero ---------- */
       .hero {
         position: relative;
         display: grid;
-        min-height: 100svh;
+        min-height: 76svh;
         align-content: end;
         overflow: hidden;
-        padding: 140px 0 56px;
+        padding: 135px 0 68px;
         isolation: isolate;
       }
 
@@ -175,12 +173,12 @@
         top: var(--pointer-y);
         left: var(--pointer-x);
         z-index: -2;
-        width: min(62vw, 830px);
+        width: min(58vw, 760px);
         aspect-ratio: 1;
         background: var(--purple);
         border-radius: 50%;
-        opacity: 0.18;
-        filter: blur(7px);
+        opacity: 0.19;
+        filter: blur(8px);
         transform: translate(-50%, -50%);
         transition:
           top 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -190,34 +188,34 @@
       .hero::after {
         content: "";
         position: absolute;
-        top: 8%;
-        right: -14%;
+        top: -22%;
+        right: -12%;
         z-index: -1;
-        width: min(70vw, 920px);
+        width: min(62vw, 800px);
         aspect-ratio: 1;
-        border: 1px solid rgba(243, 240, 232, 0.22);
+        border: 1px solid rgba(244, 241, 233, 0.22);
         border-radius: 50%;
         box-shadow:
-          inset 0 0 0 11vw var(--black),
-          inset 0 0 0 calc(11vw + 1px) rgba(223, 255, 0, 0.32),
-          inset 0 0 0 22vw var(--black),
-          inset 0 0 0 calc(22vw + 1px) rgba(243, 240, 232, 0.18);
+          inset 0 0 0 9vw var(--black),
+          inset 0 0 0 calc(9vw + 1px) rgba(223, 255, 0, 0.34),
+          inset 0 0 0 18vw var(--black),
+          inset 0 0 0 calc(18vw + 1px) rgba(244, 241, 233, 0.18);
         animation: breathe 7s ease-in-out infinite;
       }
 
-      .hero-label {
+      .eyebrow {
         display: flex;
         align-items: center;
         gap: 12px;
-        margin: 0 0 28px;
+        margin: 0 0 24px;
         color: var(--muted);
         font-size: 10px;
-        font-weight: 740;
+        font-weight: 760;
         letter-spacing: 0.18em;
         text-transform: uppercase;
       }
 
-      .hero-label::before {
+      .eyebrow::before {
         content: "✦";
         color: var(--acid);
         font-size: 16px;
@@ -226,12 +224,12 @@
       h1 {
         position: relative;
         z-index: 2;
-        max-width: 1150px;
+        max-width: 1120px;
         margin: 0;
-        font-size: clamp(4.8rem, 12.6vw, 11.7rem);
-        font-weight: 840;
+        font-size: clamp(4.7rem, 11.5vw, 10.5rem);
+        font-weight: 850;
         letter-spacing: -0.09em;
-        line-height: 0.72;
+        line-height: 0.73;
         text-transform: uppercase;
       }
 
@@ -254,14 +252,14 @@
         position: relative;
         z-index: 3;
         display: grid;
-        grid-template-columns: 1fr minmax(280px, 420px);
+        grid-template-columns: 1fr minmax(280px, 440px);
         gap: 40px;
         align-items: end;
-        margin-top: 48px;
+        margin-top: 42px;
       }
 
       .hero-index {
-        color: rgba(243, 240, 232, 0.36);
+        color: rgba(244, 241, 233, 0.38);
         font-family: Georgia, serif;
         font-size: 13px;
         font-style: italic;
@@ -276,24 +274,22 @@
 
       .hero-intro strong {
         color: var(--white);
-        background: none !important;
-        -webkit-text-fill-color: var(--white) !important;
       }
 
-      /* Kinetic strip */
+      /* ---------- Kinetic strip ---------- */
       .ticker {
         position: relative;
         z-index: 5;
         overflow: hidden;
         color: var(--black);
         background: var(--acid);
-        transform: rotate(-1.2deg) scale(1.03);
+        transform: rotate(-1deg) scale(1.02);
       }
 
       .ticker-track {
         display: flex;
         width: max-content;
-        padding: 14px 0;
+        padding: 13px 0;
         animation: ticker 20s linear infinite;
       }
 
@@ -305,239 +301,338 @@
         text-transform: uppercase;
       }
 
-      /* Featured experiment */
-      .project {
-        position: relative;
-        min-height: 92svh;
-        padding: clamp(110px, 13vw, 180px) 0;
-        color: var(--black);
-        background: var(--white);
+      /* ---------- Shared collection layout ---------- */
+      .collection {
+        padding: clamp(88px, 10vw, 140px) 0;
       }
 
-      .project-layout {
+      .section-heading {
         display: grid;
-        grid-template-columns: 0.82fr 1.18fr;
-        gap: clamp(50px, 8vw, 130px);
-        align-items: center;
+        grid-template-columns: 120px minmax(0, 1fr) minmax(240px, 360px);
+        gap: 32px;
+        align-items: end;
+        margin-bottom: 54px;
       }
 
-      .project-label {
-        margin: 0 0 24px;
-        font-size: 10px;
-        font-weight: 780;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-      }
-
-      .project h2 {
+      .section-number {
         margin: 0;
-        font-size: clamp(4rem, 8vw, 8rem);
-        font-weight: 840;
-        letter-spacing: -0.085em;
-        line-height: 0.77;
+        color: var(--acid);
+        font-family: Georgia, serif;
+        font-size: 18px;
+        font-style: italic;
       }
 
-      .project h2 em {
-        color: #6d4ce8;
+      .section-heading h2 {
+        margin: 0;
+        font-size: clamp(3.7rem, 7vw, 7rem);
+        font-weight: 840;
+        letter-spacing: -0.08em;
+        line-height: 0.8;
+      }
+
+      .section-heading h2 em {
+        color: var(--acid);
         font-family: Georgia, serif;
         font-weight: 400;
       }
 
-      .project-description {
-        max-width: 410px;
-        margin: 34px 0;
-        color: rgba(9, 9, 10, 0.64);
-        font-size: 15px;
+      .section-description {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
       }
 
-      .launch-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: space-between;
-        width: min(100%, 370px);
-        padding: 17px 0;
-        border-top: 1px solid var(--black);
-        border-bottom: 1px solid var(--black);
-        text-decoration: none;
-        font-size: 13px;
-        font-weight: 800;
-        transition: padding 0.25s ease;
+      /* ---------- Games ---------- */
+      .games {
+        background: var(--black);
       }
 
-      .launch-link:hover {
-        padding-inline: 12px;
+      .game-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
       }
 
-      .launch-link span:last-child {
-        font-size: 22px;
-      }
-
-      .world {
+      .game-card {
         position: relative;
-        width: min(100%, 680px);
-        aspect-ratio: 1;
-        margin-inline: auto;
+        display: flex;
+        min-height: 360px;
+        flex-direction: column;
+        justify-content: space-between;
         overflow: hidden;
-        background: #151420;
-        border-radius: 50%;
-        box-shadow:
-          0 35px 80px rgba(60, 39, 130, 0.28),
-          0 0 0 1px rgba(9, 9, 10, 0.14);
+        padding: 28px;
+        color: var(--black);
+        background: var(--white);
+        border: 1px solid transparent;
+        text-decoration: none;
+        isolation: isolate;
+        transition:
+          transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+          box-shadow 0.3s ease;
       }
 
-      .world::before,
-      .world::after {
+      .game-card::after {
         content: "";
         position: absolute;
-        inset: 0 25%;
-        border: 1px solid rgba(243, 240, 232, 0.24);
+        right: -12%;
+        bottom: -38%;
+        z-index: -1;
+        width: 58%;
+        aspect-ratio: 1;
+        border: 1px solid currentColor;
         border-radius: 50%;
+        opacity: 0.24;
+        box-shadow:
+          0 0 0 28px transparent,
+          0 0 0 29px currentColor,
+          0 0 0 58px transparent,
+          0 0 0 59px currentColor;
       }
 
-      .world::after {
-        inset: 25% 0;
+      .game-card:hover,
+      .game-card:focus-visible {
+        z-index: 2;
+        transform: translateY(-7px) rotate(-0.5deg);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
       }
 
-      .world-grid {
+      .game-card--maze {
+        background: #ffeaa4;
+      }
+
+      .game-card--duel {
+        color: var(--white);
+        background: #6d4ce8;
+      }
+
+      .game-card--blocks {
+        color: var(--white);
+        background: #1063cf;
+      }
+
+      .game-card--land {
+        background: #ff9cc5;
+      }
+
+      .card-top,
+      .card-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .card-kicker,
+      .card-type {
+        font-size: 9px;
+        font-weight: 820;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .card-type {
+        padding: 7px 9px;
+        border: 1px solid currentColor;
+      }
+
+      .card-center {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 24px;
+        align-items: end;
+        margin-block: 44px;
+      }
+
+      .card-title {
+        max-width: 430px;
+        margin: 0;
+        font-size: clamp(2.8rem, 5vw, 5rem);
+        font-weight: 850;
+        letter-spacing: -0.075em;
+        line-height: 0.82;
+      }
+
+      .card-symbol {
+        display: grid;
+        width: clamp(80px, 11vw, 130px);
+        aspect-ratio: 1;
+        place-items: center;
+        border: 1px solid currentColor;
+        border-radius: 50%;
+        font-family: Georgia, serif;
+        font-size: clamp(2.8rem, 6vw, 5rem);
+        font-style: italic;
+        transform: rotate(7deg);
+      }
+
+      .card-note {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 680;
+      }
+
+      .card-arrow {
+        font-size: 25px;
+        transition: transform 0.25s ease;
+      }
+
+      .game-card:hover .card-arrow,
+      .game-card:focus-visible .card-arrow {
+        transform: translate(4px, -4px);
+      }
+
+      /* ---------- Test prep ---------- */
+      .test-prep {
+        color: var(--black);
+        background: var(--white);
+      }
+
+      .test-prep .section-number,
+      .test-prep .section-heading h2 em {
+        color: #6d4ce8;
+      }
+
+      .test-prep .section-description {
+        color: rgba(9, 9, 10, 0.62);
+      }
+
+      .prep-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .prep-card {
+        position: relative;
+        display: grid;
+        min-height: 370px;
+        grid-template-columns: minmax(0, 1fr) minmax(170px, 0.75fr);
+        gap: 26px;
+        align-items: center;
+        overflow: hidden;
+        padding: clamp(28px, 4vw, 48px);
+        color: var(--white);
+        background: #17141f;
+        text-decoration: none;
+        isolation: isolate;
+        transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .prep-card:hover,
+      .prep-card:focus-visible {
+        transform: translateY(-6px);
+      }
+
+      .prep-card-copy {
+        position: relative;
+        z-index: 2;
+      }
+
+      .prep-card .card-kicker {
+        color: var(--acid);
+      }
+
+      .prep-card h3 {
+        margin: 18px 0 22px;
+        font-size: clamp(2.8rem, 5vw, 5rem);
+        font-weight: 840;
+        letter-spacing: -0.075em;
+        line-height: 0.82;
+      }
+
+      .prep-card p {
+        max-width: 360px;
+        margin: 0 0 30px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .prep-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .prep-meta span {
+        padding: 7px 9px;
+        border: 1px solid var(--line);
+        font-size: 9px;
+        font-weight: 780;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .globe {
+        position: relative;
+        width: min(100%, 260px);
+        aspect-ratio: 1;
+        justify-self: end;
+        border: 1px solid rgba(223, 255, 0, 0.75);
+        border-radius: 50%;
+        box-shadow:
+          inset 0 0 0 25px #17141f,
+          inset 0 0 0 26px rgba(223, 255, 0, 0.45),
+          inset 0 0 0 54px #17141f,
+          inset 0 0 0 55px rgba(244, 241, 233, 0.3);
+        animation: breathe 6s ease-in-out infinite;
+      }
+
+      .globe::before,
+      .globe::after {
+        content: "";
         position: absolute;
-        inset: 8%;
-        border: 1px dashed rgba(223, 255, 0, 0.42);
+        inset: 0 34%;
+        border: 1px solid rgba(244, 241, 233, 0.32);
         border-radius: 50%;
-        transform: rotate(28deg);
-        animation: spin 18s linear infinite;
       }
 
-      .world-mark {
+      .globe::after {
+        inset: 34% 0;
+      }
+
+      .globe span {
         position: absolute;
         top: 50%;
         left: 50%;
         color: var(--acid);
         font-family: Georgia, serif;
-        font-size: clamp(7rem, 17vw, 14rem);
+        font-size: clamp(5rem, 10vw, 8rem);
         font-style: italic;
-        line-height: 1;
-        transform: translate(-50%, -52%) rotate(-13deg);
-        filter: drop-shadow(0 0 40px rgba(223, 255, 0, 0.22));
+        transform: translate(-50%, -54%) rotate(-12deg);
       }
 
-      .world-tag {
-        position: absolute;
-        top: 12%;
-        left: 11%;
-        padding: 8px 10px;
-        color: var(--acid);
-        border: 1px solid rgba(223, 255, 0, 0.5);
-        font-size: 9px;
-        font-weight: 760;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
+      .prep-coming {
+        display: grid;
+        min-height: 370px;
+        place-items: center;
+        padding: 36px;
+        border: 1px dashed rgba(9, 9, 10, 0.28);
+        text-align: center;
       }
 
-      /* Interactive signal lab */
-      .lab {
-        padding: clamp(90px, 11vw, 150px) 0 34px;
+      .prep-coming p {
+        max-width: 270px;
+        margin: 0;
+        color: rgba(9, 9, 10, 0.5);
+        font-family: Georgia, serif;
+        font-size: clamp(1.5rem, 3vw, 2.25rem);
+        font-style: italic;
+      }
+
+      /* ---------- Footer ---------- */
+      .site-footer {
+        color: var(--white);
         background: var(--black);
       }
 
-      .lab-layout {
-        display: grid;
-        grid-template-columns: 0.62fr 1.38fr;
-        gap: clamp(35px, 7vw, 100px);
-        align-items: center;
-      }
-
-      .lab h2 {
-        margin: 14px 0 22px;
-        font-size: clamp(3.2rem, 6.6vw, 6.6rem);
-        font-weight: 830;
-        letter-spacing: -0.08em;
-        line-height: 0.8;
-      }
-
-      .lab h2 em {
-        display: block;
-        color: var(--orange);
-        font-family: Georgia, serif;
-        font-weight: 400;
-      }
-
-      .lab-copy p {
-        max-width: 360px;
-        color: var(--muted);
-        font-size: 14px;
-      }
-
-      .lab-links {
-        display: grid;
-        width: min(100%, 370px);
-        margin-top: 28px;
-      }
-
-      .lab-launch-link {
-        width: 100%;
-        color: var(--white);
-        border-color: var(--line);
-      }
-
-      .lab-launch-link + .lab-launch-link {
-        border-top: 0;
-      }
-
-      .lab-launch-link:hover {
-        color: var(--acid);
-        border-color: var(--acid);
-      }
-
-      .signal-stage {
-        position: relative;
-        min-height: 500px;
-        overflow: hidden;
-        border: 1px solid var(--line);
-        background: #111113;
-        cursor: crosshair;
-      }
-
-      #signal-canvas {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-      }
-
-      .signal-note,
-      .signal-value {
-        position: absolute;
-        z-index: 2;
-        pointer-events: none;
-      }
-
-      .signal-note {
-        top: 22px;
-        left: 24px;
-        color: var(--muted);
-        font-size: 9px;
-        font-weight: 740;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-      }
-
-      .signal-value {
-        right: 24px;
-        bottom: 20px;
-        color: var(--acid);
-        font-family: Georgia, serif;
-        font-size: 12px;
-        font-style: italic;
-      }
-
-      .footer {
+      .footer-inner {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 30px;
-        margin-top: clamp(80px, 10vw, 130px);
-        padding-top: 22px;
-        border-top: 1px solid var(--line);
+        gap: 24px;
+        padding: 30px 0;
         color: var(--muted);
         font-size: 10px;
         font-weight: 700;
@@ -545,33 +640,26 @@
         text-transform: uppercase;
       }
 
-      .footer a {
+      .footer-inner a {
         text-decoration: none;
       }
 
-      .footer a:hover {
+      .footer-inner a:hover {
         color: var(--acid);
       }
 
-      /* Motion */
+      /* ---------- Motion ---------- */
       .reveal {
         opacity: 0;
         transform: translateY(28px);
         transition:
-          opacity 0.8s ease,
-          transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+          opacity 0.75s ease,
+          transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
       }
 
       .reveal.visible {
         opacity: 1;
         transform: none;
-      }
-
-      @keyframes pulse {
-        50% {
-          opacity: 0.35;
-          transform: scale(0.7);
-        }
       }
 
       @keyframes breathe {
@@ -586,34 +674,19 @@
         }
       }
 
-      @keyframes spin {
-        to {
-          transform: rotate(388deg);
+      /* ---------- Responsive ---------- */
+      @media (max-width: 940px) {
+        .section-heading {
+          grid-template-columns: 80px 1fr;
+        }
+
+        .section-description {
+          grid-column: 2;
+          max-width: 520px;
         }
       }
 
-      /* Responsive */
-      @media (max-width: 860px) {
-        .project-layout,
-        .lab-layout {
-          grid-template-columns: 1fr;
-        }
-
-        .project-copy {
-          position: relative;
-          z-index: 2;
-        }
-
-        .world {
-          width: min(90vw, 620px);
-        }
-
-        .lab-copy p {
-          max-width: 540px;
-        }
-      }
-
-      @media (max-width: 620px) {
+      @media (max-width: 720px) {
         :root {
           --page: calc(100% - 30px);
         }
@@ -622,29 +695,33 @@
           padding: 17px 0;
         }
 
-        .status {
+        .site-nav {
+          gap: 16px;
+        }
+
+        .site-nav a {
           font-size: 8px;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.09em;
         }
 
         .hero {
-          min-height: 93svh;
-          padding: 115px 0 34px;
+          min-height: 72svh;
+          padding: 112px 0 46px;
         }
 
         .hero::after {
-          top: 8%;
-          right: -74%;
-          width: 150vw;
+          top: -5%;
+          right: -62%;
+          width: 130vw;
           box-shadow:
-            inset 0 0 0 23vw var(--black),
-            inset 0 0 0 calc(23vw + 1px) rgba(223, 255, 0, 0.32),
-            inset 0 0 0 46vw var(--black),
-            inset 0 0 0 calc(46vw + 1px) rgba(243, 240, 232, 0.18);
+            inset 0 0 0 20vw var(--black),
+            inset 0 0 0 calc(20vw + 1px) rgba(223, 255, 0, 0.32),
+            inset 0 0 0 40vw var(--black),
+            inset 0 0 0 calc(40vw + 1px) rgba(244, 241, 233, 0.18);
         }
 
         h1 {
-          font-size: clamp(4.7rem, 24vw, 7rem);
+          font-size: clamp(4.6rem, 23vw, 7rem);
         }
 
         h1 .human {
@@ -654,33 +731,72 @@
         .hero-bottom {
           grid-template-columns: 1fr;
           gap: 18px;
-          margin-top: 40px;
+          margin-top: 34px;
         }
 
         .hero-index {
           display: none;
         }
 
-        .project {
-          min-height: auto;
-          padding: 100px 0;
+        .section-heading {
+          grid-template-columns: 1fr;
+          gap: 16px;
+          margin-bottom: 34px;
         }
 
-        .project-layout {
-          gap: 70px;
+        .section-description {
+          grid-column: auto;
         }
 
-        .world {
-          width: calc(100vw - 30px);
+        .game-grid,
+        .prep-grid {
+          grid-template-columns: 1fr;
         }
 
-        .signal-stage {
-          min-height: 420px;
+        .game-card {
+          min-height: 315px;
+          padding: 23px;
         }
 
-        .footer {
+        .card-center {
+          margin-block: 34px;
+        }
+
+        .prep-card {
+          min-height: 430px;
+          grid-template-columns: 1fr;
+        }
+
+        .globe {
+          position: absolute;
+          right: -50px;
+          bottom: -70px;
+          z-index: -1;
+          width: 240px;
+          opacity: 0.62;
+        }
+
+        .prep-coming {
+          min-height: 210px;
+        }
+
+        .footer-inner {
           align-items: flex-start;
           flex-direction: column;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .brand > span:last-child {
+          display: none;
+        }
+
+        .card-title {
+          font-size: 2.65rem;
+        }
+
+        .card-symbol {
+          width: 72px;
         }
       }
 
@@ -708,131 +824,170 @@
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
 
-    <!-- Navigation -->
     <header class="site-header">
       <a class="brand" href="#top" aria-label="AI by Gazit, home">
         <span class="brand-mark" aria-hidden="true">G</span>
         <span>AI by Gazit</span>
       </a>
-      <span class="status">Experiments live</span>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="#games">Games</a>
+        <a href="#test-prep">Test prep</a>
+      </nav>
     </header>
 
     <main id="main">
       <!-- Hero -->
       <section class="hero shell" id="top" aria-labelledby="hero-title">
-        <p class="hero-label">Independent artificial intelligence studio</p>
+        <p class="eyebrow">Small digital worlds, made personally</p>
         <h1 id="hero-title">
           <span>AI, but</span>
           <span class="human">human.</span>
         </h1>
         <div class="hero-bottom">
-          <span class="hero-index">Intelligence / intuition / imagination</span>
+          <span class="hero-index">Play / learn / explore</span>
           <p class="hero-intro">
-            <strong>Useful enough to matter. Strange enough to remember.</strong>
-            Small AI experiments built with clarity, character and a little electricity.
+            <strong>Made for real people, not imaginary users.</strong>
+            Personal games and playful learning experiences—with character in every pixel.
           </p>
         </div>
       </section>
 
-      <!-- Kinetic statement -->
       <div class="ticker" aria-hidden="true">
         <div class="ticker-track">
-          <span>Think boldly ✦ Build clearly ✦ Stay curious ✦ Make it human ✦</span>
-          <span>Think boldly ✦ Build clearly ✦ Stay curious ✦ Make it human ✦</span>
+          <span>Play boldly ✦ Learn differently ✦ Stay curious ✦ Make it personal ✦</span>
+          <span>Play boldly ✦ Learn differently ✦ Stay curious ✦ Make it personal ✦</span>
         </div>
       </div>
 
-      <!-- Featured experiment -->
-      <section class="project" id="work" aria-labelledby="project-title">
-        <div class="project-layout shell">
-          <div class="project-copy reveal">
-            <p class="project-label">Experiment 001 · Now live</p>
-            <h2 id="project-title">
-              Learn the
-              <br />
-              <em>world.</em>
-            </h2>
-            <p class="project-description">
-              Geography becomes a game: 159 questions, instant explanations, progress tracking and
-              challenges that adapt to every attempt.
+      <!-- Games come first -->
+      <section class="collection games" id="games" aria-labelledby="games-title">
+        <div class="shell">
+          <header class="section-heading reveal">
+            <p class="section-number">01 / Play</p>
+            <h2 id="games-title">Choose your <em>world.</em></h2>
+            <p class="section-description">
+              Four very different adventures. Every one made for someone special—and ready to play.
             </p>
-            <a class="launch-link" href="/ron/geo/">
-              <span>Launch the experience</span>
-              <span aria-hidden="true">↗</span>
-            </a>
-          </div>
+          </header>
 
-          <div class="world reveal" aria-hidden="true">
-            <div class="world-grid"></div>
-            <span class="world-mark">G</span>
-            <span class="world-tag">Interactive · Portuguese</span>
+          <div class="game-grid">
+            <a class="game-card game-card--maze reveal" href="/anat/pcman/">
+              <div class="card-top">
+                <span class="card-kicker">For Anat</span>
+                <span class="card-type">Arcade chase</span>
+              </div>
+              <div class="card-center">
+                <h3 class="card-title">Snoopy’s Maze</h3>
+                <span class="card-symbol" aria-hidden="true">S</span>
+              </div>
+              <div class="card-bottom">
+                <p class="card-note">Ghosts, fruit and airplane-ready fun</p>
+                <span class="card-arrow" aria-hidden="true">↗</span>
+              </div>
+            </a>
+
+            <a class="game-card game-card--duel reveal" href="/yuval/mastermind/">
+              <div class="card-top">
+                <span class="card-kicker">For Yuval</span>
+                <span class="card-type">Logic battle</span>
+              </div>
+              <div class="card-center">
+                <h3 class="card-title">Code Duel</h3>
+                <span class="card-symbol" aria-hidden="true">5</span>
+              </div>
+              <div class="card-bottom">
+                <p class="card-note">Crack the colors before the computer does</p>
+                <span class="card-arrow" aria-hidden="true">↗</span>
+              </div>
+            </a>
+
+            <a class="game-card game-card--blocks reveal" href="/ron/tetris/">
+              <div class="card-top">
+                <span class="card-kicker">For Ron</span>
+                <span class="card-type">Block adventure</span>
+              </div>
+              <div class="card-center">
+                <h3 class="card-title">Dragon Blocks</h3>
+                <span class="card-symbol" aria-hidden="true">▦</span>
+              </div>
+              <div class="card-bottom">
+                <p class="card-note">Porto spirit meets a pixel quest</p>
+                <span class="card-arrow" aria-hidden="true">↗</span>
+              </div>
+            </a>
+
+            <a class="game-card game-card--land reveal" href="/shaked/landeater/">
+              <div class="card-top">
+                <span class="card-kicker">For Shaked</span>
+                <span class="card-type">Territory adventure</span>
+              </div>
+              <div class="card-center">
+                <h3 class="card-title">Land Eater</h3>
+                <span class="card-symbol" aria-hidden="true">♥</span>
+              </div>
+              <div class="card-bottom">
+                <p class="card-note">Help Kitty reclaim the Dream Garden</p>
+                <span class="card-arrow" aria-hidden="true">↗</span>
+              </div>
+            </a>
           </div>
         </div>
       </section>
 
-      <!-- Interactive signal lab -->
-      <section class="lab" aria-labelledby="lab-title">
-        <div class="lab-layout shell">
-          <div class="lab-copy reveal">
-            <p class="project-label">Tiny experiment · Your move</p>
-            <h2 id="lab-title">
-              Touch the
-              <br />
-              <em>signal.</em>
-            </h2>
-            <p>Move through the field. Watch a quiet system notice you—and come alive.</p>
-            <div class="lab-links">
-              <a class="launch-link lab-launch-link" href="/anat/pcman/">
-                <span>Play Snoopy’s Maze</span>
-                <span aria-hidden="true">↗</span>
-              </a>
-              <a class="launch-link lab-launch-link" href="/yuval/mastermind/">
-                <span>Play Yuval’s Code Duel</span>
-                <span aria-hidden="true">↗</span>
-              </a>
-              <a class="launch-link lab-launch-link" href="/ron/tetris/">
-                <span>Play Ron’s Dragon Blocks</span>
-                <span aria-hidden="true">↗</span>
-              </a>
-              <a class="launch-link lab-launch-link" href="/shaked/landeater/">
-                <span>Play Shaked’s Land Eater</span>
-                <span aria-hidden="true">↗</span>
-              </a>
+      <!-- Test prep is designed to grow as new subjects arrive -->
+      <section class="collection test-prep" id="test-prep" aria-labelledby="prep-title">
+        <div class="shell">
+          <header class="section-heading reveal">
+            <p class="section-number">02 / Prepare</p>
+            <h2 id="prep-title">Study smart. <em>Stress less.</em></h2>
+            <p class="section-description">
+              Focused practice for the next test. Geography is first; more subjects can slot right in.
+            </p>
+          </header>
+
+          <div class="prep-grid">
+            <a class="prep-card reveal" href="/ron/geo/">
+              <div class="prep-card-copy">
+                <span class="card-kicker">Geography · Portuguese</span>
+                <h3>Ron’s Geography Challenge</h3>
+                <p>
+                  Fast practice, instant explanations and progress tracking for confident test day.
+                </p>
+                <div class="prep-meta">
+                  <span>159 questions</span>
+                  <span>Instant feedback</span>
+                  <span>Saved progress</span>
+                </div>
+              </div>
+              <div class="globe" aria-hidden="true"><span>G</span></div>
+            </a>
+
+            <div class="prep-coming reveal" aria-label="More test preparation subjects are coming">
+              <p>More subjects are already waiting for their turn.</p>
             </div>
           </div>
-
-          <div class="signal-stage reveal" id="signal-stage">
-            <canvas
-              id="signal-canvas"
-              aria-label="Interactive animated field that follows your pointer"
-            ></canvas>
-            <span class="signal-note">Move your cursor / touch and drag</span>
-            <span class="signal-value" id="signal-value">signal: waiting</span>
-          </div>
         </div>
-
-        <footer class="footer shell">
-          <span>
-            ©
-            <span id="year"></span>
-            AI by Gazit
-          </span>
-          <span>Made with curiosity in Valbom</span>
-          <a href="https://lifeisfor.fun/" target="_blank" rel="noopener noreferrer">
-            Life is for fun ↗
-          </a>
-          <a href="#top">Again ↑</a>
-        </footer>
       </section>
     </main>
 
+    <footer class="site-footer">
+      <div class="footer-inner shell">
+        <span>© <span id="year"></span> AI by Gazit</span>
+        <span>Made with curiosity in Valbom</span>
+        <a href="https://lifeisfor.fun/" target="_blank" rel="noopener noreferrer">
+          Life is for fun ↗
+        </a>
+        <a href="#top">Again ↑</a>
+      </div>
+    </footer>
+
     <script>
-      // Keep the footer date current.
+      // Always show the current year.
       document.getElementById("year").textContent = new Date().getFullYear();
 
       const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      // Let the hero's color field react gently to pointer movement.
+      // Let the hero's color field gently follow the pointer.
       if (!reducedMotion) {
         document.addEventListener("pointermove", (event) => {
           document.documentElement.style.setProperty("--pointer-x", `${event.clientX}px`);
@@ -840,7 +995,7 @@
         });
       }
 
-      // Reveal the two lower sections as they enter the viewport.
+      // Reveal catalog items as they enter the viewport.
       const revealItems = document.querySelectorAll(".reveal");
       if (reducedMotion || !("IntersectionObserver" in window)) {
         revealItems.forEach((item) => item.classList.add("visible"));
@@ -854,111 +1009,10 @@
               }
             });
           },
-          { threshold: 0.14 },
+          { threshold: 0.12 },
         );
         revealItems.forEach((item) => observer.observe(item));
       }
-
-      // Interactive vector field.
-      const stage = document.getElementById("signal-stage");
-      const canvas = document.getElementById("signal-canvas");
-      const signalValue = document.getElementById("signal-value");
-      const context = canvas.getContext("2d");
-
-      let width = 0;
-      let height = 0;
-      let pointer = { x: 0.5, y: 0.5, active: false };
-      let animationFrame = 0;
-
-      function resizeCanvas() {
-        const box = stage.getBoundingClientRect();
-        const density = Math.min(devicePixelRatio || 1, 2);
-        width = box.width;
-        height = box.height;
-        canvas.width = Math.round(width * density);
-        canvas.height = Math.round(height * density);
-        context.setTransform(density, 0, 0, density, 0, 0);
-      }
-
-      function setPointer(clientX, clientY) {
-        const box = stage.getBoundingClientRect();
-        pointer.x = Math.max(0, Math.min(1, (clientX - box.left) / box.width));
-        pointer.y = Math.max(0, Math.min(1, (clientY - box.top) / box.height));
-        pointer.active = true;
-        signalValue.textContent = `signal: ${Math.round(pointer.x * 99)
-          .toString()
-          .padStart(2, "0")}·${Math.round(pointer.y * 99)
-          .toString()
-          .padStart(2, "0")}`;
-      }
-
-      stage.addEventListener("pointermove", (event) => {
-        setPointer(event.clientX, event.clientY);
-      });
-      stage.addEventListener("pointerdown", (event) => {
-        setPointer(event.clientX, event.clientY);
-      });
-      stage.addEventListener("pointerleave", () => {
-        pointer.active = false;
-        signalValue.textContent = "signal: drifting";
-      });
-
-      function draw(time = 0) {
-        context.clearRect(0, 0, width, height);
-
-        const columns = Math.max(9, Math.round(width / 46));
-        const rows = Math.max(9, Math.round(height / 46));
-        const gapX = width / (columns + 1);
-        const gapY = height / (rows + 1);
-        const targetX = pointer.active
-          ? pointer.x * width
-          : width * (0.5 + Math.sin(time * 0.0004) * 0.16);
-        const targetY = pointer.active
-          ? pointer.y * height
-          : height * (0.5 + Math.cos(time * 0.00035) * 0.13);
-
-        for (let row = 1; row <= rows; row++) {
-          for (let column = 1; column <= columns; column++) {
-            const x = column * gapX;
-            const y = row * gapY;
-            const deltaX = targetX - x;
-            const deltaY = targetY - y;
-            const distance = Math.hypot(deltaX, deltaY);
-            const influence = Math.max(0, 1 - (distance / Math.max(width, height)) * 2.1);
-            const angle = Math.atan2(deltaY, deltaX);
-            const lineLength = 5 + influence * 25;
-            const opacity = 0.15 + influence * 0.76;
-
-            context.beginPath();
-            context.moveTo(
-              x - Math.cos(angle) * lineLength * 0.5,
-              y - Math.sin(angle) * lineLength * 0.5,
-            );
-            context.lineTo(
-              x + Math.cos(angle) * lineLength * 0.5,
-              y + Math.sin(angle) * lineLength * 0.5,
-            );
-            context.strokeStyle =
-              influence > 0.55 ? `rgba(223,255,0,${opacity})` : `rgba(243,240,232,${opacity})`;
-            context.lineWidth = 1 + influence * 1.5;
-            context.stroke();
-          }
-        }
-
-        context.beginPath();
-        context.arc(targetX, targetY, 4, 0, Math.PI * 2);
-        context.fillStyle = "#ff593d";
-        context.fill();
-
-        if (!reducedMotion) {
-          animationFrame = requestAnimationFrame(draw);
-        }
-      }
-
-      resizeCanvas();
-      addEventListener("resize", resizeCanvas, { passive: true });
-      addEventListener("pagehide", () => cancelAnimationFrame(animationFrame));
-      draw();
     </script>
   </body>
 </html>
