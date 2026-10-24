@@ -11,6 +11,9 @@ const SOFT = 1;
 const STEEL = 2;
 const SAVE_KEY = "jellylemmy_save_v1";
 const SKILLS = ["turn", "build", "dig", "bash", "float"];
+const IS_COARSE_POINTER = window.matchMedia("(pointer: coarse)").matches;
+const MOBILE_GAME_SPEED = IS_COARSE_POINTER ? 1.2 : 1;
+const SKILL_TIME_SCALE = IS_COARSE_POINTER ? 0.6 : 0.28;
 
 // Every action uses several high-resolution poses. Walking uses a true gait
 // cycle with stable foot placement; falling has its own crisp, full-body arc.
@@ -576,6 +579,39 @@ let viewHeight = 540;
 let toastTimer = 0;
 let modalPrimaryAction = null;
 let modalSecondaryAction = null;
+let screenWakeLock = null;
+let wakeLockPending = false;
+
+function gameNeedsWakeLock() {
+  return running && !paused && !resolving && !gameScreen.hidden && !document.hidden;
+}
+
+async function requestScreenWakeLock() {
+  if (!("wakeLock" in navigator) || !gameNeedsWakeLock() || screenWakeLock || wakeLockPending) return;
+  wakeLockPending = true;
+  try {
+    const lock = await navigator.wakeLock.request("screen");
+    if (!gameNeedsWakeLock()) {
+      await lock.release();
+      return;
+    }
+    screenWakeLock = lock;
+    screenWakeLock.addEventListener("release", () => {
+      screenWakeLock = null;
+      if (gameNeedsWakeLock()) requestScreenWakeLock();
+    }, { once: true });
+  } catch {
+    screenWakeLock = null;
+  } finally {
+    wakeLockPending = false;
+  }
+}
+
+function releaseScreenWakeLock() {
+  const lock = screenWakeLock;
+  screenWakeLock = null;
+  lock?.release().catch(() => {});
+}
 
 function createTerrain() {
   tiles = Array.from({ length: WORLD_HEIGHT }, () => Array(WORLD_WIDTH).fill(EMPTY));
@@ -636,6 +672,7 @@ function startLevel(index) {
   resizeCanvas();
   playSound("start");
   startLevelMusic();
+  requestScreenWakeLock();
   announce(`${currentLevel.name}. Collect ${dolls.length} plush friends and rescue ${currentLevel.rescue} Lemmies.`);
 }
 
@@ -981,6 +1018,7 @@ function finishLevel() {
   if (resolving) return;
   resolving = true;
   running = false;
+  releaseScreenWakeLock();
   const stars = lost === 0 ? 3 : lost === 1 ? 2 : 1;
   const score = rescued * 500 + collected * 900 + Math.floor(timeLeft) * 12 + remainingSkills() * 80;
   save.unlocked = Math.max(save.unlocked, Math.min(LEVELS.length, currentLevelIndex + 2));
@@ -1008,6 +1046,7 @@ function failLevel(reason) {
   if (resolving) return;
   resolving = true;
   running = false;
+  releaseScreenWakeLock();
   stopLevelMusic();
   playSound("lose");
   showModal({
@@ -1045,6 +1084,7 @@ function hideModal() {
 function showMenu() {
   running = false;
   paused = false;
+  releaseScreenWakeLock();
   stopLevelMusic();
   hideModal();
   gameScreen.hidden = true;
@@ -1057,8 +1097,13 @@ function showMenu() {
 function togglePause() {
   if (resolving || gameScreen.hidden) return;
   paused = !paused;
-  if (paused) stopLevelMusic();
-  else startLevelMusic(0.08);
+  if (paused) {
+    stopLevelMusic();
+    releaseScreenWakeLock();
+  } else {
+    startLevelMusic(0.08);
+    requestScreenWakeLock();
+  }
   pauseButton.textContent = paused ? "▶" : "Ⅱ";
   pauseButton.setAttribute("aria-label", paused ? "Resume game" : "Pause game");
   showToast(paused ? "Rescue paused" : "Rescue resumed");
@@ -2037,7 +2082,8 @@ function gameLoop(time) {
   lastFrame = time;
   if (running && !paused && !resolving) {
     timeLeft -= rawElapsed;
-    const elapsed = selectedSkill ? rawElapsed * 0.28 : rawElapsed;
+    const gameplayElapsed = rawElapsed * MOBILE_GAME_SPEED;
+    const elapsed = selectedSkill ? gameplayElapsed * SKILL_TIME_SCALE : gameplayElapsed;
     spawnClock -= rawElapsed;
     if (spawned < currentLevel.population && spawnClock <= 0) {
       spawnUnit();
@@ -2087,7 +2133,12 @@ modalPrimary.addEventListener("click", () => modalPrimaryAction?.());
 modalSecondary.addEventListener("click", () => modalSecondaryAction?.());
 window.addEventListener("resize", resizeCanvas, { passive: true });
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden && running && !paused) togglePause();
+  if (document.hidden) {
+    releaseScreenWakeLock();
+    if (running && !paused) togglePause();
+  } else if (gameNeedsWakeLock()) {
+    requestScreenWakeLock();
+  }
 });
 window.addEventListener("online", () => {
   offlineBadge.textContent = "Game ready";
@@ -2109,5 +2160,6 @@ updateMenu();
 animationFrame = requestAnimationFrame(gameLoop);
 window.addEventListener("pagehide", () => {
   stopLevelMusic();
+  releaseScreenWakeLock();
   cancelAnimationFrame(animationFrame);
 });
