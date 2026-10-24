@@ -1107,17 +1107,19 @@ function drawPlush(item, cellWidth, cellHeight, time) {
 function drawUnit(unit, cellWidth, cellHeight, time) {
   const x = unit.x * cellWidth;
   const y = unit.y * cellHeight;
-  const size = Math.min(cellWidth, cellHeight) * 1.16;
+  const size = Math.min(cellWidth, cellHeight) * 1.4;
   const stride = Math.sin(time * 0.014 + unit.phase);
-  const actionColor = unit.state === "build" ? "#ffd65d" : unit.state === "bash" ? "#ff70b3" : "#65e6bd";
+  const falling = unit.state === "fall";
+  const actionColor = unit.state === "build" ? "#ffd65d" : unit.state === "bash" ? "#ff70b3" : "#62e5bd";
+  const outline = "#1c1530";
 
   context.save();
   context.translate(x, y);
   context.fillStyle = "rgba(3,1,12,0.36)";
   context.beginPath();
-  context.ellipse(0, -size * 0.02, size * 0.38, size * 0.1, 0, 0, Math.PI * 2);
+  context.ellipse(0, -size * 0.015, size * 0.4, size * 0.09, 0, 0, Math.PI * 2);
   context.fill();
-  context.translate(0, -size * 0.54 + stride * 1.2);
+  context.translate(0, -size * 0.58 + (falling ? 0 : stride * 1.1));
   context.scale(unit.dir, 1);
 
   if (selectedSkill) {
@@ -1128,49 +1130,124 @@ function drawUnit(unit, cellWidth, cellHeight, time) {
     context.setLineDash([]);
   }
 
-  // Feet and arms exaggerate motion at tiny sizes.
-  context.strokeStyle = "#28183e";
-  context.lineWidth = Math.max(1.5, size * 0.07);
+  // Two fully articulated legs: hips, knees and boots remain readable even on
+  // a phone. Falling Lemmies kick outward; walkers alternate each stride.
+  const leftFootX = falling ? -size * 0.32 : -size * 0.16 + stride * size * 0.14;
+  const rightFootX = falling ? size * 0.32 : size * 0.16 - stride * size * 0.14;
+  const leftKneeX = -size * 0.12 + stride * size * 0.06;
+  const rightKneeX = size * 0.12 - stride * size * 0.06;
+  const bootTilt = falling ? 0.45 : stride * 0.28;
+
+  context.strokeStyle = "#ffd5b5";
+  context.lineWidth = Math.max(3.2, size * 0.12);
   context.lineCap = "round";
   context.beginPath();
-  context.moveTo(-size * 0.16, size * 0.35); context.lineTo(-size * 0.2 + stride * size * 0.07, size * 0.53);
-  context.moveTo(size * 0.16, size * 0.35); context.lineTo(size * 0.2 - stride * size * 0.07, size * 0.53);
-  context.moveTo(-size * 0.3, 0); context.lineTo(-size * 0.44, size * 0.14 + stride * size * 0.06);
-  context.moveTo(size * 0.3, 0); context.lineTo(size * 0.44, size * 0.14 - stride * size * 0.06);
+  context.moveTo(-size * 0.11, size * 0.2);
+  context.lineTo(leftKneeX, size * 0.37);
+  context.lineTo(leftFootX, size * 0.52);
+  context.moveTo(size * 0.11, size * 0.2);
+  context.lineTo(rightKneeX, size * 0.37);
+  context.lineTo(rightFootX, size * 0.52);
   context.stroke();
 
-  const body = context.createLinearGradient(-size * 0.32, -size * 0.4, size * 0.35, size * 0.46);
-  body.addColorStop(0, "#c3ffe9");
-  body.addColorStop(0.45, actionColor);
-  body.addColorStop(1, "#289f89");
+  // A small pair of shorts keeps the two legs visually separate from the
+  // tunic while still reading clearly at one-cell character scale.
+  context.fillStyle = "#2f4abb";
+  context.strokeStyle = outline;
+  context.lineWidth = Math.max(1, size * 0.04);
+  roundedPath(-size * 0.22, size * 0.16, size * 0.2, size * 0.17, size * 0.05);
+  context.fill(); context.stroke();
+  roundedPath(size * 0.02, size * 0.16, size * 0.2, size * 0.17, size * 0.05);
+  context.fill(); context.stroke();
+
+  context.fillStyle = "#18142b";
+  context.strokeStyle = outline;
+  context.lineWidth = Math.max(1, size * 0.045);
+  context.save();
+  context.translate(leftFootX + size * 0.04, size * 0.53);
+  context.rotate(bootTilt);
+  context.beginPath(); context.ellipse(0, 0, size * 0.17, size * 0.085, 0, 0, Math.PI * 2); context.fill(); context.stroke();
+  context.restore();
+  context.save();
+  context.translate(rightFootX + size * 0.04, size * 0.53);
+  context.rotate(-bootTilt);
+  context.beginPath(); context.ellipse(0, 0, size * 0.17, size * 0.085, 0, 0, Math.PI * 2); context.fill(); context.stroke();
+  context.restore();
+
+  // Swinging arms with visible hands and action-specific poses.
+  const armSwing = falling ? 0 : stride * size * 0.11;
+  const frontHandX = unit.state === "bash" ? size * 0.57 : size * 0.39 - armSwing;
+  const frontHandY = unit.state === "build" ? -size * 0.16 : size * 0.13;
+  const backHandX = -size * 0.38 + armSwing;
+  const backHandY = falling ? -size * 0.08 : size * 0.13;
+  context.strokeStyle = "#4969dc";
+  context.lineWidth = Math.max(2.4, size * 0.09);
+  context.beginPath();
+  context.moveTo(-size * 0.25, -size * 0.01); context.lineTo(backHandX, backHandY);
+  context.moveTo(size * 0.25, -size * 0.01); context.lineTo(frontHandX, frontHandY);
+  context.stroke();
+  context.fillStyle = "#ffd5b5";
+  context.strokeStyle = outline;
+  context.lineWidth = Math.max(1, size * 0.04);
+  context.beginPath();
+  context.arc(backHandX, backHandY, size * 0.075, 0, Math.PI * 2);
+  context.arc(frontHandX, frontHandY, size * 0.075, 0, Math.PI * 2);
+  context.fill(); context.stroke();
+
+  // Blue tunic and belt create a recognisable little person, not a bean.
+  const body = context.createLinearGradient(-size * 0.28, -size * 0.18, size * 0.3, size * 0.3);
+  body.addColorStop(0, "#7895ff");
+  body.addColorStop(0.55, "#4263d8");
+  body.addColorStop(1, "#243c9f");
   context.shadowColor = actionColor;
   context.shadowBlur = unit.state === "walk" ? 5 : 11;
   context.fillStyle = body;
-  context.strokeStyle = "#28183e";
+  context.strokeStyle = outline;
   context.lineWidth = Math.max(1.5, size * 0.065);
-  context.beginPath();
-  context.ellipse(0, size * 0.04, size * 0.36, size * 0.46, -0.08, 0, Math.PI * 2);
+  roundedPath(-size * 0.3, -size * 0.13, size * 0.6, size * 0.45, size * 0.17);
   context.fill(); context.stroke();
   context.shadowBlur = 0;
+  context.fillStyle = actionColor;
+  roundedPath(-size * 0.3, size * 0.12, size * 0.6, size * 0.09, size * 0.04);
+  context.fill();
 
-  // Signature pink tuft.
-  const hair = context.createLinearGradient(0, -size * 0.6, 0, -size * 0.24);
-  hair.addColorStop(0, "#ffb0d5");
-  hair.addColorStop(1, "#ff4f9f");
+  // Separate head and face.
+  const skin = context.createRadialGradient(-size * 0.1, -size * 0.37, 1, 0, -size * 0.29, size * 0.32);
+  skin.addColorStop(0, "#fff0d6");
+  skin.addColorStop(1, "#eeb990");
+  context.fillStyle = skin;
+  context.strokeStyle = outline;
+  context.lineWidth = Math.max(1.4, size * 0.055);
+  context.beginPath();
+  context.arc(0, -size * 0.3, size * 0.265, 0, Math.PI * 2);
+  context.fill(); context.stroke();
+
+  // Wild green hair gives the walkers their unmistakable Lemmy silhouette.
+  const hair = context.createLinearGradient(0, -size * 0.72, 0, -size * 0.38);
+  hair.addColorStop(0, "#a5ff80");
+  hair.addColorStop(1, "#35c77b");
   context.fillStyle = hair;
   context.beginPath();
-  context.moveTo(-size * 0.31, -size * 0.27);
-  context.quadraticCurveTo(-size * 0.38, -size * 0.57, -size * 0.08, -size * 0.46);
-  context.quadraticCurveTo(size * 0.08, -size * 0.68, size * 0.18, -size * 0.42);
-  context.quadraticCurveTo(size * 0.4, -size * 0.5, size * 0.31, -size * 0.24);
+  context.moveTo(-size * 0.26, -size * 0.34);
+  context.quadraticCurveTo(-size * 0.37, -size * 0.61, -size * 0.13, -size * 0.52);
+  context.quadraticCurveTo(-size * 0.04, -size * 0.75, size * 0.07, -size * 0.53);
+  context.quadraticCurveTo(size * 0.22, -size * 0.7, size * 0.27, -size * 0.39);
   context.closePath();
   context.fill(); context.stroke();
 
-  context.fillStyle = "#241534";
-  context.beginPath(); context.arc(size * 0.12, -size * 0.05, size * 0.048, 0, Math.PI * 2); context.fill();
-  context.strokeStyle = "#241534";
+  context.fillStyle = outline;
+  context.beginPath(); context.arc(size * 0.1, -size * 0.32, size * 0.04, 0, Math.PI * 2); context.fill();
+  context.strokeStyle = outline;
   context.lineWidth = Math.max(1, size * 0.04);
-  context.beginPath(); context.arc(size * 0.13, size * 0.08, size * 0.11, 0.2, 1.6); context.stroke();
+  context.beginPath(); context.arc(size * 0.11, -size * 0.23, size * 0.1, 0.25, 1.55); context.stroke();
+
+  if (unit.state === "build") {
+    context.fillStyle = "#f6c64f";
+    context.strokeStyle = outline;
+    context.beginPath();
+    context.rect(size * 0.38, -size * 0.29, size * 0.2, size * 0.1);
+    context.fill(); context.stroke();
+  }
 
   if (unit.float && unit.state === "fall") {
     const umbrella = context.createLinearGradient(0, -size * 1.3, 0, -size * 0.78);
