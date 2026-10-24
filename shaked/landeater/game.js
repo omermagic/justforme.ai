@@ -258,6 +258,33 @@ function currentWorld() {
   return WORLDS[(game.level - 1) % WORLDS.length];
 }
 
+function difficultyForLevel(level) {
+  const step = Math.max(0, level - 1);
+  let label = "Sweet start";
+  if (level >= 9) label = "Expert garden";
+  else if (level >= 6) label = "Shadow storm";
+  else if (level >= 4) label = "Quick paws";
+  else if (level >= 2) label = "Getting brave";
+
+  return {
+    label,
+    target: Math.min(88, 75 + step),
+    enemyCount: Math.min(9, 2 + Math.floor(level / 2)),
+    baseEnemySpeed: Math.min(6, 2.45 + step * 0.2),
+    chaserCount: level === 1 ? 0 : Math.min(4, Math.ceil(step / 2)),
+    chaseForce: Math.min(1.35, 0.55 + step * 0.075),
+    chaseMaxSpeed: Math.min(6.8, 3 + step * 0.2),
+    bounceJitter: Math.min(0.38, 0.04 + step * 0.025),
+    hitRadius: Math.min(1.05, 0.82 + step * 0.015),
+    maxPickups: level >= 6 ? 1 : 2,
+    pickupLifetime: Math.max(6500, 11000 - step * 280),
+    firstPickupDelay: Math.min(10500, 6500 + step * 300),
+    pickupInterval: Math.min(18000, 12000 + step * 350),
+    shieldChance: Math.max(0.12, 0.28 - step * 0.012),
+    playerMoveDelay: Math.max(70, 96 - step * 0.5),
+  };
+}
+
 function createBoard() {
   board = Array.from({ length: ROWS }, (_, row) =>
     Array.from({ length: COLS }, (_, column) =>
@@ -294,39 +321,48 @@ function randomEmptyCell(minDistance = 0) {
 
 function spawnEnemies() {
   enemies = [];
-  const count = Math.min(8, 2 + Math.floor((game.level - 1) / 2));
-  const baseSpeed = Math.min(4.8, 2.35 + game.level * 0.13);
+  const difficulty = difficultyForLevel(game.level);
+  const firstChaser = difficulty.enemyCount - difficulty.chaserCount;
 
-  for (let index = 0; index < count; index += 1) {
+  for (let index = 0; index < difficulty.enemyCount; index += 1) {
     const cell = randomEmptyCell(10);
     const angle = Math.random() * Math.PI * 2;
-    const speed = baseSpeed * (0.88 + Math.random() * 0.25);
+    const speed = difficulty.baseEnemySpeed * (0.88 + Math.random() * 0.25);
     enemies.push({
       x: cell.x + 0.5,
       y: cell.y + 0.5,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
-      type: game.level >= 3 && index === count - 1 && game.level % 3 === 0 ? "chaser" : "puff",
+      type: index >= firstChaser ? "chaser" : "puff",
+      aggression: difficulty.chaseForce * (0.9 + Math.random() * 0.2),
       phase: Math.random() * Math.PI * 2,
     });
   }
 }
 
 function spawnPickup(forceType = null) {
-  if (!game.running || pickups.length >= 2) return;
+  const difficulty = difficultyForLevel(game.level);
+  if (!game.running || pickups.length >= difficulty.maxPickups) return;
   const cell = randomEmptyCell(6);
   const roll = Math.random();
-  const type = forceType || (roll < 0.46 ? "strawberry" : roll < 0.74 ? "shield" : "slow");
-  pickups.push({ ...cell, type, expiresAt: performance.now() + 11000, phase: Math.random() * 6 });
+  const shieldCutoff = 0.46 + difficulty.shieldChance;
+  const type = forceType || (roll < 0.46 ? "strawberry" : roll < shieldCutoff ? "shield" : "slow");
+  pickups.push({
+    ...cell,
+    type,
+    expiresAt: performance.now() + difficulty.pickupLifetime,
+    phase: Math.random() * 6,
+  });
 }
 
 function prepareLevel(level, keepScore = false) {
   game.level = Math.max(1, level);
+  const difficulty = difficultyForLevel(game.level);
   if (!keepScore) game.score = 0;
   game.levelStartScore = game.score;
   game.lives = 3;
   game.captured = 0;
-  game.target = Math.min(81, 75 + Math.floor((game.level - 1) / 3));
+  game.target = difficulty.target;
   game.combo = 0;
   game.fever = 0;
   game.feverUntil = 0;
@@ -336,7 +372,7 @@ function prepareLevel(level, keepScore = false) {
   game.paused = false;
   game.resolving = false;
   game.lastPlayerMove = performance.now();
-  game.nextPickupAt = performance.now() + 6500;
+  game.nextPickupAt = performance.now() + difficulty.firstPickupDelay;
 
   createBoard();
   resetPlayer();
@@ -345,11 +381,14 @@ function prepareLevel(level, keepScore = false) {
   if (game.level === 1) spawnPickup("strawberry");
 
   worldName.textContent = currentWorld().name;
-  levelLabel.textContent = `Level ${game.level}`;
+  levelLabel.textContent = `Level ${game.level} · ${difficulty.label}`;
   targetValue.textContent = String(game.target);
+  readyMessage.textContent = `${difficulty.label} · Save ${difficulty.target}%`;
   hideModal();
   updateHUD();
-  announce(`${currentWorld().name}, level ${game.level}. Swipe to begin.`);
+  announce(
+    `${currentWorld().name}, level ${game.level}. ${difficulty.enemyCount} shadows and ${difficulty.chaserCount} hunters. Save ${difficulty.target} percent. Swipe to begin.`,
+  );
   playSound("start");
 }
 
@@ -557,18 +596,18 @@ function loseLife(message) {
 }
 
 function moveEnemies(elapsed, time) {
+  const difficulty = difficultyForLevel(game.level);
   const slowFactor = game.slowUntil > time ? 0.47 : game.feverUntil > time ? 0.65 : 1;
 
   for (const enemy of enemies) {
     if (enemy.type === "chaser" && player.trail.length) {
       const angle = Math.atan2(player.y + 0.5 - enemy.y, player.x + 0.5 - enemy.x);
-      enemy.vx += Math.cos(angle) * elapsed * 0.55;
-      enemy.vy += Math.sin(angle) * elapsed * 0.55;
+      enemy.vx += Math.cos(angle) * elapsed * enemy.aggression;
+      enemy.vy += Math.sin(angle) * elapsed * enemy.aggression;
       const speed = Math.hypot(enemy.vx, enemy.vy);
-      const maximum = Math.min(5.3, 2.8 + game.level * 0.14);
-      if (speed > maximum) {
-        enemy.vx = (enemy.vx / speed) * maximum;
-        enemy.vy = (enemy.vy / speed) * maximum;
+      if (speed > difficulty.chaseMaxSpeed) {
+        enemy.vx = (enemy.vx / speed) * difficulty.chaseMaxSpeed;
+        enemy.vy = (enemy.vy / speed) * difficulty.chaseMaxSpeed;
       }
     }
 
@@ -578,11 +617,25 @@ function moveEnemies(elapsed, time) {
     const horizontalCell = board[Math.floor(enemy.y)]?.[Math.floor(nextX)];
     const verticalCell = board[Math.floor(nextY)]?.[Math.floor(enemy.x)];
 
-    if (horizontalCell === LAND || horizontalCell === undefined) enemy.vx *= -1;
-    else enemy.x = nextX;
+    let bounced = false;
+    if (horizontalCell === LAND || horizontalCell === undefined) {
+      enemy.vx *= -1;
+      bounced = true;
+    } else enemy.x = nextX;
 
-    if (verticalCell === LAND || verticalCell === undefined) enemy.vy *= -1;
-    else enemy.y = nextY;
+    if (verticalCell === LAND || verticalCell === undefined) {
+      enemy.vy *= -1;
+      bounced = true;
+    } else enemy.y = nextY;
+
+    if (bounced) {
+      const turn = (Math.random() - 0.5) * difficulty.bounceJitter;
+      const cosine = Math.cos(turn);
+      const sine = Math.sin(turn);
+      const turnedX = enemy.vx * cosine - enemy.vy * sine;
+      enemy.vy = enemy.vx * sine + enemy.vy * cosine;
+      enemy.vx = turnedX;
+    }
 
     const cell = board[Math.floor(enemy.y)]?.[Math.floor(enemy.x)];
     if (cell === TRAIL) {
@@ -592,7 +645,7 @@ function moveEnemies(elapsed, time) {
 
     if (
       player.trail.length &&
-      Math.hypot(enemy.x - player.x - 0.5, enemy.y - player.y - 0.5) < 0.82
+      Math.hypot(enemy.x - player.x - 0.5, enemy.y - player.y - 0.5) < difficulty.hitRadius
     ) {
       loseLife("A Shadow Puff caught you!");
       return;
@@ -610,6 +663,7 @@ function completeLevel() {
   game.running = false;
   player.direction = null;
   const completedLevel = game.level;
+  const nextDifficulty = difficultyForLevel(completedLevel + 1);
   const landSaved = Math.round(game.captured);
 
   save.bestScore = Math.max(save.bestScore, game.score);
@@ -623,7 +677,7 @@ function completeLevel() {
       sticker: completedLevel % 3 === 0 ? "✦" : "♥",
       kicker: `Level ${completedLevel} complete`,
       title: "Garden saved!",
-      copy: `${currentWorld().surprise} Ready for a faster garden with smarter shadows?`,
+      copy: `${currentWorld().surprise} Next: ${nextDifficulty.label}, ${nextDifficulty.enemyCount} shadows and ${nextDifficulty.target}% to save.`,
       stats: [`${landSaved}% claimed`, `${game.score.toLocaleString()} points`],
       primaryLabel: "Next garden",
       secondaryLabel: "Back to menu",
@@ -1050,7 +1104,8 @@ function gameLoop(time) {
   lastFrame = time;
 
   if (game.running && !game.paused && !game.resolving) {
-    const moveDelay = Math.max(54, 98 - game.level * 1.8);
+    const difficulty = difficultyForLevel(game.level);
+    const moveDelay = difficulty.playerMoveDelay;
     if (time - game.lastPlayerMove >= moveDelay) {
       movePlayer();
       game.lastPlayerMove = time;
@@ -1059,7 +1114,7 @@ function gameLoop(time) {
     pickups = pickups.filter((pickup) => pickup.expiresAt > time);
     if (time >= game.nextPickupAt) {
       spawnPickup();
-      game.nextPickupAt = time + Math.max(7000, 12500 - game.level * 180);
+      game.nextPickupAt = time + difficulty.pickupInterval;
     }
     if (game.feverUntil && time > game.feverUntil) game.feverUntil = 0;
     updateHUD();
