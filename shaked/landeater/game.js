@@ -219,6 +219,7 @@ function updateSoundButton() {
 
 let board = [];
 let enemies = [];
+let landBot = null;
 let pickups = [];
 let viewWidth = 600;
 let viewHeight = 920;
@@ -231,6 +232,8 @@ let modalSecondaryAction = null;
 const player = {
   x: Math.floor(COLS / 2),
   y: 1,
+  lastLandX: Math.floor(COLS / 2),
+  lastLandY: 1,
   direction: null,
   trail: [],
 };
@@ -241,6 +244,7 @@ const game = {
   resolving: false,
   level: 1,
   score: 0,
+  scoreDecayElapsed: 0,
   levelStartScore: 0,
   lives: 3,
   captured: 0,
@@ -282,6 +286,8 @@ function difficultyForLevel(level) {
     pickupInterval: Math.min(18000, 12000 + step * 350),
     shieldChance: Math.max(0.12, 0.28 - step * 0.012),
     playerMoveDelay: Math.max(70, 96 - step * 0.5),
+    landBotActive: level >= 16,
+    landBotMoveDelay: Math.max(155, 285 - Math.max(0, level - 16) * 10),
   };
 }
 
@@ -298,6 +304,8 @@ function createBoard() {
 function resetPlayer() {
   player.x = Math.floor(COLS / 2);
   player.y = 1;
+  player.lastLandX = player.x;
+  player.lastLandY = player.y;
   player.direction = null;
   player.trail = [];
   readyMessage.classList.remove("dismissed");
@@ -340,6 +348,20 @@ function spawnEnemies() {
   }
 }
 
+function spawnLandBot() {
+  const difficulty = difficultyForLevel(game.level);
+  landBot = difficulty.landBotActive
+    ? {
+        x: Math.floor(COLS / 2),
+        y: ROWS - BORDER,
+        previousX: Math.floor(COLS / 2),
+        previousY: ROWS - BORDER,
+        lastMoveAt: performance.now(),
+        phase: Math.random() * Math.PI * 2,
+      }
+    : null;
+}
+
 function spawnPickup(forceType = null) {
   const difficulty = difficultyForLevel(game.level);
   if (!game.running || pickups.length >= difficulty.maxPickups) return;
@@ -359,6 +381,7 @@ function prepareLevel(level, keepScore = false) {
   game.level = Math.max(1, level);
   const difficulty = difficultyForLevel(game.level);
   if (!keepScore) game.score = 0;
+  game.scoreDecayElapsed = 0;
   game.levelStartScore = game.score;
   game.lives = 3;
   game.captured = 0;
@@ -377,17 +400,20 @@ function prepareLevel(level, keepScore = false) {
   createBoard();
   resetPlayer();
   spawnEnemies();
+  spawnLandBot();
   pickups = [];
   if (game.level === 1) spawnPickup("strawberry");
 
   worldName.textContent = currentWorld().name;
   levelLabel.textContent = `Level ${game.level} · ${difficulty.label}`;
   targetValue.textContent = String(game.target);
-  readyMessage.textContent = `${difficulty.label} · Save ${difficulty.target}%`;
+  readyMessage.textContent = difficulty.landBotActive
+    ? `LAND BOT ALERT · Save ${difficulty.target}%`
+    : `${difficulty.label} · Save ${difficulty.target}%`;
   hideModal();
   updateHUD();
   announce(
-    `${currentWorld().name}, level ${game.level}. ${difficulty.enemyCount} shadows and ${difficulty.chaserCount} hunters. Save ${difficulty.target} percent. Swipe to begin.`,
+    `${currentWorld().name}, level ${game.level}. ${difficulty.enemyCount} shadows and ${difficulty.chaserCount} hunters.${difficulty.landBotActive ? " The Garden Bot now patrols the safe land." : ""} Save ${difficulty.target} percent. Swipe to begin.`,
   );
   playSound("start");
 }
@@ -546,6 +572,11 @@ function movePlayer() {
     claimTerritory();
   }
 
+  if (board[player.y][player.x] === LAND) {
+    player.lastLandX = player.x;
+    player.lastLandY = player.y;
+  }
+
   const pickup = pickups.find((item) => item.x === player.x && item.y === player.y);
   if (pickup) {
     pickups = pickups.filter((item) => item !== pickup);
@@ -554,6 +585,8 @@ function movePlayer() {
 
   if (enemies.some((enemy) => Math.hypot(enemy.x - player.x - 0.5, enemy.y - player.y - 0.5) < 0.8)) {
     loseLife("A Shadow Puff caught you!");
+  } else if (landBot && landBot.x === player.x && landBot.y === player.y) {
+    loseLife("The Garden Bot caught you on the safe land!");
   }
 }
 
@@ -581,7 +614,10 @@ function loseLife(message) {
 
   player.x = Math.floor(COLS / 2);
   player.y = 1;
+  player.lastLandX = player.x;
+  player.lastLandY = player.y;
   player.direction = null;
+  spawnLandBot();
   readyMessage.classList.remove("dismissed");
   announce(message);
   updateHUD();
@@ -653,6 +689,63 @@ function moveEnemies(elapsed, time) {
   }
 }
 
+function findLandBotStep(targetX, targetY) {
+  if (!landBot || board[targetY]?.[targetX] !== LAND) return null;
+
+  const startIndex = landBot.y * COLS + landBot.x;
+  const targetIndex = targetY * COLS + targetX;
+  if (startIndex === targetIndex) return { x: landBot.x, y: landBot.y };
+
+  const parents = new Int16Array(COLS * ROWS);
+  parents.fill(-1);
+  const queue = new Int16Array(COLS * ROWS);
+  let queueStart = 0;
+  let queueEnd = 0;
+  queue[queueEnd++] = startIndex;
+  parents[startIndex] = startIndex;
+
+  const offsets = [-1, 1, -COLS, COLS];
+  while (queueStart < queueEnd && parents[targetIndex] === -1) {
+    const current = queue[queueStart++];
+    const currentX = current % COLS;
+
+    for (const offset of offsets) {
+      const next = current + offset;
+      if (next < 0 || next >= COLS * ROWS || parents[next] !== -1) continue;
+      const nextX = next % COLS;
+      if (Math.abs(nextX - currentX) > 1) continue;
+      const nextY = Math.floor(next / COLS);
+      if (board[nextY]?.[nextX] !== LAND) continue;
+      parents[next] = current;
+      queue[queueEnd++] = next;
+    }
+  }
+
+  if (parents[targetIndex] === -1) return null;
+  let step = targetIndex;
+  while (parents[step] !== startIndex) step = parents[step];
+  return { x: step % COLS, y: Math.floor(step / COLS) };
+}
+
+function moveLandBot(time) {
+  if (!landBot) return;
+  const difficulty = difficultyForLevel(game.level);
+  if (time - landBot.lastMoveAt < difficulty.landBotMoveDelay) return;
+
+  const step = findLandBotStep(player.lastLandX, player.lastLandY);
+  landBot.previousX = landBot.x;
+  landBot.previousY = landBot.y;
+  if (step) {
+    landBot.x = step.x;
+    landBot.y = step.y;
+  }
+  landBot.lastMoveAt = time;
+
+  if (landBot.x === player.x && landBot.y === player.y) {
+    loseLife("The Garden Bot caught you on the safe land!");
+  }
+}
+
 /* --------------------------------------------------------------------------
  * Level results
  * ----------------------------------------------------------------------- */
@@ -677,7 +770,7 @@ function completeLevel() {
       sticker: completedLevel % 3 === 0 ? "✦" : "♥",
       kicker: `Level ${completedLevel} complete`,
       title: "Garden saved!",
-      copy: `${currentWorld().surprise} Next: ${nextDifficulty.label}, ${nextDifficulty.enemyCount} shadows and ${nextDifficulty.target}% to save.`,
+      copy: `${currentWorld().surprise} Next: ${nextDifficulty.label}, ${nextDifficulty.enemyCount} shadows${nextDifficulty.landBotActive ? ", plus the Garden Bot on safe land," : ""} and ${nextDifficulty.target}% to save.`,
       stats: [`${landSaved}% claimed`, `${game.score.toLocaleString()} points`],
       primaryLabel: "Next garden",
       secondaryLabel: "Back to menu",
@@ -926,6 +1019,59 @@ function drawEnemy(enemy, time) {
   context.restore();
 }
 
+function drawLandBot(bot, time) {
+  const difficulty = difficultyForLevel(game.level);
+  const progress = Math.min(1, Math.max(0, (time - bot.lastMoveAt) / difficulty.landBotMoveDelay));
+  const eased = 1 - (1 - progress) ** 3;
+  const column = bot.previousX + (bot.x - bot.previousX) * eased;
+  const row = bot.previousY + (bot.y - bot.previousY) * eased;
+  const box = cellBox(column, row);
+  const unit = Math.min(box.width, box.height);
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2 + Math.sin(time * 0.012 + bot.phase) * unit * 0.07;
+
+  context.save();
+  context.translate(x, y);
+  context.shadowColor = "#43f1ff";
+  context.shadowBlur = unit * 0.75;
+
+  context.fillStyle = "#17284d";
+  context.strokeStyle = "#ffffff";
+  context.lineWidth = Math.max(1, unit * 0.1);
+  context.beginPath();
+  context.roundRect(-unit * 0.72, -unit * 0.48, unit * 1.44, unit * 0.96, unit * 0.35);
+  context.fill();
+  context.stroke();
+  context.shadowBlur = 0;
+
+  context.strokeStyle = "#17284d";
+  context.beginPath();
+  context.moveTo(0, -unit * 0.47);
+  context.lineTo(0, -unit * 0.82);
+  context.stroke();
+  context.fillStyle = "#ff4f91";
+  context.beginPath();
+  context.arc(0, -unit * 0.9, unit * 0.13, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "#54efff";
+  context.beginPath();
+  context.ellipse(-unit * 0.26, -unit * 0.05, unit * 0.13, unit * 0.17, 0, 0, Math.PI * 2);
+  context.ellipse(unit * 0.26, -unit * 0.05, unit * 0.13, unit * 0.17, 0, 0, Math.PI * 2);
+  context.fill();
+
+  context.strokeStyle = "#ff8fbe";
+  context.lineWidth = Math.max(1, unit * 0.08);
+  context.beginPath();
+  context.arc(0, unit * 0.1, unit * 0.25, 0.15, Math.PI - 0.15);
+  context.stroke();
+
+  context.fillStyle = "#283d69";
+  context.fillRect(-unit * 0.62, unit * 0.42, unit * 0.42, unit * 0.2);
+  context.fillRect(unit * 0.2, unit * 0.42, unit * 0.42, unit * 0.2);
+  context.restore();
+}
+
 function drawPickup(pickup, time) {
   const box = cellBox(pickup.x, pickup.y);
   const unit = Math.min(box.width, box.height);
@@ -1004,6 +1150,7 @@ function drawGame(time = performance.now()) {
 
   pickups.forEach((pickup) => drawPickup(pickup, time));
   enemies.forEach((enemy) => drawEnemy(enemy, time));
+  if (landBot) drawLandBot(landBot, time);
   drawKitty(player.x, player.y, time);
 
   if (feverActive) {
@@ -1100,7 +1247,8 @@ document.addEventListener("keydown", (event) => {
  * ----------------------------------------------------------------------- */
 
 function gameLoop(time) {
-  const elapsed = Math.min(0.04, Math.max(0, (time - lastFrame) / 1000));
+  const frameElapsed = Math.max(0, (time - lastFrame) / 1000);
+  const elapsed = Math.min(0.04, frameElapsed);
   lastFrame = time;
 
   if (game.running && !game.paused && !game.resolving) {
@@ -1111,6 +1259,13 @@ function gameLoop(time) {
       game.lastPlayerMove = time;
     }
     moveEnemies(elapsed, time);
+    moveLandBot(time);
+    game.scoreDecayElapsed += frameElapsed;
+    if (game.scoreDecayElapsed >= 1) {
+      const seconds = Math.floor(game.scoreDecayElapsed);
+      game.score = Math.max(0, game.score - seconds);
+      game.scoreDecayElapsed -= seconds;
+    }
     pickups = pickups.filter((pickup) => pickup.expiresAt > time);
     if (time >= game.nextPickupAt) {
       spawnPickup();
