@@ -25,7 +25,10 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=2" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Outfit:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css?v=3" />
     <title>Jelly Lemmy — The Great Plush Rescue</title>
   </head>
 
@@ -38,7 +41,7 @@
             <span aria-hidden="true">←</span>
             <span>AI by Gazit</span>
           </a>
-          <span class="offline-badge" id="offline-badge">Ready offline</span>
+          <span class="offline-badge" id="offline-badge">Game ready</span>
         </header>
 
         <div class="hero">
@@ -49,6 +52,11 @@
               Tiny Lemmies never stop walking. Give them the right skills, collect every super-cute
               Jellycat doll and guide the troop safely home.
             </p>
+            <ul class="hero-chips" aria-label="Game features">
+              <li>20 worlds</li>
+              <li>20 soundtracks</li>
+              <li>Progress saved</li>
+            </ul>
             <div class="hero-actions">
               <button class="primary-button" id="continue-button" type="button">Begin rescue</button>
               <button class="text-button" id="reset-button" type="button">Reset progress</button>
@@ -96,7 +104,7 @@
 
         <footer class="menu-footer">
           <span>Made for brave little thinkers</span>
-          <span>Tap controls · Keyboard friendly · Offline ready</span>
+          <span>Tap controls · 20 original tracks · Progress saved</span>
         </footer>
       </section>
 
@@ -147,19 +155,24 @@
 
         <div class="skill-dock" id="skill-dock" role="toolbar" aria-label="Lemmy skills">
           <button class="skill-button" data-skill="turn" type="button">
-            <span aria-hidden="true">↶</span><b>Turn</b><small id="skill-turn">0</small>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 5 11l4 4M6 11h7a5 5 0 1 1 0 10h-2" /></svg>
+            <b>Turn</b><small id="skill-turn">0</small>
           </button>
           <button class="skill-button" data-skill="build" type="button">
-            <span aria-hidden="true">╱</span><b>Build</b><small id="skill-build">0</small>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h6v-5h6V9h6" /><path d="m17 5 4 4-4 4" /></svg>
+            <b>Build</b><small id="skill-build">0</small>
           </button>
           <button class="skill-button" data-skill="dig" type="button">
-            <span aria-hidden="true">↓</span><b>Dig</b><small id="skill-dig">0</small>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 3-2 3 2-3 6Z" /><path d="M12 10v9M8 19h8l-1 3H9Z" /></svg>
+            <b>Dig</b><small id="skill-dig">0</small>
           </button>
           <button class="skill-button" data-skill="bash" type="button">
-            <span aria-hidden="true">→</span><b>Bash</b><small id="skill-bash">0</small>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 3 7 7-4 4-7-7Z" /><path d="M12 9 4 21M2 19l3 3" /></svg>
+            <b>Bash</b><small id="skill-bash">0</small>
           </button>
           <button class="skill-button" data-skill="float" type="button">
-            <span aria-hidden="true">☂</span><b>Float</b><small id="skill-float">0</small>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 18 0c-2-2-4-2-6 0-2-2-4-2-6 0-2-2-4-2-6 0Z" /><path d="M12 3v15c0 4 5 4 5 0" /></svg>
+            <b>Float</b><small id="skill-float">0</small>
           </button>
           <button class="restart-button" id="restart-button" type="button" aria-label="Restart level">↺</button>
         </div>
@@ -179,6 +192,6 @@
     </div>
 
     <div class="sr-only" id="announcer" aria-live="assertive"></div>
-    <script src="./game.js?v=2"></script>
+    <script src="./game.js?v=3"></script>
   </body>
 </html>

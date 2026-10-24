@@ -365,8 +365,10 @@ function renderLevelGrid() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "level-card";
+    button.dataset.theme = level.theme;
     button.disabled = !unlocked;
-    button.innerHTML = `<span>Level ${index + 1}</span><i class="stars">${unlocked ? `${"★".repeat(stars)}${"☆".repeat(3 - stars)}` : "🔒"}</i><strong>${level.name}</strong><small>${level.dolls.length} plush</small>`;
+    button.setAttribute("aria-label", `${unlocked ? "Play" : "Locked"} level ${index + 1}: ${level.name}`);
+    button.innerHTML = `<span>Mission ${String(index + 1).padStart(2, "0")}</span><i class="stars">${unlocked ? `${"★".repeat(stars)}${"☆".repeat(3 - stars)}` : "◆"}</i><strong>${level.name}</strong><em>♫ ${MUSIC[index].title}</em><small>${level.dolls.length} plush</small>`;
     button.addEventListener("click", () => startLevel(index));
     levelGrid.appendChild(button);
   });
@@ -997,30 +999,107 @@ function burst(x, y, color, count) {
   }
 }
 
+function roundedPath(x, y, width, height, radius) {
+  const corner = Math.min(radius, width / 2, height / 2);
+  context.beginPath();
+  context.moveTo(x + corner, y);
+  context.arcTo(x + width, y, x + width, y + height, corner);
+  context.arcTo(x + width, y + height, x, y + height, corner);
+  context.arcTo(x, y + height, x, y, corner);
+  context.arcTo(x, y, x + width, y, corner);
+  context.closePath();
+}
+
 function drawPlush(item, cellWidth, cellHeight, time) {
   const x = item.x * cellWidth;
-  const y = (item.y - 0.58) * cellHeight + Math.sin(time * 0.004 + item.bob) * 3;
-  const size = Math.min(cellWidth, cellHeight) * 0.72;
+  const y = (item.y - 0.66) * cellHeight + Math.sin(time * 0.004 + item.bob) * 3.5;
+  const size = Math.min(cellWidth, cellHeight) * 1.08;
+  const colors = {
+    bunny: ["#fff7ef", "#eacdc5"], bear: ["#dbad82", "#9b6548"], frog: ["#a8ed91", "#56a968"],
+    cat: ["#fffaf1", "#cfc4bd"], duck: ["#ffe77a", "#e5a834"], elephant: ["#c5d1e2", "#7d8fae"],
+    fox: ["#ffad6b", "#c75e42"], penguin: ["#7989a9", "#35405d"], dragon: ["#c49cff", "#7756b7"],
+    puppy: ["#e6bd8b", "#a86e4f"], mouse: ["#d8cad2", "#998796"], whale: ["#8ed6f5", "#4b91bb"],
+  };
+  const [light, dark] = colors[item.type] || ["#ffb4d0", "#d76d9b"];
+
   context.save();
   context.translate(x, y);
-  if (item.collected) context.globalAlpha = 0.16;
-  const colors = { bunny: "#f4d8d0", bear: "#c89167", frog: "#8fd28a", cat: "#ece6df", duck: "#ffd85c", elephant: "#a9b8ce", fox: "#e9985d", penguin: "#66708c", dragon: "#aa8bdd", puppy: "#d6a878", mouse: "#c3b4bd", whale: "#79b9df" };
-  context.fillStyle = colors[item.type] || "#ffb4d0";
-  context.strokeStyle = "#241a35";
-  context.lineWidth = 2;
+  if (item.collected) context.globalAlpha = 0.12;
+
+  // Soft collectible aura and grounding shadow.
+  context.shadowColor = light;
+  context.shadowBlur = size * 0.8;
+  context.fillStyle = "rgba(255,255,255,0.16)";
   context.beginPath();
-  context.ellipse(0, 0, size * 0.46, size * 0.55, 0, 0, Math.PI * 2);
-  context.fill(); context.stroke();
-  if (["bunny", "cat", "fox", "mouse"].includes(item.type)) {
+  context.arc(0, 0, size * 0.67, 0, Math.PI * 2);
+  context.fill();
+  context.shadowBlur = 0;
+  context.fillStyle = "rgba(5,2,16,0.28)";
+  context.beginPath();
+  context.ellipse(0, size * 0.52, size * 0.42, size * 0.12, 0, 0, Math.PI * 2);
+  context.fill();
+
+  const fur = context.createLinearGradient(-size * 0.35, -size * 0.5, size * 0.35, size * 0.55);
+  fur.addColorStop(0, light);
+  fur.addColorStop(1, dark);
+  context.fillStyle = fur;
+  context.strokeStyle = "rgba(31,20,53,0.9)";
+  context.lineWidth = Math.max(1.3, size * 0.065);
+  context.lineJoin = "round";
+
+  // Distinct silhouettes make every collected friend recognizable.
+  if (item.type === "bunny") {
     context.beginPath();
-    context.ellipse(-size * 0.24, -size * 0.46, size * 0.12, size * (item.type === "bunny" ? 0.32 : 0.2), -0.2, 0, Math.PI * 2);
-    context.ellipse(size * 0.24, -size * 0.46, size * 0.12, size * (item.type === "bunny" ? 0.32 : 0.2), 0.2, 0, Math.PI * 2);
+    context.ellipse(-size * 0.2, -size * 0.55, size * 0.11, size * 0.32, -0.12, 0, Math.PI * 2);
+    context.ellipse(size * 0.2, -size * 0.55, size * 0.11, size * 0.32, 0.12, 0, Math.PI * 2);
+    context.fill(); context.stroke();
+  } else if (["cat", "fox", "mouse"].includes(item.type)) {
+    context.beginPath();
+    context.moveTo(-size * 0.42, -size * 0.28); context.lineTo(-size * 0.28, -size * 0.65); context.lineTo(-size * 0.06, -size * 0.38);
+    context.moveTo(size * 0.42, -size * 0.28); context.lineTo(size * 0.28, -size * 0.65); context.lineTo(size * 0.06, -size * 0.38);
+    context.fill(); context.stroke();
+  } else if (["bear", "puppy"].includes(item.type)) {
+    context.beginPath();
+    context.arc(-size * 0.3, -size * 0.35, size * 0.17, 0, Math.PI * 2);
+    context.arc(size * 0.3, -size * 0.35, size * 0.17, 0, Math.PI * 2);
+    context.fill(); context.stroke();
+  } else if (item.type === "frog") {
+    context.beginPath();
+    context.arc(-size * 0.24, -size * 0.38, size * 0.15, 0, Math.PI * 2);
+    context.arc(size * 0.24, -size * 0.38, size * 0.15, 0, Math.PI * 2);
+    context.fill(); context.stroke();
+  } else if (item.type === "dragon") {
+    context.beginPath();
+    context.moveTo(-size * 0.34, -size * 0.35); context.lineTo(-size * 0.46, -size * 0.68); context.lineTo(-size * 0.12, -size * 0.43);
+    context.moveTo(size * 0.34, -size * 0.35); context.lineTo(size * 0.46, -size * 0.68); context.lineTo(size * 0.12, -size * 0.43);
     context.fill(); context.stroke();
   }
-  context.fillStyle = "#241a35";
+
   context.beginPath();
-  context.arc(-size * 0.14, -size * 0.08, 1.7, 0, Math.PI * 2);
-  context.arc(size * 0.14, -size * 0.08, 1.7, 0, Math.PI * 2);
+  context.ellipse(0, 0, size * 0.45, size * 0.54, 0, 0, Math.PI * 2);
+  context.fill(); context.stroke();
+
+  if (item.type === "elephant") {
+    context.beginPath();
+    context.moveTo(size * 0.05, size * 0.02);
+    context.quadraticCurveTo(size * 0.37, size * 0.25, size * 0.14, size * 0.43);
+    context.stroke();
+  }
+
+  // Face, shine and stitched smile.
+  context.fillStyle = "#261936";
+  context.beginPath();
+  context.arc(-size * 0.14, -size * 0.08, size * 0.045, 0, Math.PI * 2);
+  context.arc(size * 0.14, -size * 0.08, size * 0.045, 0, Math.PI * 2);
+  context.fill();
+  context.strokeStyle = "rgba(38,25,54,0.72)";
+  context.lineWidth = Math.max(1, size * 0.04);
+  context.beginPath();
+  context.arc(0, size * 0.06, size * 0.12, 0.15, Math.PI - 0.15);
+  context.stroke();
+  context.fillStyle = "rgba(255,255,255,0.52)";
+  context.beginPath();
+  context.ellipse(-size * 0.2, -size * 0.26, size * 0.08, size * 0.13, -0.5, 0, Math.PI * 2);
   context.fill();
   context.restore();
 }
@@ -1028,29 +1107,128 @@ function drawPlush(item, cellWidth, cellHeight, time) {
 function drawUnit(unit, cellWidth, cellHeight, time) {
   const x = unit.x * cellWidth;
   const y = unit.y * cellHeight;
-  const size = Math.min(cellWidth, cellHeight) * 0.76;
+  const size = Math.min(cellWidth, cellHeight) * 1.16;
+  const stride = Math.sin(time * 0.014 + unit.phase);
+  const actionColor = unit.state === "build" ? "#ffd65d" : unit.state === "bash" ? "#ff70b3" : "#65e6bd";
+
   context.save();
-  context.translate(x, y - size * 0.48);
+  context.translate(x, y);
+  context.fillStyle = "rgba(3,1,12,0.36)";
+  context.beginPath();
+  context.ellipse(0, -size * 0.02, size * 0.38, size * 0.1, 0, 0, Math.PI * 2);
+  context.fill();
+  context.translate(0, -size * 0.54 + stride * 1.2);
   context.scale(unit.dir, 1);
-  const bounce = Math.sin(time * 0.012 + unit.phase) * 1.5;
-  context.translate(0, bounce);
+
   if (selectedSkill) {
-    context.strokeStyle = "rgba(255,216,92,0.5)";
+    context.strokeStyle = `rgba(255,216,92,${0.38 + Math.sin(time * 0.01) * 0.15})`;
     context.lineWidth = 2;
+    context.setLineDash([4, 4]);
     context.beginPath(); context.arc(0, 0, size * 0.72, 0, Math.PI * 2); context.stroke();
+    context.setLineDash([]);
   }
-  context.fillStyle = unit.state === "build" ? "#ffd85c" : unit.state === "bash" ? "#ff8fb8" : "#8ce5c3";
-  context.strokeStyle = "#241a35";
-  context.lineWidth = 2;
-  context.beginPath(); context.ellipse(0, 0, size * 0.42, size * 0.52, 0, 0, Math.PI * 2); context.fill(); context.stroke();
-  context.fillStyle = "#ff8fb8";
-  context.beginPath(); context.ellipse(0, -size * 0.44, size * 0.35, size * 0.16, -0.08, 0, Math.PI * 2); context.fill(); context.stroke();
-  context.fillStyle = "#241a35";
-  context.beginPath(); context.arc(size * 0.13, -size * 0.08, 1.8, 0, Math.PI * 2); context.fill();
+
+  // Feet and arms exaggerate motion at tiny sizes.
+  context.strokeStyle = "#28183e";
+  context.lineWidth = Math.max(1.5, size * 0.07);
+  context.lineCap = "round";
+  context.beginPath();
+  context.moveTo(-size * 0.16, size * 0.35); context.lineTo(-size * 0.2 + stride * size * 0.07, size * 0.53);
+  context.moveTo(size * 0.16, size * 0.35); context.lineTo(size * 0.2 - stride * size * 0.07, size * 0.53);
+  context.moveTo(-size * 0.3, 0); context.lineTo(-size * 0.44, size * 0.14 + stride * size * 0.06);
+  context.moveTo(size * 0.3, 0); context.lineTo(size * 0.44, size * 0.14 - stride * size * 0.06);
+  context.stroke();
+
+  const body = context.createLinearGradient(-size * 0.32, -size * 0.4, size * 0.35, size * 0.46);
+  body.addColorStop(0, "#c3ffe9");
+  body.addColorStop(0.45, actionColor);
+  body.addColorStop(1, "#289f89");
+  context.shadowColor = actionColor;
+  context.shadowBlur = unit.state === "walk" ? 5 : 11;
+  context.fillStyle = body;
+  context.strokeStyle = "#28183e";
+  context.lineWidth = Math.max(1.5, size * 0.065);
+  context.beginPath();
+  context.ellipse(0, size * 0.04, size * 0.36, size * 0.46, -0.08, 0, Math.PI * 2);
+  context.fill(); context.stroke();
+  context.shadowBlur = 0;
+
+  // Signature pink tuft.
+  const hair = context.createLinearGradient(0, -size * 0.6, 0, -size * 0.24);
+  hair.addColorStop(0, "#ffb0d5");
+  hair.addColorStop(1, "#ff4f9f");
+  context.fillStyle = hair;
+  context.beginPath();
+  context.moveTo(-size * 0.31, -size * 0.27);
+  context.quadraticCurveTo(-size * 0.38, -size * 0.57, -size * 0.08, -size * 0.46);
+  context.quadraticCurveTo(size * 0.08, -size * 0.68, size * 0.18, -size * 0.42);
+  context.quadraticCurveTo(size * 0.4, -size * 0.5, size * 0.31, -size * 0.24);
+  context.closePath();
+  context.fill(); context.stroke();
+
+  context.fillStyle = "#241534";
+  context.beginPath(); context.arc(size * 0.12, -size * 0.05, size * 0.048, 0, Math.PI * 2); context.fill();
+  context.strokeStyle = "#241534";
+  context.lineWidth = Math.max(1, size * 0.04);
+  context.beginPath(); context.arc(size * 0.13, size * 0.08, size * 0.11, 0.2, 1.6); context.stroke();
+
   if (unit.float && unit.state === "fall") {
-    context.strokeStyle = "#fff8ec";
-    context.beginPath(); context.arc(0, -size * 0.8, size * 0.55, Math.PI, Math.PI * 2); context.stroke();
-    context.beginPath(); context.moveTo(0, -size * 0.8); context.lineTo(0, -size * 0.25); context.stroke();
+    const umbrella = context.createLinearGradient(0, -size * 1.3, 0, -size * 0.78);
+    umbrella.addColorStop(0, "#fff29a");
+    umbrella.addColorStop(1, "#ff78b7");
+    context.fillStyle = umbrella;
+    context.strokeStyle = "#fff";
+    context.lineWidth = 1.5;
+    context.beginPath();
+    context.arc(0, -size * 0.9, size * 0.58, Math.PI, Math.PI * 2);
+    context.quadraticCurveTo(size * 0.3, -size * 0.78, 0, -size * 0.9);
+    context.quadraticCurveTo(-size * 0.3, -size * 0.78, -size * 0.58, -size * 0.9);
+    context.fill(); context.stroke();
+    context.beginPath(); context.moveTo(0, -size * 0.9); context.lineTo(0, -size * 0.27); context.stroke();
+  }
+  context.restore();
+}
+
+function drawPortal(point, cellWidth, cellHeight, theme, time, isExit = false) {
+  const x = point.x * cellWidth;
+  const y = point.y * cellHeight;
+  const width = cellWidth * (isExit ? 1.55 : 1.42);
+  const height = cellHeight * (isExit ? 1.82 : 1.2);
+  const top = y - height;
+  const pulse = 0.82 + Math.sin(time * 0.004 + (isExit ? 2 : 0)) * 0.12;
+
+  context.save();
+  context.shadowColor = theme.glow;
+  context.shadowBlur = 20 * pulse;
+  const glow = context.createLinearGradient(x, top, x, y);
+  glow.addColorStop(0, isExit ? "#fff7b5" : theme.glow);
+  glow.addColorStop(1, isExit ? theme.glow : "rgba(255,255,255,0.25)");
+  context.fillStyle = glow;
+  roundedPath(x - width / 2, top, width, height, width * 0.45);
+  context.fill();
+  context.shadowBlur = 0;
+
+  context.fillStyle = "rgba(20,9,43,0.78)";
+  roundedPath(x - width * 0.36, top + width * 0.18, width * 0.72, height - width * 0.18, width * 0.32);
+  context.fill();
+  context.strokeStyle = "rgba(255,255,255,0.88)";
+  context.lineWidth = 1.5;
+  context.stroke();
+
+  context.strokeStyle = theme.glow;
+  context.lineWidth = 2;
+  context.setLineDash([4, 5]);
+  context.lineDashOffset = -(time * 0.02) % 18;
+  context.beginPath();
+  context.ellipse(x, top + height * 0.48, width * 0.29, height * 0.29, 0, 0, Math.PI * 2);
+  context.stroke();
+  context.setLineDash([]);
+
+  if (isExit) {
+    context.fillStyle = "white";
+    context.font = `900 ${Math.max(7, cellHeight * 0.25)}px Arial`;
+    context.textAlign = "center";
+    context.fillText("HOME", x, top + height * 0.77);
   }
   context.restore();
 }
@@ -1059,28 +1237,87 @@ function drawGame(time) {
   const cellWidth = viewWidth / WORLD_WIDTH;
   const cellHeight = viewHeight / WORLD_HEIGHT;
   const theme = THEMES[currentLevel.theme];
-  const gradient = context.createLinearGradient(0, 0, 0, viewHeight);
-  gradient.addColorStop(0, theme.sky);
-  gradient.addColorStop(1, "#160f25");
-  context.fillStyle = gradient;
+
+  // Layered sky with an aurora, planet and deterministic twinkling stars.
+  const sky = context.createLinearGradient(0, 0, 0, viewHeight);
+  sky.addColorStop(0, theme.sky);
+  sky.addColorStop(0.62, "#17102d");
+  sky.addColorStop(1, "#0a0715");
+  context.fillStyle = sky;
   context.fillRect(0, 0, viewWidth, viewHeight);
 
-  context.fillStyle = "rgba(255,255,255,0.12)";
-  for (let index = 0; index < 42; index += 1) {
-    const x = ((index * 83) % 997) / 997 * viewWidth;
-    const y = ((index * 47) % 541) / 541 * viewHeight * 0.72;
-    context.fillRect(x, y, index % 4 === 0 ? 2 : 1, index % 4 === 0 ? 2 : 1);
-  }
+  const aurora = context.createRadialGradient(viewWidth * 0.72, viewHeight * 0.08, 0, viewWidth * 0.72, viewHeight * 0.08, viewWidth * 0.5);
+  aurora.addColorStop(0, `${theme.glow}38`);
+  aurora.addColorStop(1, "transparent");
+  context.fillStyle = aurora;
+  context.fillRect(0, 0, viewWidth, viewHeight);
 
-  hazards.forEach((hazard) => {
+  context.save();
+  context.globalAlpha = 0.12;
+  context.fillStyle = theme.glow;
+  context.beginPath();
+  context.arc(viewWidth * 0.82, viewHeight * 0.18, Math.min(viewWidth, viewHeight) * 0.13, 0, Math.PI * 2);
+  context.fill();
+  context.strokeStyle = "rgba(255,255,255,0.35)";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.ellipse(viewWidth * 0.82, viewHeight * 0.18, Math.min(viewWidth, viewHeight) * 0.2, Math.min(viewWidth, viewHeight) * 0.045, -0.22, 0, Math.PI * 2);
+  context.stroke();
+  context.restore();
+
+  for (let index = 0; index < 58; index += 1) {
+    const x = ((index * 89 + currentLevelIndex * 37) % 997) / 997 * viewWidth;
+    const y = ((index * 53 + currentLevelIndex * 17) % 541) / 541 * viewHeight * 0.72;
+    const twinkle = 0.22 + (Math.sin(time * 0.002 + index * 1.7) + 1) * 0.22;
+    context.globalAlpha = twinkle;
+    context.fillStyle = index % 9 === 0 ? theme.glow : "white";
+    context.beginPath();
+    context.arc(x, y, index % 7 === 0 ? 1.7 : 0.85, 0, Math.PI * 2);
+    context.fill();
+  }
+  context.globalAlpha = 1;
+
+  // Danger zones are animated energy, water or star fields—not flat blocks.
+  hazards.forEach((hazard, hazardIndex) => {
     const x = hazard.x * cellWidth;
     const y = hazard.y * cellHeight;
     const width = hazard.width * cellWidth;
-    context.fillStyle = hazard.kind === "water" ? "#58bde3" : hazard.kind === "storm" ? "#8d72da" : "#ffcf4d";
-    context.globalAlpha = 0.8;
-    context.fillRect(x, y, width, viewHeight - y);
+    const color = hazard.kind === "water" ? "#40cfff" : hazard.kind === "storm" ? "#a06cff" : "#ffd659";
+    const danger = context.createLinearGradient(0, y, 0, viewHeight);
+    danger.addColorStop(0, `${color}cc`);
+    danger.addColorStop(1, `${color}28`);
+    context.fillStyle = danger;
+    context.fillRect(x, y + 3, width, viewHeight - y);
+    context.strokeStyle = color;
+    context.lineWidth = 2;
+    context.shadowColor = color;
+    context.shadowBlur = 10;
+    context.beginPath();
+    for (let step = 0; step <= 18; step += 1) {
+      const waveX = x + width * step / 18;
+      const waveY = y + Math.sin(time * 0.006 + step * 0.85 + hazardIndex) * 3;
+      if (step === 0) context.moveTo(waveX, waveY); else context.lineTo(waveX, waveY);
+    }
+    context.stroke();
+    context.shadowBlur = 0;
+    for (let spark = 0; spark < 5; spark += 1) {
+      const sparkX = x + ((spark * 37 + hazardIndex * 11) % 97) / 97 * width;
+      const sparkY = y + 8 + ((time * 0.018 + spark * 17) % Math.max(10, viewHeight - y - 8));
+      context.globalAlpha = 0.45;
+      context.fillStyle = "white";
+      context.fillRect(sparkX, sparkY, 1.5, 1.5);
+    }
     context.globalAlpha = 1;
   });
+
+  const soil = context.createLinearGradient(0, 0, cellWidth, cellHeight);
+  soil.addColorStop(0, theme.soilTop);
+  soil.addColorStop(0.2, theme.soil);
+  soil.addColorStop(1, "#281b45");
+  const steel = context.createLinearGradient(0, 0, cellWidth, cellHeight);
+  steel.addColorStop(0, "#e7ecff");
+  steel.addColorStop(0.22, "#8795b5");
+  steel.addColorStop(1, "#38405c");
 
   for (let row = 0; row < WORLD_HEIGHT; row += 1) {
     for (let column = 0; column < WORLD_WIDTH; column += 1) {
@@ -1088,44 +1325,52 @@ function drawGame(time) {
       if (!tile) continue;
       const x = column * cellWidth;
       const y = row * cellHeight;
-      context.fillStyle = tile === STEEL ? "#8790a8" : theme.soil;
-      context.fillRect(x, y, cellWidth + 0.5, cellHeight + 0.5);
-      if (!isSolid(column, row - 1)) {
-        context.fillStyle = tile === STEEL ? "#d5daea" : theme.soilTop;
-        context.fillRect(x, y, cellWidth + 0.5, Math.max(3, cellHeight * 0.2));
+      const topTile = !isSolid(column, row - 1);
+      context.fillStyle = "rgba(4,1,15,0.28)";
+      roundedPath(x + 2, y + 3, cellWidth - 2, cellHeight - 1, Math.min(6, cellHeight * 0.2));
+      context.fill();
+      context.fillStyle = tile === STEEL ? steel : soil;
+      roundedPath(x + 0.6, y + 0.6, cellWidth - 1.2, cellHeight - 1.2, Math.min(5, cellHeight * 0.18));
+      context.fill();
+
+      if (topTile) {
+        context.fillStyle = tile === STEEL ? "rgba(255,255,255,0.72)" : theme.soilTop;
+        roundedPath(x + 1, y + 1, cellWidth - 2, Math.max(3, cellHeight * 0.16), 3);
+        context.fill();
       }
       context.strokeStyle = "rgba(255,255,255,0.08)";
-      context.strokeRect(x + 0.5, y + 0.5, cellWidth - 1, cellHeight - 1);
+      context.lineWidth = 0.7;
+      roundedPath(x + 1, y + 1, cellWidth - 2, cellHeight - 2, 4);
+      context.stroke();
+
+      if (tile === STEEL) {
+        context.fillStyle = "rgba(255,255,255,0.62)";
+        context.beginPath();
+        context.arc(x + cellWidth * 0.24, y + cellHeight * 0.28, 1.3, 0, Math.PI * 2);
+        context.arc(x + cellWidth * 0.76, y + cellHeight * 0.72, 1.3, 0, Math.PI * 2);
+        context.fill();
+      } else if ((row + column) % 3 === 0) {
+        context.fillStyle = "rgba(255,255,255,0.09)";
+        context.beginPath(); context.arc(x + cellWidth * 0.7, y + cellHeight * 0.62, 1.2, 0, Math.PI * 2); context.fill();
+      }
     }
   }
 
-  const spawn = currentLevel.spawn;
-  context.fillStyle = theme.glow;
-  context.strokeStyle = "#fff8ec";
-  context.lineWidth = 2;
-  context.fillRect((spawn.x - 0.65) * cellWidth, (spawn.y - 1.4) * cellHeight, cellWidth * 1.3, cellHeight * 0.8);
-  context.strokeRect((spawn.x - 0.65) * cellWidth, (spawn.y - 1.4) * cellHeight, cellWidth * 1.3, cellHeight * 0.8);
-
-  const exit = currentLevel.exit;
-  context.fillStyle = "#fff8ec";
-  context.strokeStyle = theme.glow;
-  context.lineWidth = 3;
-  context.fillRect((exit.x - 0.7) * cellWidth, (exit.y - 1.7) * cellHeight, cellWidth * 1.4, cellHeight * 1.7);
-  context.strokeRect((exit.x - 0.7) * cellWidth, (exit.y - 1.7) * cellHeight, cellWidth * 1.4, cellHeight * 1.7);
-  context.fillStyle = "#241a35";
-  context.font = `900 ${Math.max(8, cellHeight * 0.36)}px Arial`;
-  context.textAlign = "center";
-  context.fillText("HOME", exit.x * cellWidth, (exit.y - 0.72) * cellHeight);
-
+  drawPortal(currentLevel.spawn, cellWidth, cellHeight, theme, time, false);
+  drawPortal(currentLevel.exit, cellWidth, cellHeight, theme, time, true);
   dolls.forEach((item) => drawPlush(item, cellWidth, cellHeight, time));
   units.filter((unit) => unit.active).forEach((unit) => drawUnit(unit, cellWidth, cellHeight, time));
 
   particles.forEach((particle) => {
+    context.save();
     context.globalAlpha = Math.max(0, particle.life);
     context.fillStyle = particle.color;
+    context.shadowColor = particle.color;
+    context.shadowBlur = 9;
     context.beginPath();
-    context.arc(particle.x * cellWidth, particle.y * cellHeight, 2.5, 0, Math.PI * 2);
+    context.arc(particle.x * cellWidth, particle.y * cellHeight, 2.6, 0, Math.PI * 2);
     context.fill();
+    context.restore();
   });
   context.globalAlpha = 1;
 }
@@ -1192,11 +1437,11 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden && running && !paused) togglePause();
 });
 window.addEventListener("online", () => {
-  offlineBadge.textContent = "Ready offline";
+  offlineBadge.textContent = "Game ready";
   offlineBadge.classList.remove("offline");
 });
 window.addEventListener("offline", () => {
-  offlineBadge.textContent = "Playing offline";
+  offlineBadge.textContent = "No connection";
   offlineBadge.classList.add("offline");
 });
 
@@ -1204,7 +1449,7 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
 
-offlineBadge.textContent = navigator.onLine ? "Ready offline" : "Playing offline";
+offlineBadge.textContent = navigator.onLine ? "Game ready" : "No connection";
 offlineBadge.classList.toggle("offline", !navigator.onLine);
 updateSoundButton();
 updateMenu();
