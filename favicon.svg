@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">AI by Gazit</title>
+  <defs>
+    <radialGradient id="glow" cx="68%" cy="28%" r="78%">
+      <stop offset="0" stop-color="#9c7cff" stop-opacity="0.72" />
+      <stop offset="0.48" stop-color="#39296f" stop-opacity="0.42" />
+      <stop offset="1" stop-color="#09090a" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="15" fill="#09090a" />
+  <rect x="1.5" y="1.5" width="61" height="61" rx="13.5" fill="url(#glow)" stroke="#dfff00" stroke-opacity="0.28" />
+
+  <path
+    d="M45 20.5C41.6 16.4 36.8 14 31.4 14C21.8 14 14 21.8 14 31.5S21.8 49 31.4 49c6.4 0 11.8-2.8 15.1-7.1V33H33"
+    fill="none"
+    stroke="#dfff00"
+    stroke-width="7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <path d="M49 9l1.8 4.2L55 15l-4.2 1.8L49 21l-1.8-4.2L43 15l4.2-1.8L49 9z" fill="#f4f1e9" />
+  <circle cx="18" cy="49" r="2.5" fill="#9c7cff" />
+</svg>
