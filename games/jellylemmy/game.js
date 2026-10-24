@@ -12,12 +12,50 @@ const STEEL = 2;
 const SAVE_KEY = "jellylemmy_save_v1";
 const SKILLS = ["turn", "build", "dig", "bash", "float"];
 
-// High-resolution character art is drawn onto the canvas at runtime. Keeping
-// it as a real RGBA asset gives the tiny explorers proper hair, fabric, skin
-// and boot materials while the canvas still controls movement and effects.
-const lemmySprite = new Image();
-lemmySprite.decoding = "async";
-lemmySprite.src = "./assets/lemmy-explorer.png?v=7";
+// Every action uses several high-resolution poses. The renderer blends the
+// final part of one pose into the next, which keeps hands, feet and tools in
+// motion without a harsh frame-to-frame snap.
+const LEMMY_ASSET_VERSION = "8";
+const LEMMY_SPRITE_FILES = {
+  walk1: "lemmy-explorer.png",
+  walk2: "lemmy-walk-2.png",
+  walk3: "lemmy-walk-3.png",
+  walk4: "lemmy-walk-b.png",
+  takeoff: "lemmy-takeoff.png",
+  air: "lemmy-air.png",
+  land: "lemmy-land.png",
+  climb1: "lemmy-climb.png",
+  climb2: "lemmy-climb-2.png",
+  climb3: "lemmy-climb-3.png",
+  climb4: "lemmy-climb-b.png",
+  build1: "lemmy-build-up.png",
+  build2: "lemmy-build-2.png",
+  build3: "lemmy-build-3.png",
+  build4: "lemmy-build.png",
+  bash1: "lemmy-bash.png",
+  bash2: "lemmy-bash-2.png",
+  bash3: "lemmy-bash-3.png",
+  bash4: "lemmy-bash-strike.png",
+};
+
+const lemmySprites = Object.fromEntries(
+  Object.entries(LEMMY_SPRITE_FILES).map(([name, file]) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.src = `./assets/${file}?v=${LEMMY_ASSET_VERSION}`;
+    return [name, image];
+  }),
+);
+
+const LEMMY_ANIMATIONS = {
+  walk: ["walk1", "walk2", "walk3", "walk4", "walk3", "walk2"],
+  takeoff: ["walk2", "takeoff", "air"],
+  air: ["air"],
+  land: ["air", "land", "walk2"],
+  climb: ["climb1", "climb2", "climb3", "climb4", "climb3", "climb2"],
+  build: ["build1", "build2", "build3", "build4", "build3", "build2"],
+  bash: ["bash1", "bash2", "bash3", "bash4", "bash3", "bash2"],
+};
 
 const THEMES = {
   rose: { sky: "#39234f", glow: "#ff8fb8", soil: "#b55f8d", soilTop: "#ffb4d0" },
@@ -594,6 +632,10 @@ function spawnUnit() {
     actionStep: 0,
     active: true,
     phase: Math.random() * 6,
+    animationClock: 0,
+    animationOffset: Math.random() * 0.5,
+    visualMotion: "takeoff",
+    visualTimer: 0.22,
   });
   spawned += 1;
 }
@@ -610,6 +652,9 @@ function landUnit(unit, row) {
     loseUnit(unit, "A Lemmy tumbled too far!");
   } else {
     unit.state = "walk";
+    unit.visualMotion = "land";
+    unit.visualTimer = 0.24;
+    unit.animationClock = 0;
     if (unit.float) unit.float = false;
   }
   unit.safeFall = false;
@@ -636,6 +681,9 @@ function updateWalking(unit, elapsed) {
     unit.state = "fall";
     unit.fallStart = unit.y;
     unit.vy = 0;
+    unit.visualMotion = "takeoff";
+    unit.visualTimer = 0.2;
+    unit.animationClock = 0;
     return;
   }
 
@@ -646,6 +694,9 @@ function updateWalking(unit, elapsed) {
     if (!isSolid(aheadColumn, bodyRow - 1)) {
       unit.y = bodyRow;
       unit.x = nextX;
+      unit.visualMotion = "climb";
+      unit.visualTimer = 0.42;
+      unit.animationClock = 0;
     } else {
       unit.dir *= -1;
     }
@@ -700,6 +751,8 @@ function updateBasher(unit, elapsed) {
 
 function updateUnit(unit, elapsed) {
   if (!unit.active) return;
+  unit.animationClock += elapsed;
+  unit.visualTimer = Math.max(0, unit.visualTimer - elapsed);
   if (unit.state === "build") updateBuilder(unit, elapsed);
   else if (unit.state === "bash") updateBasher(unit, elapsed);
   else if (unit.state === "fall") updateFalling(unit, elapsed);
@@ -796,6 +849,9 @@ function applySkill(unit, skill) {
     unit.state = "fall";
     unit.fallStart = unit.y;
     unit.vy = 0;
+    unit.visualMotion = "takeoff";
+    unit.visualTimer = 0.2;
+    unit.animationClock = 0;
   } else if (skill === "build") {
     if (!isGrounded(unit)) {
       showToast("Build needs solid ground!");
@@ -804,6 +860,7 @@ function applySkill(unit, skill) {
     unit.state = "build";
     unit.actionTimer = 0;
     unit.actionStep = 0;
+    unit.animationClock = 0;
   } else if (skill === "bash") {
     if (!isGrounded(unit)) {
       showToast("Bash needs solid ground!");
@@ -812,6 +869,7 @@ function applySkill(unit, skill) {
     unit.state = "bash";
     unit.actionTimer = 0;
     unit.actionStep = 0;
+    unit.animationClock = 0;
   }
 
   skills[skill] -= 1;
@@ -1378,8 +1436,60 @@ function drawUnitFallback(unit, cellWidth, cellHeight, time) {
   context.restore();
 }
 
+function unitAnimation(unit) {
+  if (unit.state === "build") return { name: "build", frameMs: 74, loop: true };
+  if (unit.state === "bash") return { name: "bash", frameMs: 58, loop: true };
+  if (unit.state === "fall") {
+    if (unit.visualMotion === "takeoff" && unit.visualTimer > 0) {
+      return { name: "takeoff", frameMs: 78, loop: false };
+    }
+    return { name: "air", frameMs: 100, loop: false };
+  }
+  if (unit.visualMotion === "land" && unit.visualTimer > 0) {
+    return { name: "land", frameMs: 78, loop: false };
+  }
+  if (unit.visualMotion === "climb" && unit.visualTimer > 0) {
+    return { name: "climb", frameMs: 66, loop: false };
+  }
+  return { name: "walk", frameMs: 92, loop: true };
+}
+
+function animationBlend(animation, unit) {
+  const sequence = LEMMY_ANIMATIONS[animation.name];
+  const offset = animation.name === "walk" ? unit.animationOffset : 0;
+  let position = (unit.animationClock + offset) * 1000 / animation.frameMs;
+
+  if (animation.loop) position %= sequence.length;
+  else position = Math.min(position, sequence.length - 1);
+
+  const frameIndex = Math.floor(position);
+  const nextIndex = animation.loop
+    ? (frameIndex + 1) % sequence.length
+    : Math.min(frameIndex + 1, sequence.length - 1);
+  const progress = position - frameIndex;
+  const blendProgress = Math.max(0, Math.min(1, (progress - 0.62) / 0.38));
+  const blend = blendProgress * blendProgress * (3 - 2 * blendProgress);
+
+  return {
+    current: lemmySprites[sequence[frameIndex]],
+    next: lemmySprites[sequence[nextIndex]],
+    blend,
+    position,
+  };
+}
+
+function imageIsReady(image) {
+  return Boolean(image?.complete && image.naturalWidth);
+}
+
+function drawAnimationFrame(image, width, height, alpha) {
+  context.globalAlpha = alpha;
+  context.drawImage(image, -width / 2, -height, width, height);
+}
+
 function drawUnit(unit, cellWidth, cellHeight, time) {
-  if (!lemmySprite.complete || !lemmySprite.naturalWidth) {
+  const baseSprite = lemmySprites.walk1;
+  if (!imageIsReady(baseSprite)) {
     drawUnitFallback(unit, cellWidth, cellHeight, time);
     return;
   }
@@ -1389,12 +1499,15 @@ function drawUnit(unit, cellWidth, cellHeight, time) {
   const cellSize = Math.min(cellWidth, cellHeight);
   const compact = cellSize < 18;
   const height = cellSize * (compact ? 3.15 : 2.6);
-  const width = height * (lemmySprite.naturalWidth / lemmySprite.naturalHeight);
-  const stride = Math.sin(time * 0.012 + unit.phase);
-  const walking = unit.state === "walk";
+  const width = height * (baseSprite.naturalWidth / baseSprite.naturalHeight);
+  const animation = unitAnimation(unit);
+  const frames = animationBlend(animation, unit);
+  const stride = Math.sin(frames.position * Math.PI);
+  const walking = animation.name === "walk";
   const falling = unit.state === "fall";
-  const bob = walking ? -Math.abs(stride) * height * 0.025 : 0;
-  const lean = falling ? -unit.dir * 0.13 : walking ? stride * 0.025 : unit.state === "bash" ? 0.1 : 0;
+  const climbing = animation.name === "climb";
+  const bob = walking ? -Math.abs(stride) * height * 0.018 : climbing ? -Math.abs(stride) * height * 0.03 : 0;
+  const lean = falling ? -unit.dir * 0.11 : walking ? stride * 0.018 : unit.state === "bash" ? 0.06 : 0;
   const actionColor = unit.state === "build" ? "#ffd55e" : unit.state === "bash" ? "#ff65af" : "#67f0c5";
 
   context.save();
@@ -1423,22 +1536,19 @@ function drawUnit(unit, cellWidth, cellHeight, time) {
   // A subtle live rim light ties the rendered character into every world.
   context.shadowColor = actionColor;
   context.shadowBlur = unit.state === "walk" ? (compact ? 3 : 6) : (compact ? 7 : 13);
-  context.drawImage(lemmySprite, -width / 2, -height, width, height);
+  if (imageIsReady(frames.current) && imageIsReady(frames.next) && frames.current !== frames.next) {
+    drawAnimationFrame(frames.current, width, height, 1 - frames.blend);
+    drawAnimationFrame(frames.next, width, height, frames.blend);
+  } else {
+    const availableFrame = imageIsReady(frames.current)
+      ? frames.current
+      : imageIsReady(frames.next) ? frames.next : baseSprite;
+    drawAnimationFrame(availableFrame, width, height, 1);
+  }
+  context.globalAlpha = 1;
   context.shadowBlur = 0;
 
-  if (unit.state === "build") {
-    // Translucent construction hologram appears just beyond the leading hand.
-    const brickWidth = width * 0.35;
-    const brickHeight = height * 0.09;
-    context.fillStyle = "rgba(255,218,92,0.76)";
-    context.strokeStyle = "rgba(255,255,255,0.9)";
-    context.lineWidth = Math.max(1, cellSize * 0.05);
-    context.shadowColor = "#ffd65d";
-    context.shadowBlur = 10;
-    roundedPath(width * 0.3, -height * 0.57, brickWidth, brickHeight, brickHeight * 0.25);
-    context.fill(); context.stroke();
-    context.shadowBlur = 0;
-  } else if (unit.state === "bash") {
+  if (unit.state === "bash" && frames.position % LEMMY_ANIMATIONS.bash.length >= 2.65) {
     // Modern impact flare, kept outside the character so the art stays crisp.
     const impactX = width * 0.58;
     const impactY = -height * 0.47;
