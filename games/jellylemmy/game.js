@@ -13,8 +13,8 @@ const SAVE_KEY = "jellylemmy_save_v1";
 const SKILLS = ["turn", "build", "dig", "bash", "float"];
 
 // Every action uses several high-resolution poses. Walking uses a true gait
-// cycle with stable foot placement; tool actions use short blended sequences.
-const LEMMY_ASSET_VERSION = "10";
+// cycle with stable foot placement; falling has its own crisp, full-body arc.
+const LEMMY_ASSET_VERSION = "11";
 const LEMMY_SPRITE_FILES = {
   walk1: "lemmy-walk-v2-01.png",
   walk2: "lemmy-walk-v2-02.png",
@@ -22,9 +22,12 @@ const LEMMY_SPRITE_FILES = {
   walk4: "lemmy-walk-v2-04.png",
   walk5: "lemmy-walk-v2-05.png",
   walk6: "lemmy-walk-v2-06.png",
-  takeoff: "lemmy-takeoff.png",
-  air: "lemmy-air.png",
-  land: "lemmy-land.png",
+  fall1: "lemmy-fall-v2-01.png",
+  fall2: "lemmy-fall-v2-02.png",
+  fall3: "lemmy-fall-v2-03.png",
+  fall4: "lemmy-fall-v2-04.png",
+  fall5: "lemmy-fall-v2-05.png",
+  land1: "lemmy-land-v2.png",
   climb1: "lemmy-climb.png",
   climb2: "lemmy-climb-2.png",
   climb3: "lemmy-climb-3.png",
@@ -50,9 +53,9 @@ const lemmySprites = Object.fromEntries(
 
 const LEMMY_ANIMATIONS = {
   walk: ["walk1", "walk2", "walk3", "walk4", "walk5", "walk6"],
-  takeoff: ["walk2", "takeoff", "air"],
-  air: ["air"],
-  land: ["air", "land", "walk2"],
+  takeoff: ["walk3", "fall1", "fall2"],
+  air: ["fall2", "fall3", "fall4", "fall5", "fall4", "fall3"],
+  land: ["fall5", "land1", "walk2"],
   climb: ["climb1", "climb2", "climb3", "climb4", "climb3", "climb2"],
   build: ["build1", "build2", "build3", "build4", "build3", "build2"],
   bash: ["bash1", "bash2", "bash3", "bash4", "bash3", "bash2"],
@@ -1507,12 +1510,12 @@ function unitAnimation(unit) {
   if (unit.state === "bash") return { name: "bash", frameMs: 58, loop: true };
   if (unit.state === "fall") {
     if (unit.visualMotion === "takeoff" && unit.visualTimer > 0) {
-      return { name: "takeoff", frameMs: 78, loop: false };
+      return { name: "takeoff", frameMs: 70, loop: false, crossfade: false };
     }
-    return { name: "air", frameMs: 100, loop: false };
+    return { name: "air", frameMs: 88, loop: true, crossfade: false };
   }
   if (unit.visualMotion === "land" && unit.visualTimer > 0) {
-    return { name: "land", frameMs: 78, loop: false };
+    return { name: "land", frameMs: 72, loop: false, crossfade: false };
   }
   if (unit.visualMotion === "climb" && unit.visualTimer > 0) {
     return { name: "climb", frameMs: 66, loop: false };
@@ -1575,7 +1578,7 @@ function drawUnit(unit, cellWidth, cellHeight, time) {
   const falling = unit.state === "fall";
   const climbing = animation.name === "climb";
   const bob = walking ? -Math.abs(stride) * height * 0.018 : climbing ? -Math.abs(stride) * height * 0.03 : 0;
-  const lean = falling ? -unit.dir * 0.11 : walking ? stride * 0.018 : unit.state === "bash" ? 0.06 : 0;
+  const lean = falling ? -unit.dir * 0.04 : walking ? stride * 0.018 : unit.state === "bash" ? 0.06 : 0;
   const actionColor = unit.state === "build" ? "#ffd55e" : unit.state === "bash" ? "#ff65af" : "#67f0c5";
 
   context.save();
