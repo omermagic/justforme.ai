@@ -1,0 +1,19 @@
+{
+  "name": "Shaked's Land Eater",
+  "short_name": "Land Eater",
+  "description": "A super-cute offline territory adventure made for Shaked.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#160d2b",
+  "theme_color": "#ff5f9e",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

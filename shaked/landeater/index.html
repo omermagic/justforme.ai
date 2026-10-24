@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ff5f9e" />
+    <meta
+      name="description"
+      content="Shaked's Land Eater — a super-cute territory adventure made for mobile and offline play."
+    />
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-E3JJGMR427"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-E3JJGMR427");
+    </script>
+
+    <title>Shaked's Land Eater</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon.svg" />
+    <link rel="stylesheet" href="./styles.css?v=1" />
+  </head>
+
+  <body>
+    <main class="app-shell">
+      <section class="menu-screen" id="menu-screen" aria-labelledby="game-title">
+        <header class="menu-header">
+          <a class="mini-brand" href="/" aria-label="Back to AI by Gazit">
+            <span class="brand-heart" aria-hidden="true">♥</span>
+            <span>Shaked's arcade</span>
+          </a>
+          <span class="offline-badge" id="offline-badge">Preparing offline mode</span>
+        </header>
+
+        <div class="menu-content">
+          <div class="hero-copy">
+            <p class="eyebrow">A sweet territory adventure</p>
+            <h1 id="game-title">
+              Land
+              <span>Eater</span>
+            </h1>
+            <p class="hero-intro">
+              Help Hello Kitty reclaim the Dream Garden. Draw brave paths, close the loop and turn
+              every dark patch into a sparkling world.
+            </p>
+
+            <div class="menu-actions">
+              <button class="primary-action" id="start-button" type="button">Start adventure</button>
+              <button class="secondary-action" id="reset-button" type="button">Reset progress</button>
+            </div>
+
+            <dl class="career-stats" aria-label="Saved adventure progress">
+              <div>
+                <dt>Best score</dt>
+                <dd id="menu-best-score">0</dd>
+              </div>
+              <div>
+                <dt>Best level</dt>
+                <dd id="menu-best-level">1</dd>
+              </div>
+              <div>
+                <dt>Land saved</dt>
+                <dd id="menu-total-land">0%</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="hero-art" aria-hidden="true">
+            <div class="sparkle sparkle-one">✦</div>
+            <div class="sparkle sparkle-two">✦</div>
+            <div class="sparkle sparkle-three">♥</div>
+            <div class="kitty-orbit orbit-one"></div>
+            <div class="kitty-orbit orbit-two"></div>
+            <div class="kitty-mascot">
+              <span class="kitty-ear ear-left"></span>
+              <span class="kitty-ear ear-right"></span>
+              <span class="kitty-bow bow-left"></span>
+              <span class="kitty-bow bow-right"></span>
+              <span class="kitty-bow-center"></span>
+              <span class="kitty-eye eye-left"></span>
+              <span class="kitty-eye eye-right"></span>
+              <span class="kitty-nose"></span>
+              <span class="whisker whisker-left-one"></span>
+              <span class="whisker whisker-left-two"></span>
+              <span class="whisker whisker-right-one"></span>
+              <span class="whisker whisker-right-two"></span>
+            </div>
+            <p class="made-for">Made especially for Shaked</p>
+          </div>
+        </div>
+
+        <section class="how-to-play" aria-labelledby="how-to-title">
+          <div>
+            <p class="section-kicker">The mission</p>
+            <h2 id="how-to-title">Claim 75% of every garden.</h2>
+          </div>
+          <ol>
+            <li><b>Swipe</b><span>Move from safe pink land into the dark garden.</span></li>
+            <li><b>Connect</b><span>Return to safe land before a Shadow Puff hits your trail.</span></li>
+            <li><b>Glow</b><span>Take big bites, build combos and unleash Cute Fever.</span></li>
+          </ol>
+        </section>
+
+        <footer class="menu-footer">
+          <span>Swipe on mobile · Arrow keys on computer</span>
+          <span>Progress saves on this device</span>
+        </footer>
+      </section>
+
+      <section class="game-screen" id="game-screen" aria-label="Shaked's Land Eater game" hidden>
+        <header class="game-header">
+          <button class="icon-button" id="home-button" type="button" aria-label="Return to menu">←</button>
+          <div class="level-identity">
+            <span id="world-name">Strawberry Meadow</span>
+            <strong id="level-label">Level 1</strong>
+          </div>
+          <div class="score-display">
+            <span>Score</span>
+            <strong id="score-value">0</strong>
+          </div>
+          <button class="icon-button" id="sound-button" type="button" aria-label="Turn sound off">♪</button>
+          <button class="icon-button" id="pause-button" type="button" aria-label="Pause game">Ⅱ</button>
+        </header>
+
+        <div class="mission-strip">
+          <div class="lives" id="lives" aria-label="Three lives">♥ ♥ ♥</div>
+          <div class="land-progress">
+            <div class="progress-copy">
+              <span>Garden saved</span>
+              <strong><span id="land-value">0</span>% / <span id="target-value">75</span>%</strong>
+            </div>
+            <div class="progress-track"><i id="land-fill"></i></div>
+          </div>
+          <div class="combo-display">
+            <span>Combo</span>
+            <strong id="combo-value">×1</strong>
+          </div>
+        </div>
+
+        <div class="game-main">
+          <div class="board-wrap" id="board-wrap">
+            <canvas
+              id="game-canvas"
+              width="600"
+              height="920"
+              aria-label="Territory board. Swipe to move Hello Kitty."
+            ></canvas>
+            <div class="event-banner" id="event-banner" aria-live="polite"></div>
+            <div class="ready-message" id="ready-message">Swipe to begin!</div>
+          </div>
+
+          <div class="fever-panel" aria-label="Cute Fever power">
+            <span>♥ Cute Fever</span>
+            <div class="fever-track"><i id="fever-fill"></i></div>
+            <strong id="fever-value">0%</strong>
+          </div>
+
+          <p class="swipe-guide" aria-label="Game controls">
+            <span>← → left / right</span>
+            <span>↑ ↓ up / down</span>
+            <span>Close the loop!</span>
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal" id="game-modal" role="dialog" aria-modal="true" hidden>
+      <div class="modal-card">
+        <span class="modal-sticker" id="modal-sticker" aria-hidden="true">♥</span>
+        <p class="modal-kicker" id="modal-kicker">Garden saved</p>
+        <h2 id="modal-title">Sparkling work!</h2>
+        <p id="modal-copy"></p>
+        <div class="modal-stats" id="modal-stats"></div>
+        <button class="primary-action" id="modal-primary" type="button">Next garden</button>
+        <button class="secondary-action" id="modal-secondary" type="button">Back to menu</button>
+      </div>
+    </div>
+
+    <div class="sr-only" id="announcer" aria-live="assertive"></div>
+    <script src="./game.js?v=1"></script>
+  </body>
+</html>
