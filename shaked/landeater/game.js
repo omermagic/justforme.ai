@@ -503,6 +503,7 @@ function movePlayer() {
     board[nextY][nextX] = TRAIL;
     player.trail.push({ x: nextX, y: nextY });
   } else if (nextCell === LAND && player.trail.length) {
+    player.direction = null;
     claimTerritory();
   }
 
