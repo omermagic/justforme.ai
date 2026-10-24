@@ -172,7 +172,7 @@ const LEVELS = [
   },
   {
     name: "Midnight Plush Museum",
-    subtitle: "The grand final rescue",
+    subtitle: "The museum after dark",
     theme: "plum",
     population: 12, rescue: 10, time: 80, spawnEvery: 1.05, speed: 2.08,
     skills: { turn: 5, build: 7, dig: 4, bash: 5, float: 6 },
@@ -181,6 +181,99 @@ const LEVELS = [
     hazards: [{ x: 13, y: 17, width: 3, kind: "stars" }, { x: 23, y: 17, width: 2, kind: "stars" }],
     dolls: [doll(7, 16, 11), doll(12, 11, 0), doll(18, 16, 1), doll(26, 10, 2), doll(30, 10, 8)],
     tip: "Use everything you learned. The rare Pocket Dragon is waiting.",
+  },
+  {
+    name: "Clockwork Cuddles",
+    subtitle: "Beat the attic clock",
+    theme: "gold",
+    population: 12, rescue: 10, time: 78, spawnEvery: 1, speed: 2.12,
+    skills: { turn: 5, build: 4, dig: 2, bash: 7, float: 2 },
+    spawn: { x: 2, y: 3, dir: 1 }, exit: { x: 30, y: 16 },
+    terrain: [platform(0, 16, 32), platform(9, 10, 2, 6), platform(18, 12, 2, 4), platform(24, 13, 2, 3, STEEL)],
+    hazards: [], dolls: [doll(6, 16, 12), doll(14, 16, 13), doll(22, 16, 14), doll(28, 16, 15)],
+    tip: "Bash the soft clockwork walls, but build over the silver gears.",
+  },
+  {
+    name: "Jellybean Junction",
+    subtitle: "Choose the right floor",
+    theme: "rose",
+    population: 13, rescue: 10, time: 76, spawnEvery: 0.96, speed: 2.16,
+    skills: { turn: 6, build: 3, dig: 6, bash: 4, float: 3 },
+    spawn: { x: 3, y: 2, dir: 1 }, exit: { x: 2, y: 16 },
+    terrain: [platform(0, 7, 32, 1), platform(0, 16, 32), platform(12, 11, 2, 5, STEEL), platform(22, 12, 2, 4)],
+    hazards: [], dolls: [doll(8, 7, 16), doll(26, 7, 17), doll(7, 16, 18), doll(18, 16, 19), doll(28, 16, 20)],
+    tip: "Explore upstairs, then dig before the steel divider and turn everyone home.",
+  },
+  {
+    name: "Starlight Spillway",
+    subtitle: "Bridge the glowing river",
+    theme: "blue",
+    population: 13, rescue: 11, time: 74, spawnEvery: 0.92, speed: 2.2,
+    skills: { turn: 6, build: 9, dig: 2, bash: 2, float: 5 },
+    spawn: { x: 2, y: 3, dir: 1 }, exit: { x: 30, y: 9 },
+    terrain: [platform(0, 10, 8, 1), platform(10, 16, 7), platform(19, 12, 6, 6), platform(27, 9, 5, 9)],
+    hazards: [{ x: 8, y: 17, width: 2, kind: "stars" }, { x: 17, y: 17, width: 2, kind: "water" }, { x: 25, y: 17, width: 2, kind: "stars" }],
+    dolls: [doll(5, 10, 21), doll(13, 16, 22), doll(22, 12, 23), doll(29, 9, 24)],
+    tip: "Three gaps, three heights. Float first, then build each shining crossing.",
+  },
+  {
+    name: "Cuckoo Clock Tower",
+    subtitle: "Race up the chiming shelves",
+    theme: "plum",
+    population: 14, rescue: 11, time: 72, spawnEvery: 0.88, speed: 2.24,
+    skills: { turn: 7, build: 10, dig: 3, bash: 3, float: 4 },
+    spawn: { x: 2, y: 3, dir: 1 }, exit: { x: 29, y: 6 },
+    terrain: [platform(0, 16, 8), platform(10, 13, 6, 5), platform(18, 10, 6, 8), platform(26, 6, 6, 12), platform(15, 15, 1, 1, STEEL)],
+    hazards: [{ x: 8, y: 17, width: 2, kind: "storm" }, { x: 16, y: 17, width: 2, kind: "storm" }, { x: 24, y: 17, width: 2, kind: "storm" }],
+    dolls: [doll(5, 16, 25), doll(13, 13, 26), doll(21, 10, 27), doll(29, 6, 28)],
+    tip: "Climb fast: each bridge must start near the very edge of its shelf.",
+  },
+  {
+    name: "Frosted Toy Fortress",
+    subtitle: "Soft cake, solid silver",
+    theme: "mint",
+    population: 14, rescue: 12, time: 70, spawnEvery: 0.84, speed: 2.28,
+    skills: { turn: 7, build: 7, dig: 5, bash: 7, float: 4 },
+    spawn: { x: 2, y: 3, dir: 1 }, exit: { x: 30, y: 16 },
+    terrain: [platform(0, 16, 32), platform(8, 11, 2, 5), platform(14, 12, 2, 4, STEEL), platform(20, 9, 2, 7), platform(26, 13, 2, 3, STEEL)],
+    hazards: [], dolls: [doll(5, 16, 29), doll(12, 16, 30), doll(18, 16, 31), doll(24, 16, 32), doll(29, 16, 33)],
+    tip: "Read each wall: bash the cake, build over silver, and keep the troop together.",
+  },
+  {
+    name: "Pocket Dragon Dream",
+    subtitle: "Float through a sleepy sky",
+    theme: "blue",
+    population: 15, rescue: 12, time: 68, spawnEvery: 0.8, speed: 2.32,
+    skills: { turn: 8, build: 8, dig: 4, bash: 4, float: 12 },
+    spawn: { x: 2, y: 2, dir: 1 }, exit: { x: 30, y: 16 },
+    terrain: [platform(0, 6, 9, 1), platform(12, 11, 7, 1), platform(22, 8, 6, 1), platform(17, 16, 15)],
+    hazards: [{ x: 9, y: 17, width: 3, kind: "stars" }, { x: 19, y: 17, width: 3, kind: "stars" }, { x: 28, y: 17, width: 3, kind: "storm" }],
+    dolls: [doll(5, 6, 34), doll(15, 11, 35), doll(25, 8, 36), doll(20, 16, 37), doll(29, 16, 38)],
+    tip: "Float across the dream shelves, then dig or build toward the moonlit home.",
+  },
+  {
+    name: "Plush Planet",
+    subtitle: "Orbit every tiny moon",
+    theme: "gold",
+    population: 15, rescue: 13, time: 66, spawnEvery: 0.76, speed: 2.36,
+    skills: { turn: 9, build: 11, dig: 6, bash: 6, float: 8 },
+    spawn: { x: 2, y: 3, dir: 1 }, exit: { x: 2, y: 16 },
+    terrain: [platform(0, 8, 11, 1), platform(14, 6, 8, 1), platform(25, 9, 7, 1), platform(0, 16, 9), platform(12, 13, 8, 5), platform(23, 16, 9)],
+    hazards: [{ x: 9, y: 17, width: 3, kind: "stars" }, { x: 20, y: 17, width: 3, kind: "stars" }],
+    dolls: [doll(6, 8, 39), doll(18, 6, 40), doll(28, 9, 41), doll(16, 13, 42), doll(27, 16, 43), doll(5, 16, 44)],
+    tip: "Collect every orbiting plush, descend carefully, then reverse course for home.",
+  },
+  {
+    name: "Crown of Cuddles",
+    subtitle: "The ultimate plush rescue",
+    theme: "plum",
+    population: 16, rescue: 14, time: 64, spawnEvery: 0.72, speed: 2.4,
+    skills: { turn: 10, build: 12, dig: 7, bash: 8, float: 10 },
+    spawn: { x: 2, y: 2, dir: 1 }, exit: { x: 30, y: 7 },
+    terrain: [platform(0, 7, 10, 1), platform(0, 16, 7), platform(10, 13, 6, 5), platform(18, 16, 6), platform(26, 7, 6, 11), platform(15, 11, 2, 2, STEEL), platform(23, 12, 2, 4)],
+    hazards: [{ x: 7, y: 17, width: 3, kind: "storm" }, { x: 16, y: 17, width: 2, kind: "stars" }, { x: 24, y: 17, width: 2, kind: "water" }],
+    dolls: [doll(6, 7, 45), doll(4, 16, 46), doll(13, 13, 47), doll(21, 16, 48), doll(24, 12, 49), doll(28, 7, 50), doll(30, 7, 51)],
+    tip: "The crown demands every skill. Rescue fourteen Lemmies and every royal plush.",
   },
 ];
 
@@ -208,6 +301,7 @@ const rescueValue = document.getElementById("rescue-value");
 const dollValue = document.getElementById("doll-value");
 const timeValue = document.getElementById("time-value");
 const missionText = document.getElementById("mission-text");
+const musicTitle = document.getElementById("music-title");
 const releaseFill = document.getElementById("release-fill");
 const gameStage = document.getElementById("game-stage");
 const canvas = document.getElementById("game-canvas");
@@ -239,6 +333,13 @@ function loadSave() {
 }
 
 let save = loadSave();
+
+// Players who finished the original twelve-level adventure start directly at
+// the first new world instead of having to replay the old finale.
+if (save.unlocked === 12 && Number(save.stars?.[11] || 0) > 0) {
+  save.unlocked = 13;
+  localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+}
 
 function persistSave() {
   localStorage.setItem(SAVE_KEY, JSON.stringify(save));
@@ -277,13 +378,45 @@ function renderLevelGrid() {
 
 let audioContext = null;
 let soundEnabled = save.sound !== false;
+let musicTimer = 0;
+let musicStep = 0;
+let musicGeneration = 0;
+
+// Twenty original, tiny synth scores. Keeping the notes in code means the
+// complete soundtrack works on an aeroplane just like the rest of the game.
+const MUSIC = [
+  { title: "Plush Parade Waltz", bpm: 104, wave: "triangle", melody: [72, 76, 79, 76, 74, 77, 81, 77, 72, 76, 79, 84], bass: [48, 55, 52] },
+  { title: "Steps in the Clouds", bpm: 112, wave: "sine", melody: [67, 71, 74, 79, 76, 74, 71, 74, 79, 83, 81, 79], bass: [43, 50, 47] },
+  { title: "Burrow Bossa", bpm: 116, wave: "triangle", melody: [64, 67, 71, 74, 71, 67, 66, 69, 72, 76, 72, 69], bass: [40, 47, 45] },
+  { title: "Cuddle Cloud Lullaby", bpm: 90, wave: "sine", melody: [76, 79, 83, null, 81, 79, 76, null, 74, 76, 79, 83], bass: [45, 52, 48] },
+  { title: "Tea-Shop Tiptoe", bpm: 120, wave: "triangle", melody: [69, 72, 76, 72, 71, 74, 77, 74, 69, 72, 76, 81], bass: [45, 52, 50] },
+  { title: "Two-Storey Tango", bpm: 124, wave: "square", melody: [62, 65, 69, 70, 69, 65, 62, 67, 70, 74, 72, 70], bass: [38, 45, 43] },
+  { title: "Bubble Bridge Bounce", bpm: 128, wave: "sine", melody: [74, 78, 81, 86, 83, 81, 78, 81, 86, 90, 88, 86], bass: [47, 54, 51] },
+  { title: "Moon-Shelf Minuet", bpm: 108, wave: "triangle", melody: [69, 73, 76, 81, 80, 76, 73, 68, 71, 76, 80, 83], bass: [45, 52, 44] },
+  { title: "Tin Toy Toccata", bpm: 132, wave: "square", melody: [64, 68, 71, 76, 71, 68, 66, 69, 73, 78, 73, 69], bass: [40, 47, 42] },
+  { title: "Nursery Thunder", bpm: 118, wave: "sawtooth", melody: [62, 65, 69, 74, 72, 69, 65, 60, 64, 67, 72, 76], bass: [38, 45, 36] },
+  { title: "The Great Plush Chase", bpm: 136, wave: "triangle", melody: [67, 70, 74, 79, 77, 74, 70, 72, 75, 79, 82, 79], bass: [43, 50, 46] },
+  { title: "Midnight Museum", bpm: 110, wave: "sine", melody: [61, 64, 68, 73, 71, 68, 64, 59, 63, 66, 71, 75], bass: [37, 44, 35] },
+  { title: "Clockwork Cuddle", bpm: 140, wave: "square", melody: [72, 76, 79, 84, 83, 79, 76, 71, 74, 79, 83, 86], bass: [48, 55, 47] },
+  { title: "Jellybean Junction", bpm: 126, wave: "triangle", melody: [65, 69, 72, 77, 74, 72, 69, 67, 70, 74, 79, 82], bass: [41, 48, 43] },
+  { title: "Starlight River", bpm: 130, wave: "sine", melody: [78, 81, 85, 90, 88, 85, 81, 76, 80, 83, 88, 92], bass: [42, 49, 44] },
+  { title: "Cuckoo Clock Sprint", bpm: 144, wave: "square", melody: [67, 72, 76, 79, 76, 72, 67, 71, 74, 79, 83, 86], bass: [43, 50, 47] },
+  { title: "Fortress Frost", bpm: 134, wave: "sawtooth", melody: [60, 63, 67, 72, 70, 67, 63, 58, 62, 65, 70, 74], bass: [36, 43, 34] },
+  { title: "Pocket Dragon Dreams", bpm: 114, wave: "sine", melody: [74, 79, 83, 86, 88, 86, 83, 79, 76, 81, 84, 88], bass: [43, 50, 45] },
+  { title: "Orbit of the Plush", bpm: 142, wave: "triangle", melody: [69, 73, 76, 81, 85, 81, 76, 71, 74, 78, 83, 86], bass: [45, 52, 47] },
+  { title: "Crown of Cuddles", bpm: 148, wave: "square", melody: [72, 76, 79, 84, 88, 86, 83, 79, 74, 77, 81, 86], bass: [48, 55, 50] },
+];
+
+function ensureAudio() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!audioContext && AudioContextClass) audioContext = new AudioContextClass();
+  if (audioContext?.state === "suspended") audioContext.resume();
+  return audioContext;
+}
 
 function tone(frequency, duration = 0.08, delay = 0, type = "sine", volume = 0.03) {
   if (!soundEnabled) return;
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!audioContext && AudioContextClass) audioContext = new AudioContextClass();
-  if (!audioContext) return;
-  if (audioContext.state === "suspended") audioContext.resume();
+  if (!ensureAudio()) return;
   const oscillator = audioContext.createOscillator();
   const gain = audioContext.createGain();
   const start = audioContext.currentTime + delay;
@@ -302,6 +435,41 @@ function playSound(name) {
     rescue: [659, 880], lose: [240, 180, 130], win: [523, 659, 784, 1047, 1319],
   };
   (patterns[name] || []).forEach((note, index) => tone(note, 0.12, index * 0.055, name === "lose" ? "sawtooth" : "triangle"));
+}
+
+function midiFrequency(note) {
+  return 440 * (2 ** ((note - 69) / 12));
+}
+
+function stopLevelMusic() {
+  musicGeneration += 1;
+  clearTimeout(musicTimer);
+  musicTimer = 0;
+}
+
+function startLevelMusic(delay = 0.45) {
+  stopLevelMusic();
+  if (!soundEnabled || !running || paused || gameScreen.hidden) return;
+  if (!ensureAudio()) return;
+  const track = MUSIC[currentLevelIndex];
+  const generation = musicGeneration;
+  musicStep = 0;
+
+  const playBeat = () => {
+    if (generation !== musicGeneration || !soundEnabled || !running || paused || gameScreen.hidden) return;
+    const melodyNote = track.melody[musicStep % track.melody.length];
+    const beatLength = 60 / track.bpm / 2;
+    if (melodyNote) tone(midiFrequency(melodyNote), beatLength * 0.72, 0, track.wave, 0.012);
+    if (musicStep % 4 === 0) {
+      const bassNote = track.bass[Math.floor(musicStep / 4) % track.bass.length];
+      tone(midiFrequency(bassNote), beatLength * 2.6, 0, "sine", 0.014);
+    }
+    if (musicStep % 8 === 6) tone(midiFrequency(melodyNote - 12), beatLength * 0.45, 0, "triangle", 0.006);
+    musicStep += 1;
+    musicTimer = window.setTimeout(playBeat, beatLength * 1000);
+  };
+
+  musicTimer = window.setTimeout(playBeat, delay * 1000);
 }
 
 function updateSoundButton() {
@@ -391,11 +559,13 @@ function startLevel(index) {
   levelKicker.textContent = `Level ${currentLevelIndex + 1} · ${currentLevel.subtitle}`;
   levelName.textContent = currentLevel.name;
   missionText.textContent = currentLevel.tip;
+  musicTitle.textContent = `♫ ${MUSIC[currentLevelIndex].title}`;
   tapHint.classList.remove("dismissed");
   updateSkillDock();
   updateHUD();
   resizeCanvas();
   playSound("start");
+  startLevelMusic();
   announce(`${currentLevel.name}. Collect ${dolls.length} plush friends and rescue ${currentLevel.rescue} Lemmies.`);
 }
 
@@ -697,13 +867,14 @@ function finishLevel() {
   save.bestScores[currentLevelIndex] = Math.max(Number(save.bestScores[currentLevelIndex] || 0), score);
   save.stars[currentLevelIndex] = Math.max(Number(save.stars[currentLevelIndex] || 0), stars);
   persistSave();
+  stopLevelMusic();
   playSound("win");
   showModal({
     sticker: stars === 3 ? "✦" : "♥",
     kicker: `Level ${currentLevelIndex + 1} complete · ${"★".repeat(stars)}`,
     title: "The plush friends are safe!",
     copy: currentLevelIndex === LEVELS.length - 1
-      ? "The Midnight Museum is glowing. Every brave choice led the Lemmies home."
+      ? "The Crown of Cuddles is glowing. You mastered all twenty rescues and brought every royal plush home."
       : `Next up: ${LEVELS[currentLevelIndex + 1].name}. It is a little trickier and has a brand-new surprise.`,
     stats: [`${rescued} rescued`, `${collected} plush`, `${score.toLocaleString()} pts`],
     primaryLabel: currentLevelIndex === LEVELS.length - 1 ? "Play again" : "Next level",
@@ -717,6 +888,7 @@ function failLevel(reason) {
   if (resolving) return;
   resolving = true;
   running = false;
+  stopLevelMusic();
   playSound("lose");
   showModal({
     sticker: "♡",
@@ -753,6 +925,7 @@ function hideModal() {
 function showMenu() {
   running = false;
   paused = false;
+  stopLevelMusic();
   hideModal();
   gameScreen.hidden = true;
   menuScreen.hidden = false;
@@ -764,6 +937,8 @@ function showMenu() {
 function togglePause() {
   if (resolving || gameScreen.hidden) return;
   paused = !paused;
+  if (paused) stopLevelMusic();
+  else startLevelMusic(0.08);
   pauseButton.textContent = paused ? "▶" : "Ⅱ";
   pauseButton.setAttribute("aria-label", paused ? "Resume game" : "Pause game");
   showToast(paused ? "Rescue paused" : "Rescue resumed");
@@ -1007,6 +1182,8 @@ soundButton.addEventListener("click", () => {
   save.sound = soundEnabled;
   persistSave();
   updateSoundButton();
+  if (soundEnabled) startLevelMusic(0.08);
+  else stopLevelMusic();
 });
 modalPrimary.addEventListener("click", () => modalPrimaryAction?.());
 modalSecondary.addEventListener("click", () => modalSecondaryAction?.());
@@ -1032,4 +1209,7 @@ offlineBadge.classList.toggle("offline", !navigator.onLine);
 updateSoundButton();
 updateMenu();
 animationFrame = requestAnimationFrame(gameLoop);
-window.addEventListener("pagehide", () => cancelAnimationFrame(animationFrame));
+window.addEventListener("pagehide", () => {
+  stopLevelMusic();
+  cancelAnimationFrame(animationFrame);
+});

@@ -25,7 +25,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=1" />
+    <link rel="stylesheet" href="./styles.css?v=2" />
     <title>Jelly Lemmy — The Great Plush Rescue</title>
   </head>
 
@@ -54,7 +54,7 @@
               <button class="text-button" id="reset-button" type="button">Reset progress</button>
             </div>
             <dl class="save-stats" aria-label="Saved adventure progress">
-              <div><dt>Unlocked</dt><dd id="unlocked-value">1 / 12</dd></div>
+              <div><dt>Unlocked</dt><dd id="unlocked-value">1 / 20</dd></div>
               <div><dt>Plush shelf</dt><dd id="collection-value">0</dd></div>
               <div><dt>Best score</dt><dd id="best-score-value">0</dd></div>
             </dl>
@@ -86,7 +86,7 @@
         <section class="level-section" aria-labelledby="levels-title">
           <div class="level-heading">
             <div>
-              <p class="section-kicker">Twelve tiny worlds</p>
+              <p class="section-kicker">Twenty tiny worlds</p>
               <h2 id="levels-title">Every level adds a new twist.</h2>
             </div>
             <p>Finish a rescue to unlock the next puzzle. Your collection stays on this device.</p>
@@ -125,7 +125,10 @@
         </header>
 
         <div class="mission-bar">
-          <span id="mission-text">Collect every Jellycat doll, then reach the toy chest.</span>
+          <span class="mission-copy">
+            <span id="mission-text">Collect every Jellycat doll, then reach the toy chest.</span>
+            <small id="music-title">♫ Plush Parade Waltz</small>
+          </span>
           <div class="release-meter" aria-label="Lemmies released">
             <i id="release-fill"></i>
           </div>
@@ -176,6 +179,6 @@
     </div>
 
     <div class="sr-only" id="announcer" aria-live="assertive"></div>
-    <script src="./game.js?v=1"></script>
+    <script src="./game.js?v=2"></script>
   </body>
 </html>

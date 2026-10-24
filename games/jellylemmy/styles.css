@@ -587,6 +587,25 @@ h1 em {
   text-transform: uppercase;
 }
 
+.mission-copy {
+  min-width: 0;
+}
+
+.mission-copy > span,
+.mission-copy > small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mission-copy > small {
+  margin-top: 3px;
+  color: var(--yellow);
+  font-size: 6px;
+  letter-spacing: 0.08em;
+}
+
 .release-meter {
   height: 5px;
   overflow: hidden;

@@ -1,11 +1,11 @@
 "use strict";
 
-const CACHE_NAME = "jelly-lemmy-v1";
+const CACHE_NAME = "jelly-lemmy-v2";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=1",
-  "./game.js?v=1",
+  "./styles.css?v=2",
+  "./game.js?v=2",
   "./manifest.webmanifest",
   "./icon.svg",
 ];
