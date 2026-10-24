@@ -1012,8 +1012,10 @@ function roundedPath(x, y, width, height, radius) {
 
 function drawPlush(item, cellWidth, cellHeight, time) {
   const x = item.x * cellWidth;
-  const y = (item.y - 0.66) * cellHeight + Math.sin(time * 0.004 + item.bob) * 3.5;
-  const size = Math.min(cellWidth, cellHeight) * 1.08;
+  const ground = item.y * cellHeight;
+  const bob = Math.sin(time * 0.004 + item.bob) * 2.8;
+  const cellSize = Math.min(cellWidth, cellHeight);
+  const size = cellSize * (cellSize < 18 ? 1.68 : 1.42);
   const colors = {
     bunny: ["#fff7ef", "#eacdc5"], bear: ["#dbad82", "#9b6548"], frog: ["#a8ed91", "#56a968"],
     cat: ["#fffaf1", "#cfc4bd"], duck: ["#ffe77a", "#e5a834"], elephant: ["#c5d1e2", "#7d8fae"],
@@ -1021,42 +1023,93 @@ function drawPlush(item, cellWidth, cellHeight, time) {
     puppy: ["#e6bd8b", "#a86e4f"], mouse: ["#d8cad2", "#998796"], whale: ["#8ed6f5", "#4b91bb"],
   };
   const [light, dark] = colors[item.type] || ["#ffb4d0", "#d76d9b"];
+  const outline = "#2b2039";
 
   context.save();
-  context.translate(x, y);
   if (item.collected) context.globalAlpha = 0.12;
 
-  // Soft collectible aura and grounding shadow.
-  context.shadowColor = light;
-  context.shadowBlur = size * 0.8;
-  context.fillStyle = "rgba(255,255,255,0.16)";
+  // A grounded shadow and a restrained halo make the toy feel present in the
+  // world instead of looking like an icon floating over it.
+  context.fillStyle = "rgba(3,1,12,0.4)";
   context.beginPath();
-  context.arc(0, 0, size * 0.67, 0, Math.PI * 2);
+  context.ellipse(x, ground - size * 0.03, size * 0.38, size * 0.1, 0, 0, Math.PI * 2);
+  context.fill();
+  context.translate(x, ground - size * 0.54 + bob);
+  context.shadowColor = light;
+  context.shadowBlur = size * 0.5;
+  context.fillStyle = "rgba(255,255,255,0.1)";
+  context.beginPath();
+  context.arc(0, 0, size * 0.66, 0, Math.PI * 2);
   context.fill();
   context.shadowBlur = 0;
-  context.fillStyle = "rgba(5,2,16,0.28)";
-  context.beginPath();
-  context.ellipse(0, size * 0.52, size * 0.42, size * 0.12, 0, 0, Math.PI * 2);
-  context.fill();
 
-  const fur = context.createLinearGradient(-size * 0.35, -size * 0.5, size * 0.35, size * 0.55);
+  const fur = context.createRadialGradient(-size * 0.18, -size * 0.32, size * 0.03, 0, 0, size * 0.7);
   fur.addColorStop(0, light);
+  fur.addColorStop(0.58, light);
   fur.addColorStop(1, dark);
   context.fillStyle = fur;
-  context.strokeStyle = "rgba(31,20,53,0.9)";
-  context.lineWidth = Math.max(1.3, size * 0.065);
+  context.strokeStyle = outline;
+  context.lineWidth = Math.max(1.15, size * 0.045);
   context.lineJoin = "round";
+  context.lineCap = "round";
 
-  // Distinct silhouettes make every collected friend recognizable.
+  // Stuffed legs and arms sit behind the torso. Their slight asymmetry and
+  // stitched ends make each collectible read as a real soft toy.
+  context.save();
+  context.rotate(-0.08);
+  roundedPath(-size * 0.28, size * 0.24, size * 0.22, size * 0.42, size * 0.11);
+  context.fill(); context.stroke();
+  context.restore();
+  context.save();
+  context.rotate(0.08);
+  roundedPath(size * 0.06, size * 0.24, size * 0.22, size * 0.42, size * 0.11);
+  context.fill(); context.stroke();
+  context.save();
+  context.rotate(-0.42);
+  roundedPath(-size * 0.43, -size * 0.03, size * 0.19, size * 0.42, size * 0.1);
+  context.fill(); context.stroke();
+  context.restore();
+  context.save();
+  context.rotate(0.42);
+  roundedPath(size * 0.24, -size * 0.03, size * 0.19, size * 0.42, size * 0.1);
+  context.fill(); context.stroke();
+  context.restore();
+
+  // Tail and wings are tucked behind the body.
+  if (["cat", "fox", "mouse", "puppy"].includes(item.type)) {
+    context.beginPath();
+    context.moveTo(size * 0.25, size * 0.19);
+    context.bezierCurveTo(size * 0.68, size * 0.12, size * 0.55, size * 0.48, size * 0.34, size * 0.39);
+    context.strokeStyle = dark;
+    context.lineWidth = size * 0.15;
+    context.stroke();
+    context.strokeStyle = outline;
+    context.lineWidth = Math.max(1, size * 0.035);
+  } else if (item.type === "dragon") {
+    context.beginPath();
+    context.moveTo(-size * 0.28, -size * 0.02); context.lineTo(-size * 0.58, -size * 0.2); context.lineTo(-size * 0.5, size * 0.18); context.closePath();
+    context.moveTo(size * 0.28, -size * 0.02); context.lineTo(size * 0.58, -size * 0.2); context.lineTo(size * 0.5, size * 0.18); context.closePath();
+    context.fill(); context.stroke();
+  }
+
+  // Pear-shaped stuffed torso.
+  context.fillStyle = fur;
+  context.strokeStyle = outline;
+  context.beginPath();
+  context.ellipse(0, size * 0.14, size * 0.36, size * 0.42, 0, 0, Math.PI * 2);
+  context.fill(); context.stroke();
+
+  // Species-specific ears create a recognisable silhouette before the head is
+  // added, while keeping the same premium plush construction language.
   if (item.type === "bunny") {
     context.beginPath();
-    context.ellipse(-size * 0.2, -size * 0.55, size * 0.11, size * 0.32, -0.12, 0, Math.PI * 2);
-    context.ellipse(size * 0.2, -size * 0.55, size * 0.11, size * 0.32, 0.12, 0, Math.PI * 2);
+    context.ellipse(-size * 0.2, -size * 0.55, size * 0.12, size * 0.32, -0.14, 0, Math.PI * 2);
+    context.ellipse(size * 0.2, -size * 0.55, size * 0.12, size * 0.32, 0.14, 0, Math.PI * 2);
     context.fill(); context.stroke();
   } else if (["cat", "fox", "mouse"].includes(item.type)) {
     context.beginPath();
-    context.moveTo(-size * 0.42, -size * 0.28); context.lineTo(-size * 0.28, -size * 0.65); context.lineTo(-size * 0.06, -size * 0.38);
-    context.moveTo(size * 0.42, -size * 0.28); context.lineTo(size * 0.28, -size * 0.65); context.lineTo(size * 0.06, -size * 0.38);
+    context.moveTo(-size * 0.42, -size * 0.3); context.lineTo(-size * 0.28, -size * 0.62); context.lineTo(-size * 0.06, -size * 0.39);
+    context.moveTo(size * 0.42, -size * 0.3); context.lineTo(size * 0.28, -size * 0.62); context.lineTo(size * 0.06, -size * 0.39);
     context.fill(); context.stroke();
   } else if (["bear", "puppy"].includes(item.type)) {
     context.beginPath();
@@ -1073,41 +1126,92 @@ function drawPlush(item, cellWidth, cellHeight, time) {
     context.moveTo(-size * 0.34, -size * 0.35); context.lineTo(-size * 0.46, -size * 0.68); context.lineTo(-size * 0.12, -size * 0.43);
     context.moveTo(size * 0.34, -size * 0.35); context.lineTo(size * 0.46, -size * 0.68); context.lineTo(size * 0.12, -size * 0.43);
     context.fill(); context.stroke();
+  } else if (item.type === "elephant") {
+    context.beginPath();
+    context.ellipse(-size * 0.38, -size * 0.23, size * 0.2, size * 0.27, -0.3, 0, Math.PI * 2);
+    context.ellipse(size * 0.38, -size * 0.23, size * 0.2, size * 0.27, 0.3, 0, Math.PI * 2);
+    context.fill(); context.stroke();
+  } else if (item.type === "duck") {
+    context.beginPath();
+    context.moveTo(-size * 0.12, -size * 0.49); context.lineTo(0, -size * 0.7); context.lineTo(size * 0.11, -size * 0.48);
+    context.fill(); context.stroke();
   }
 
+  // Separate oversized head, like a contemporary designer plush.
   context.beginPath();
-  context.ellipse(0, 0, size * 0.45, size * 0.54, 0, 0, Math.PI * 2);
+  context.ellipse(0, -size * 0.25, size * 0.43, size * 0.36, 0, 0, Math.PI * 2);
   context.fill(); context.stroke();
 
   if (item.type === "elephant") {
     context.beginPath();
-    context.moveTo(size * 0.05, size * 0.02);
-    context.quadraticCurveTo(size * 0.37, size * 0.25, size * 0.14, size * 0.43);
+    context.moveTo(size * 0.02, -size * 0.18);
+    context.quadraticCurveTo(size * 0.17, size * 0.1, size * 0.02, size * 0.2);
+    context.lineWidth = size * 0.12;
     context.stroke();
+  } else if (item.type === "duck") {
+    context.fillStyle = "#f39a43";
+    context.strokeStyle = outline;
+    context.beginPath();
+    context.ellipse(0, -size * 0.17, size * 0.19, size * 0.1, 0, 0, Math.PI * 2);
+    context.fill(); context.stroke();
+  } else if (item.type === "penguin") {
+    context.fillStyle = "#f8f3eb";
+    context.beginPath();
+    context.ellipse(0, -size * 0.23, size * 0.29, size * 0.25, 0, 0, Math.PI * 2);
+    context.fill();
   }
 
-  // Face, shine and stitched smile.
-  context.fillStyle = "#261936";
+  // Glass bead eyes, a felt nose, blush and a short stitched smile.
+  context.fillStyle = outline;
   context.beginPath();
-  context.arc(-size * 0.14, -size * 0.08, size * 0.045, 0, Math.PI * 2);
-  context.arc(size * 0.14, -size * 0.08, size * 0.045, 0, Math.PI * 2);
+  context.arc(-size * 0.14, -size * 0.29, size * 0.047, 0, Math.PI * 2);
+  context.arc(size * 0.14, -size * 0.29, size * 0.047, 0, Math.PI * 2);
   context.fill();
-  context.strokeStyle = "rgba(38,25,54,0.72)";
-  context.lineWidth = Math.max(1, size * 0.04);
+  context.fillStyle = "rgba(255,255,255,0.86)";
   context.beginPath();
-  context.arc(0, size * 0.06, size * 0.12, 0.15, Math.PI - 0.15);
+  context.arc(-size * 0.126, -size * 0.305, size * 0.014, 0, Math.PI * 2);
+  context.arc(size * 0.154, -size * 0.305, size * 0.014, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = "rgba(255,122,153,0.34)";
+  context.beginPath();
+  context.ellipse(-size * 0.25, -size * 0.18, size * 0.08, size * 0.04, 0, 0, Math.PI * 2);
+  context.ellipse(size * 0.25, -size * 0.18, size * 0.08, size * 0.04, 0, 0, Math.PI * 2);
+  context.fill();
+  if (!["duck", "elephant"].includes(item.type)) {
+    context.fillStyle = item.type === "frog" ? "#315d43" : "#6d4651";
+    context.beginPath(); context.arc(0, -size * 0.2, size * 0.045, 0, Math.PI * 2); context.fill();
+  }
+  context.strokeStyle = "rgba(43,32,57,0.75)";
+  context.lineWidth = Math.max(1, size * 0.028);
+  context.beginPath();
+  context.arc(0, -size * 0.16, size * 0.1, 0.2, Math.PI - 0.2);
   context.stroke();
-  context.fillStyle = "rgba(255,255,255,0.52)";
+
+  // Visible seam and tiny fabric fibres add tactile detail without using
+  // external image assets.
+  context.strokeStyle = "rgba(255,255,255,0.45)";
+  context.lineWidth = Math.max(0.8, size * 0.018);
+  context.setLineDash([size * 0.045, size * 0.04]);
   context.beginPath();
-  context.ellipse(-size * 0.2, -size * 0.26, size * 0.08, size * 0.13, -0.5, 0, Math.PI * 2);
-  context.fill();
+  context.moveTo(0, size * 0.02); context.quadraticCurveTo(-size * 0.04, size * 0.28, 0, size * 0.47);
+  context.stroke();
+  context.setLineDash([]);
+  context.strokeStyle = "rgba(255,255,255,0.26)";
+  for (let fibre = 0; fibre < 7; fibre += 1) {
+    const angle = fibre * 2.399 + item.bob;
+    const radius = size * (0.16 + (fibre % 3) * 0.07);
+    const fx = Math.cos(angle) * radius;
+    const fy = size * 0.12 + Math.sin(angle) * radius * 0.85;
+    context.beginPath(); context.moveTo(fx - 1.5, fy); context.lineTo(fx + 1.5, fy - 1); context.stroke();
+  }
   context.restore();
 }
 
 function drawUnit(unit, cellWidth, cellHeight, time) {
   const x = unit.x * cellWidth;
   const y = unit.y * cellHeight;
-  const size = Math.min(cellWidth, cellHeight) * 1.4;
+  const cellSize = Math.min(cellWidth, cellHeight);
+  const size = cellSize * (cellSize < 18 ? 1.68 : 1.4);
   const stride = Math.sin(time * 0.014 + unit.phase);
   const falling = unit.state === "fall";
   const actionColor = unit.state === "build" ? "#ffd65d" : unit.state === "bash" ? "#ff70b3" : "#62e5bd";
@@ -1269,45 +1373,231 @@ function drawUnit(unit, cellWidth, cellHeight, time) {
 function drawPortal(point, cellWidth, cellHeight, theme, time, isExit = false) {
   const x = point.x * cellWidth;
   const y = point.y * cellHeight;
-  const width = cellWidth * (isExit ? 1.55 : 1.42);
-  const height = cellHeight * (isExit ? 1.82 : 1.2);
-  const top = y - height;
   const pulse = 0.82 + Math.sin(time * 0.004 + (isExit ? 2 : 0)) * 0.12;
 
   context.save();
-  context.shadowColor = theme.glow;
-  context.shadowBlur = 20 * pulse;
-  const glow = context.createLinearGradient(x, top, x, y);
-  glow.addColorStop(0, isExit ? "#fff7b5" : theme.glow);
-  glow.addColorStop(1, isExit ? theme.glow : "rgba(255,255,255,0.25)");
-  context.fillStyle = glow;
-  roundedPath(x - width / 2, top, width, height, width * 0.45);
-  context.fill();
-  context.shadowBlur = 0;
+  if (!isExit) {
+    // A physical launch pod replaces the generic glowing pill.
+    const compact = Math.min(cellWidth, cellHeight) < 18;
+    const width = cellWidth * (compact ? 1.72 : 1.5);
+    const height = cellHeight * (compact ? 1.44 : 1.28);
+    const top = y - height;
+    context.fillStyle = "rgba(1,0,9,0.4)";
+    context.beginPath(); context.ellipse(x, y, width * 0.57, height * 0.14, 0, 0, Math.PI * 2); context.fill();
+    context.shadowColor = theme.glow;
+    context.shadowBlur = 18 * pulse;
+    const shell = context.createLinearGradient(x - width / 2, top, x + width / 2, y);
+    shell.addColorStop(0, "#f6f8ff"); shell.addColorStop(0.22, "#8390ad"); shell.addColorStop(0.58, "#313852"); shell.addColorStop(1, "#14182c");
+    context.fillStyle = shell;
+    roundedPath(x - width / 2, top, width, height, width * 0.32);
+    context.fill();
+    context.shadowBlur = 0;
+    context.fillStyle = "rgba(12,8,29,0.9)";
+    roundedPath(x - width * 0.34, top + height * 0.16, width * 0.68, height * 0.72, width * 0.25);
+    context.fill();
+    const portalLight = context.createRadialGradient(x, top + height * 0.52, 0, x, top + height * 0.52, width * 0.38);
+    portalLight.addColorStop(0, "rgba(255,255,255,0.96)");
+    portalLight.addColorStop(0.32, theme.glow);
+    portalLight.addColorStop(1, "rgba(255,255,255,0)");
+    context.fillStyle = portalLight;
+    context.beginPath(); context.ellipse(x, top + height * 0.52, width * 0.29, height * 0.33, 0, 0, Math.PI * 2); context.fill();
+    context.fillStyle = "rgba(255,255,255,0.82)";
+    context.beginPath(); context.arc(x - width * 0.36, top + height * 0.16, Math.max(1.4, width * 0.035), 0, Math.PI * 2); context.fill();
+  } else {
+    // HOME is a tiny, warm, inhabitable cottage—not another portal. It is
+    // deliberately richer than the scenery so the rescue destination is
+    // instantly obvious even on a phone.
+    const compact = Math.min(cellWidth, cellHeight) < 18;
+    const width = cellWidth * (compact ? 2.8 : 2.4);
+    const wallHeight = cellHeight * (compact ? 1.55 : 1.42);
+    const roofHeight = cellHeight * (compact ? 0.94 : 0.86);
+    const left = x - width / 2;
+    const wallTop = y - wallHeight;
 
-  context.fillStyle = "rgba(20,9,43,0.78)";
-  roundedPath(x - width * 0.36, top + width * 0.18, width * 0.72, height - width * 0.18, width * 0.32);
-  context.fill();
-  context.strokeStyle = "rgba(255,255,255,0.88)";
-  context.lineWidth = 1.5;
-  context.stroke();
+    context.fillStyle = "rgba(2,1,11,0.46)";
+    context.beginPath(); context.ellipse(x, y + 1, width * 0.57, cellHeight * 0.16, 0, 0, Math.PI * 2); context.fill();
 
-  context.strokeStyle = theme.glow;
-  context.lineWidth = 2;
-  context.setLineDash([4, 5]);
-  context.lineDashOffset = -(time * 0.02) % 18;
-  context.beginPath();
-  context.ellipse(x, top + height * 0.48, width * 0.29, height * 0.29, 0, 0, Math.PI * 2);
-  context.stroke();
-  context.setLineDash([]);
+    // Chimney and a curl of illuminated smoke.
+    const chimney = context.createLinearGradient(0, wallTop - roofHeight, 0, wallTop);
+    chimney.addColorStop(0, "#8d5167"); chimney.addColorStop(1, "#46283d");
+    context.fillStyle = chimney;
+    roundedPath(x + width * 0.25, wallTop - roofHeight * 0.74, width * 0.16, roofHeight * 0.72, width * 0.035);
+    context.fill();
+    context.strokeStyle = `rgba(255,255,255,${0.22 * pulse})`;
+    context.lineWidth = Math.max(1, cellWidth * 0.04);
+    context.beginPath();
+    context.bezierCurveTo(x + width * 0.33, wallTop - roofHeight * 0.83, x + width * 0.18, wallTop - roofHeight * 1.12, x + width * 0.36, wallTop - roofHeight * 1.32);
+    context.stroke();
 
-  if (isExit) {
-    context.fillStyle = "white";
-    context.font = `900 ${Math.max(7, cellHeight * 0.25)}px Arial`;
+    const walls = context.createLinearGradient(left, wallTop, left + width, y);
+    walls.addColorStop(0, "#fff0cf"); walls.addColorStop(0.5, "#e9bd8f"); walls.addColorStop(1, "#9a5e58");
+    context.fillStyle = walls;
+    context.strokeStyle = "#39263f";
+    context.lineWidth = Math.max(1.4, cellWidth * 0.045);
+    roundedPath(left, wallTop, width, wallHeight, cellWidth * 0.16);
+    context.fill(); context.stroke();
+
+    // Curved shingle roof with a snow-soft ridge.
+    const roof = context.createLinearGradient(x, wallTop - roofHeight, x, wallTop + roofHeight * 0.2);
+    roof.addColorStop(0, "#ff7cab"); roof.addColorStop(0.6, "#a43f75"); roof.addColorStop(1, "#54264d");
+    context.fillStyle = roof;
+    context.beginPath();
+    context.moveTo(left - width * 0.1, wallTop + roofHeight * 0.08);
+    context.quadraticCurveTo(x - width * 0.33, wallTop - roofHeight * 0.78, x, wallTop - roofHeight);
+    context.quadraticCurveTo(x + width * 0.34, wallTop - roofHeight * 0.74, left + width * 1.1, wallTop + roofHeight * 0.08);
+    context.quadraticCurveTo(x, wallTop + roofHeight * 0.29, left - width * 0.1, wallTop + roofHeight * 0.08);
+    context.closePath(); context.fill(); context.stroke();
+    context.strokeStyle = "rgba(255,255,255,0.22)";
+    context.lineWidth = 1;
+    for (let shingle = 1; shingle < 5; shingle += 1) {
+      const sx = left + width * shingle / 5;
+      context.beginPath(); context.moveTo(sx, wallTop - roofHeight * 0.43); context.lineTo(sx - width * 0.08, wallTop + roofHeight * 0.07); context.stroke();
+    }
+
+    // Lit windows and an open-looking front door.
+    const warmLight = context.createRadialGradient(x, wallTop + wallHeight * 0.62, 0, x, wallTop + wallHeight * 0.62, width * 0.65);
+    warmLight.addColorStop(0, `rgba(255,222,112,${0.42 * pulse})`); warmLight.addColorStop(1, "rgba(255,222,112,0)");
+    context.fillStyle = warmLight; context.fillRect(left - width * 0.2, wallTop - cellHeight * 0.2, width * 1.4, wallHeight * 1.3);
+    context.shadowColor = "#ffd968"; context.shadowBlur = 12 * pulse;
+    context.fillStyle = "#6e3d50";
+    roundedPath(x - width * 0.12, y - wallHeight * 0.7, width * 0.25, wallHeight * 0.7, width * 0.11);
+    context.fill();
+    context.fillStyle = "#ffe994";
+    roundedPath(x - width * 0.075, y - wallHeight * 0.62, width * 0.15, wallHeight * 0.53, width * 0.07);
+    context.fill();
+    context.shadowBlur = 0;
+    [-0.31, 0.31].forEach((offset) => {
+      context.fillStyle = "#59354c";
+      roundedPath(x + width * offset - width * 0.095, wallTop + wallHeight * 0.31, width * 0.19, wallHeight * 0.25, width * 0.035);
+      context.fill();
+      context.fillStyle = "#ffe89a";
+      roundedPath(x + width * offset - width * 0.068, wallTop + wallHeight * 0.35, width * 0.136, wallHeight * 0.17, width * 0.02);
+      context.fill();
+      context.strokeStyle = "rgba(89,53,76,0.7)";
+      context.beginPath(); context.moveTo(x + width * offset, wallTop + wallHeight * 0.35); context.lineTo(x + width * offset, wallTop + wallHeight * 0.52); context.stroke();
+    });
+
+    // Wooden plaque and tiny garden details finish the miniature-house read.
+    context.fillStyle = "#70404a";
+    roundedPath(x - width * 0.19, wallTop + wallHeight * 0.08, width * 0.38, wallHeight * 0.16, cellWidth * 0.04);
+    context.fill();
+    context.fillStyle = "#fff2d0";
+    context.font = `900 ${Math.max(7, cellHeight * 0.22)}px Manrope, Arial`;
     context.textAlign = "center";
-    context.fillText("HOME", x, top + height * 0.77);
+    context.textBaseline = "middle";
+    context.fillText("HOME", x, wallTop + wallHeight * 0.16);
+    context.fillStyle = theme.glow;
+    context.beginPath(); context.arc(left + width * 0.08, y - cellHeight * 0.08, cellWidth * 0.09, 0, Math.PI * 2); context.fill();
+    context.beginPath(); context.arc(left + width * 0.18, y - cellHeight * 0.05, cellWidth * 0.07, 0, Math.PI * 2); context.fill();
   }
   context.restore();
+}
+
+function drawTerrain(cellWidth, cellHeight, theme) {
+  // Physics still uses an exact tile grid, but the player sees continuous
+  // sculpted land. Slightly overlapping tile rectangles are filled as a
+  // single path, completely removing the old wall-of-rounded-squares look.
+  const drawMass = (tileType, fillStyle, shadowColor) => {
+    context.save();
+    context.beginPath();
+    for (let row = 0; row < WORLD_HEIGHT; row += 1) {
+      for (let column = 0; column < WORLD_WIDTH; column += 1) {
+        if (tiles[row][column] !== tileType) continue;
+        context.rect(column * cellWidth - 0.6, row * cellHeight - 0.6, cellWidth + 1.2, cellHeight + 1.2);
+      }
+    }
+    context.fillStyle = fillStyle;
+    context.shadowColor = shadowColor;
+    context.shadowBlur = 13;
+    context.shadowOffsetY = 6;
+    context.fill();
+    context.shadowBlur = 0;
+    context.shadowOffsetY = 0;
+    context.fill();
+    context.restore();
+  };
+
+  const soil = context.createLinearGradient(0, 0, 0, viewHeight);
+  soil.addColorStop(0, theme.soilTop);
+  soil.addColorStop(0.18, theme.soil);
+  soil.addColorStop(0.72, "#4a315f");
+  soil.addColorStop(1, "#20152f");
+  const steel = context.createLinearGradient(0, 0, viewWidth, viewHeight);
+  steel.addColorStop(0, "#f4f7ff");
+  steel.addColorStop(0.22, "#93a2c4");
+  steel.addColorStop(0.58, "#4b5578");
+  steel.addColorStop(1, "#242a43");
+  drawMass(SOFT, soil, "rgba(1,0,8,0.7)");
+  drawMass(STEEL, steel, "rgba(1,0,8,0.8)");
+
+  // Draw exposed tops as long, organic ridges rather than one cap per cell.
+  [SOFT, STEEL].forEach((tileType) => {
+    for (let row = 0; row < WORLD_HEIGHT; row += 1) {
+      let column = 0;
+      while (column < WORLD_WIDTH) {
+        if (tileAt(column, row) !== tileType || tileAt(column, row - 1) !== EMPTY) {
+          column += 1;
+          continue;
+        }
+        const start = column;
+        while (column < WORLD_WIDTH && tileAt(column, row) === tileType && tileAt(column, row - 1) === EMPTY) column += 1;
+        const left = start * cellWidth;
+        const right = column * cellWidth;
+        const top = row * cellHeight;
+        const capHeight = Math.max(4, cellHeight * 0.24);
+        const cap = context.createLinearGradient(0, top - 2, 0, top + capHeight);
+        if (tileType === STEEL) {
+          cap.addColorStop(0, "#ffffff"); cap.addColorStop(0.35, "#cbd5ee"); cap.addColorStop(1, "#687696");
+        } else {
+          cap.addColorStop(0, "#fff0f7"); cap.addColorStop(0.18, theme.soilTop); cap.addColorStop(1, theme.soil);
+        }
+        context.fillStyle = cap;
+        context.beginPath();
+        context.moveTo(left, top + capHeight * 0.16);
+        for (let xStep = left; xStep <= right; xStep += Math.max(8, cellWidth * 0.5)) {
+          const lift = tileType === STEEL ? 0 : Math.sin((xStep / cellWidth) * 2.3 + row) * capHeight * 0.11;
+          context.lineTo(Math.min(xStep, right), top + lift);
+        }
+        context.lineTo(right, top + capHeight);
+        context.lineTo(left, top + capHeight);
+        context.closePath(); context.fill();
+        context.strokeStyle = tileType === STEEL ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.48)";
+        context.lineWidth = tileType === STEEL ? 1.6 : 1.2;
+        context.beginPath(); context.moveTo(left, top); context.lineTo(right, top); context.stroke();
+
+        if (tileType === STEEL) {
+          // Large engineered plates: a seam every four cells, not a visible
+          // collision grid around every tile.
+          context.fillStyle = "rgba(255,255,255,0.62)";
+          for (let plate = start; plate < column; plate += 4) {
+            const px = plate * cellWidth + cellWidth * 0.18;
+            context.beginPath(); context.arc(px, top + capHeight * 0.58, Math.max(1, cellWidth * 0.035), 0, Math.PI * 2); context.fill();
+          }
+        } else {
+          // Soft tufts and tiny fibres keep the ridge tactile and alive.
+          context.strokeStyle = "rgba(255,255,255,0.28)";
+          context.lineWidth = 1;
+          for (let tuft = start; tuft < column; tuft += 2) {
+            const tx = (tuft + 0.45) * cellWidth;
+            context.beginPath();
+            context.moveTo(tx, top + 1); context.quadraticCurveTo(tx + cellWidth * 0.1, top - capHeight * 0.35, tx + cellWidth * 0.2, top + 1);
+            context.stroke();
+          }
+        }
+      }
+    }
+  });
+
+  // Sparse embedded texture gives the land depth without revealing the grid.
+  for (let row = 0; row < WORLD_HEIGHT; row += 1) {
+    for (let column = 0; column < WORLD_WIDTH; column += 1) {
+      if (tiles[row][column] !== SOFT || (column * 11 + row * 7) % 5 !== 0) continue;
+      const x = (column + 0.64) * cellWidth;
+      const y = (row + 0.58) * cellHeight;
+      context.fillStyle = "rgba(255,255,255,0.08)";
+      context.beginPath(); context.ellipse(x, y, Math.max(1, cellWidth * 0.045), Math.max(0.7, cellHeight * 0.025), -0.4, 0, Math.PI * 2); context.fill();
+    }
+  }
 }
 
 function drawGame(time) {
@@ -1387,51 +1677,7 @@ function drawGame(time) {
     context.globalAlpha = 1;
   });
 
-  const soil = context.createLinearGradient(0, 0, cellWidth, cellHeight);
-  soil.addColorStop(0, theme.soilTop);
-  soil.addColorStop(0.2, theme.soil);
-  soil.addColorStop(1, "#281b45");
-  const steel = context.createLinearGradient(0, 0, cellWidth, cellHeight);
-  steel.addColorStop(0, "#e7ecff");
-  steel.addColorStop(0.22, "#8795b5");
-  steel.addColorStop(1, "#38405c");
-
-  for (let row = 0; row < WORLD_HEIGHT; row += 1) {
-    for (let column = 0; column < WORLD_WIDTH; column += 1) {
-      const tile = tiles[row][column];
-      if (!tile) continue;
-      const x = column * cellWidth;
-      const y = row * cellHeight;
-      const topTile = !isSolid(column, row - 1);
-      context.fillStyle = "rgba(4,1,15,0.28)";
-      roundedPath(x + 2, y + 3, cellWidth - 2, cellHeight - 1, Math.min(6, cellHeight * 0.2));
-      context.fill();
-      context.fillStyle = tile === STEEL ? steel : soil;
-      roundedPath(x + 0.6, y + 0.6, cellWidth - 1.2, cellHeight - 1.2, Math.min(5, cellHeight * 0.18));
-      context.fill();
-
-      if (topTile) {
-        context.fillStyle = tile === STEEL ? "rgba(255,255,255,0.72)" : theme.soilTop;
-        roundedPath(x + 1, y + 1, cellWidth - 2, Math.max(3, cellHeight * 0.16), 3);
-        context.fill();
-      }
-      context.strokeStyle = "rgba(255,255,255,0.08)";
-      context.lineWidth = 0.7;
-      roundedPath(x + 1, y + 1, cellWidth - 2, cellHeight - 2, 4);
-      context.stroke();
-
-      if (tile === STEEL) {
-        context.fillStyle = "rgba(255,255,255,0.62)";
-        context.beginPath();
-        context.arc(x + cellWidth * 0.24, y + cellHeight * 0.28, 1.3, 0, Math.PI * 2);
-        context.arc(x + cellWidth * 0.76, y + cellHeight * 0.72, 1.3, 0, Math.PI * 2);
-        context.fill();
-      } else if ((row + column) % 3 === 0) {
-        context.fillStyle = "rgba(255,255,255,0.09)";
-        context.beginPath(); context.arc(x + cellWidth * 0.7, y + cellHeight * 0.62, 1.2, 0, Math.PI * 2); context.fill();
-      }
-    }
-  }
+  drawTerrain(cellWidth, cellHeight, theme);
 
   drawPortal(currentLevel.spawn, cellWidth, cellHeight, theme, time, false);
   drawPortal(currentLevel.exit, cellWidth, cellHeight, theme, time, true);
