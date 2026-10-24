@@ -1,11 +1,11 @@
 "use strict";
 
-const CACHE_NAME = "shaked-land-eater-v4";
+const CACHE_NAME = "shaked-land-eater-v5";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css?v=1",
-  "./game.js?v=4",
+  "./game.js?v=5",
   "./manifest.webmanifest",
   "./icon.svg",
 ];

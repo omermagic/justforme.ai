@@ -254,8 +254,10 @@ const game = {
   feverUntil: 0,
   shield: 0,
   slowUntil: 0,
+  landBotSlowUntil: 0,
   lastPlayerMove: 0,
   nextPickupAt: 0,
+  nextPickupType: null,
 };
 
 function currentWorld() {
@@ -362,13 +364,23 @@ function spawnLandBot() {
     : null;
 }
 
+function randomPickupType(difficulty) {
+  const roll = Math.random();
+  const strawberryCutoff = difficulty.landBotActive ? 0.4 : 0.46;
+  const shieldCutoff = strawberryCutoff + difficulty.shieldChance;
+  const botSlowCutoff = difficulty.landBotActive ? 0.78 : 1;
+
+  if (roll < strawberryCutoff) return "strawberry";
+  if (roll < shieldCutoff) return "shield";
+  if (roll < botSlowCutoff) return "slow";
+  return "botSlow";
+}
+
 function spawnPickup(forceType = null) {
   const difficulty = difficultyForLevel(game.level);
   if (!game.running || pickups.length >= difficulty.maxPickups) return;
   const cell = randomEmptyCell(6);
-  const roll = Math.random();
-  const shieldCutoff = 0.46 + difficulty.shieldChance;
-  const type = forceType || (roll < 0.46 ? "strawberry" : roll < shieldCutoff ? "shield" : "slow");
+  const type = forceType || randomPickupType(difficulty);
   pickups.push({
     ...cell,
     type,
@@ -391,11 +403,13 @@ function prepareLevel(level, keepScore = false) {
   game.feverUntil = 0;
   game.shield = 0;
   game.slowUntil = 0;
+  game.landBotSlowUntil = 0;
   game.running = true;
   game.paused = false;
   game.resolving = false;
   game.lastPlayerMove = performance.now();
   game.nextPickupAt = performance.now() + difficulty.firstPickupDelay;
+  game.nextPickupType = difficulty.landBotActive ? "botSlow" : null;
 
   createBoard();
   resetPlayer();
@@ -461,6 +475,10 @@ function collectPickup(pickup, automatically = false) {
   } else if (pickup.type === "shield") {
     game.shield = Math.min(2, game.shield + 1);
     showBanner("Bow shield ready!");
+  } else if (pickup.type === "botSlow") {
+    game.landBotSlowUntil = performance.now() + 8000;
+    showBanner("Robot cupcake: bot slowed!");
+    announce("Robot cupcake activated. The Garden Bot is slowed for eight seconds.");
   } else {
     game.slowUntil = performance.now() + 8000;
     showBanner("Milk time: shadows slowed!");
@@ -730,7 +748,9 @@ function findLandBotStep(targetX, targetY) {
 function moveLandBot(time) {
   if (!landBot) return;
   const difficulty = difficultyForLevel(game.level);
-  if (time - landBot.lastMoveAt < difficulty.landBotMoveDelay) return;
+  const slowMultiplier = game.landBotSlowUntil > time ? 3 : 1;
+  const moveDelay = difficulty.landBotMoveDelay * slowMultiplier;
+  if (time - landBot.lastMoveAt < moveDelay) return;
 
   const step = findLandBotStep(player.lastLandX, player.lastLandY);
   landBot.previousX = landBot.x;
@@ -1021,7 +1041,9 @@ function drawEnemy(enemy, time) {
 
 function drawLandBot(bot, time) {
   const difficulty = difficultyForLevel(game.level);
-  const progress = Math.min(1, Math.max(0, (time - bot.lastMoveAt) / difficulty.landBotMoveDelay));
+  const botSlowed = game.landBotSlowUntil > time;
+  const moveDelay = difficulty.landBotMoveDelay * (botSlowed ? 3 : 1);
+  const progress = Math.min(1, Math.max(0, (time - bot.lastMoveAt) / moveDelay));
   const eased = 1 - (1 - progress) ** 3;
   const column = bot.previousX + (bot.x - bot.previousX) * eased;
   const row = bot.previousY + (bot.y - bot.previousY) * eased;
@@ -1032,7 +1054,7 @@ function drawLandBot(bot, time) {
 
   context.save();
   context.translate(x, y);
-  context.shadowColor = "#43f1ff";
+  context.shadowColor = botSlowed ? "#d7faff" : "#43f1ff";
   context.shadowBlur = unit * 0.75;
 
   context.fillStyle = "#17284d";
@@ -1049,7 +1071,7 @@ function drawLandBot(bot, time) {
   context.moveTo(0, -unit * 0.47);
   context.lineTo(0, -unit * 0.82);
   context.stroke();
-  context.fillStyle = "#ff4f91";
+  context.fillStyle = botSlowed ? "#7de9ff" : "#ff4f91";
   context.beginPath();
   context.arc(0, -unit * 0.9, unit * 0.13, 0, Math.PI * 2);
   context.fill();
@@ -1069,6 +1091,14 @@ function drawLandBot(bot, time) {
   context.fillStyle = "#283d69";
   context.fillRect(-unit * 0.62, unit * 0.42, unit * 0.42, unit * 0.2);
   context.fillRect(unit * 0.2, unit * 0.42, unit * 0.42, unit * 0.2);
+
+  if (botSlowed) {
+    context.fillStyle = "#ffffff";
+    context.font = `bold ${unit * 0.55}px Arial`;
+    context.textAlign = "center";
+    context.fillText("z", unit * 0.72, -unit * 0.72);
+    context.fillText("z", unit * 0.98, -unit * 1.08);
+  }
   context.restore();
 }
 
@@ -1091,6 +1121,11 @@ function drawPickup(pickup, time) {
     context.textAlign = "center";
     context.textBaseline = "middle";
     context.fillText("🎀", 0, 0);
+  } else if (pickup.type === "botSlow") {
+    context.font = `${unit * 1.2}px Arial`;
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText("🧁", 0, 0);
   } else {
     context.font = `${unit * 1.2}px Arial`;
     context.textAlign = "center";
@@ -1268,7 +1303,8 @@ function gameLoop(time) {
     }
     pickups = pickups.filter((pickup) => pickup.expiresAt > time);
     if (time >= game.nextPickupAt) {
-      spawnPickup();
+      spawnPickup(game.nextPickupType);
+      game.nextPickupType = null;
       game.nextPickupAt = time + difficulty.pickupInterval;
     }
     if (game.feverUntil && time > game.feverUntil) game.feverUntil = 0;
