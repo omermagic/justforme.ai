@@ -12,15 +12,16 @@ const STEEL = 2;
 const SAVE_KEY = "jellylemmy_save_v1";
 const SKILLS = ["turn", "build", "dig", "bash", "float"];
 
-// Every action uses several high-resolution poses. The renderer blends the
-// final part of one pose into the next, which keeps hands, feet and tools in
-// motion without a harsh frame-to-frame snap.
-const LEMMY_ASSET_VERSION = "8";
+// Every action uses several high-resolution poses. Walking uses a true gait
+// cycle with stable foot placement; tool actions use short blended sequences.
+const LEMMY_ASSET_VERSION = "10";
 const LEMMY_SPRITE_FILES = {
-  walk1: "lemmy-explorer.png",
-  walk2: "lemmy-walk-2.png",
-  walk3: "lemmy-walk-3.png",
-  walk4: "lemmy-walk-b.png",
+  walk1: "lemmy-walk-v2-01.png",
+  walk2: "lemmy-walk-v2-02.png",
+  walk3: "lemmy-walk-v2-03.png",
+  walk4: "lemmy-walk-v2-04.png",
+  walk5: "lemmy-walk-v2-05.png",
+  walk6: "lemmy-walk-v2-06.png",
   takeoff: "lemmy-takeoff.png",
   air: "lemmy-air.png",
   land: "lemmy-land.png",
@@ -48,7 +49,7 @@ const lemmySprites = Object.fromEntries(
 );
 
 const LEMMY_ANIMATIONS = {
-  walk: ["walk1", "walk2", "walk3", "walk4", "walk3", "walk2"],
+  walk: ["walk1", "walk2", "walk3", "walk4", "walk5", "walk6"],
   takeoff: ["walk2", "takeoff", "air"],
   air: ["air"],
   land: ["air", "land", "walk2"],
@@ -1516,7 +1517,7 @@ function unitAnimation(unit) {
   if (unit.visualMotion === "climb" && unit.visualTimer > 0) {
     return { name: "climb", frameMs: 66, loop: false };
   }
-  return { name: "walk", frameMs: 92, loop: true };
+  return { name: "walk", frameMs: 78, loop: true, crossfade: false };
 }
 
 function animationBlend(animation, unit) {
@@ -1533,7 +1534,9 @@ function animationBlend(animation, unit) {
     : Math.min(frameIndex + 1, sequence.length - 1);
   const progress = position - frameIndex;
   const blendProgress = Math.max(0, Math.min(1, (progress - 0.62) / 0.38));
-  const blend = blendProgress * blendProgress * (3 - 2 * blendProgress);
+  const blend = animation.crossfade === false
+    ? 0
+    : blendProgress * blendProgress * (3 - 2 * blendProgress);
 
   return {
     current: lemmySprites[sequence[frameIndex]],
@@ -1601,7 +1604,7 @@ function drawUnit(unit, cellWidth, cellHeight, time) {
   // A subtle live rim light ties the rendered character into every world.
   context.shadowColor = actionColor;
   context.shadowBlur = unit.state === "walk" ? (compact ? 3 : 6) : (compact ? 7 : 13);
-  if (imageIsReady(frames.current) && imageIsReady(frames.next) && frames.current !== frames.next) {
+  if (frames.blend > 0 && imageIsReady(frames.current) && imageIsReady(frames.next) && frames.current !== frames.next) {
     drawAnimationFrame(frames.current, width, height, 1 - frames.blend);
     drawAnimationFrame(frames.next, width, height, frames.blend);
   } else {
