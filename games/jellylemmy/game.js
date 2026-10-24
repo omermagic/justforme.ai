@@ -14,7 +14,7 @@ const SKILLS = ["turn", "build", "dig", "bash", "float"];
 
 // Every action uses several high-resolution poses. Walking uses a true gait
 // cycle with stable foot placement; falling has its own crisp, full-body arc.
-const LEMMY_ASSET_VERSION = "11";
+const LEMMY_ASSET_VERSION = "12";
 const LEMMY_SPRITE_FILES = {
   walk1: "lemmy-walk-v2-01.png",
   walk2: "lemmy-walk-v2-02.png",
@@ -28,10 +28,10 @@ const LEMMY_SPRITE_FILES = {
   fall4: "lemmy-fall-v2-04.png",
   fall5: "lemmy-fall-v2-05.png",
   land1: "lemmy-land-v2.png",
-  climb1: "lemmy-climb.png",
-  climb2: "lemmy-climb-2.png",
-  climb3: "lemmy-climb-3.png",
-  climb4: "lemmy-climb-b.png",
+  step1: "lemmy-step-v2-01.png",
+  step2: "lemmy-step-v2-02.png",
+  step3: "lemmy-step-v2-03.png",
+  step4: "lemmy-step-v2-04.png",
   build1: "lemmy-build-up.png",
   build2: "lemmy-build-2.png",
   build3: "lemmy-build-3.png",
@@ -56,7 +56,7 @@ const LEMMY_ANIMATIONS = {
   takeoff: ["walk3", "fall1", "fall2"],
   air: ["fall2", "fall3", "fall4", "fall5", "fall4", "fall3"],
   land: ["fall5", "land1", "walk2"],
-  climb: ["climb1", "climb2", "climb3", "climb4", "climb3", "climb2"],
+  step: ["step1", "step2", "step3", "step4"],
   build: ["build1", "build2", "build3", "build4", "build3", "build2"],
   bash: ["bash1", "bash2", "bash3", "bash4", "bash3", "bash2"],
 };
@@ -713,16 +713,41 @@ function updateWalking(unit, elapsed) {
   const bodyRow = Math.floor(unit.y - 0.35);
   if (isSolid(aheadColumn, bodyRow)) {
     if (!isSolid(aheadColumn, bodyRow - 1)) {
-      unit.y = bodyRow;
-      unit.x = nextX;
-      unit.visualMotion = "climb";
-      unit.visualTimer = 0.42;
-      unit.animationClock = 0;
+      beginStepUp(unit, aheadColumn, bodyRow);
     } else {
       unit.dir *= -1;
     }
   } else {
     unit.x = nextX;
+  }
+}
+
+function beginStepUp(unit, stairColumn, targetRow) {
+  unit.state = "step";
+  unit.stepFromX = unit.x;
+  unit.stepFromY = unit.y;
+  unit.stepToX = stairColumn + (unit.dir > 0 ? 0.36 : 0.64);
+  unit.stepToY = targetRow;
+  unit.stepProgress = 0;
+  unit.stepDuration = 0.34;
+  unit.animationClock = 0;
+}
+
+function updateStepUp(unit, elapsed) {
+  unit.stepProgress = Math.min(1, unit.stepProgress + elapsed / unit.stepDuration);
+
+  // Smoothly transfer the Lemmy's weight both forward and up onto the block.
+  const progress = unit.stepProgress;
+  const eased = progress * progress * (3 - 2 * progress);
+  const lift = Math.sin(progress * Math.PI) * 0.08;
+  unit.x = unit.stepFromX + (unit.stepToX - unit.stepFromX) * eased;
+  unit.y = unit.stepFromY + (unit.stepToY - unit.stepFromY) * eased - lift;
+
+  if (progress >= 1) {
+    unit.x = unit.stepToX;
+    unit.y = unit.stepToY;
+    unit.state = "walk";
+    unit.animationClock = 0;
   }
 }
 
@@ -777,6 +802,7 @@ function updateUnit(unit, elapsed) {
   if (unit.state === "build") updateBuilder(unit, elapsed);
   else if (unit.state === "bash") updateBasher(unit, elapsed);
   else if (unit.state === "fall") updateFalling(unit, elapsed);
+  else if (unit.state === "step") updateStepUp(unit, elapsed);
   else updateWalking(unit, elapsed);
   if (!unit.active) return;
   checkDolls(unit);
@@ -853,6 +879,10 @@ function nearestUnit(x, y) {
 
 function applySkill(unit, skill) {
   if (!unit || !skills[skill] || !unit.active) return false;
+  if (unit.state === "step") {
+    showToast("Let this Lemmy finish the step!");
+    return false;
+  }
   if (skill === "float") {
     unit.float = true;
   } else if (skill === "turn") {
@@ -1508,6 +1538,7 @@ function drawUnitFallback(unit, cellWidth, cellHeight, time) {
 function unitAnimation(unit) {
   if (unit.state === "build") return { name: "build", frameMs: 74, loop: true };
   if (unit.state === "bash") return { name: "bash", frameMs: 58, loop: true };
+  if (unit.state === "step") return { name: "step", frameMs: 82, loop: false, crossfade: false };
   if (unit.state === "fall") {
     if (unit.visualMotion === "takeoff" && unit.visualTimer > 0) {
       return { name: "takeoff", frameMs: 70, loop: false, crossfade: false };
@@ -1516,9 +1547,6 @@ function unitAnimation(unit) {
   }
   if (unit.visualMotion === "land" && unit.visualTimer > 0) {
     return { name: "land", frameMs: 72, loop: false, crossfade: false };
-  }
-  if (unit.visualMotion === "climb" && unit.visualTimer > 0) {
-    return { name: "climb", frameMs: 66, loop: false };
   }
   return { name: "walk", frameMs: 78, loop: true, crossfade: false };
 }
@@ -1576,17 +1604,17 @@ function drawUnit(unit, cellWidth, cellHeight, time) {
   const stride = Math.sin(frames.position * Math.PI);
   const walking = animation.name === "walk";
   const falling = unit.state === "fall";
-  const climbing = animation.name === "climb";
-  const bob = walking ? -Math.abs(stride) * height * 0.018 : climbing ? -Math.abs(stride) * height * 0.03 : 0;
-  const lean = falling ? -unit.dir * 0.04 : walking ? stride * 0.018 : unit.state === "bash" ? 0.06 : 0;
+  const stepping = animation.name === "step";
+  const bob = walking ? -Math.abs(stride) * height * 0.018 : 0;
+  const lean = falling ? -unit.dir * 0.04 : stepping ? -0.025 : walking ? stride * 0.018 : unit.state === "bash" ? 0.06 : 0;
   const actionColor = unit.state === "build" ? "#ffd55e" : unit.state === "bash" ? "#ff65af" : "#67f0c5";
 
   context.save();
 
   // Soft contact shadow changes shape as a Lemmy leaves the ground.
-  context.fillStyle = falling ? "rgba(4,2,14,0.16)" : "rgba(4,2,14,0.45)";
+  context.fillStyle = falling || stepping ? "rgba(4,2,14,0.2)" : "rgba(4,2,14,0.45)";
   context.beginPath();
-  context.ellipse(x, ground - cellSize * 0.03, width * (falling ? 0.24 : 0.34), cellSize * 0.11, 0, 0, Math.PI * 2);
+  context.ellipse(x, ground - cellSize * 0.03, width * (falling || stepping ? 0.24 : 0.34), cellSize * 0.11, 0, 0, Math.PI * 2);
   context.fill();
 
   if (selectedSkill) {
