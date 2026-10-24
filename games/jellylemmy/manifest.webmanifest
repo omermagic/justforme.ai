@@ -1,0 +1,19 @@
+{
+  "name": "Jelly Lemmy — The Great Plush Rescue",
+  "short_name": "Jelly Lemmy",
+  "description": "Guide tiny Lemmies, collect every Jellycat doll and reach home.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#181027",
+  "theme_color": "#201636",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

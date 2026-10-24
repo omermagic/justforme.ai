@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#201636" />
+    <meta
+      name="description"
+      content="Jelly Lemmy — guide tiny Lemmies through clever puzzles and collect super-cute Jellycat dolls."
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-E3JJGMR427"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-E3JJGMR427");
+    </script>
+
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon.svg" />
+    <link rel="stylesheet" href="./styles.css?v=1" />
+    <title>Jelly Lemmy — The Great Plush Rescue</title>
+  </head>
+
+  <body>
+    <main>
+      <!-- Adventure menu -->
+      <section class="menu-screen" id="menu-screen" aria-label="Jelly Lemmy">
+        <header class="menu-header">
+          <a class="back-link" href="/" aria-label="Back to AI by Gazit">
+            <span aria-hidden="true">←</span>
+            <span>AI by Gazit</span>
+          </a>
+          <span class="offline-badge" id="offline-badge">Ready offline</span>
+        </header>
+
+        <div class="hero">
+          <div class="hero-copy">
+            <p class="kicker">The great plush rescue</p>
+            <h1>Jelly<br /><em>Lemmy</em></h1>
+            <p class="intro">
+              Tiny Lemmies never stop walking. Give them the right skills, collect every super-cute
+              Jellycat doll and guide the troop safely home.
+            </p>
+            <div class="hero-actions">
+              <button class="primary-button" id="continue-button" type="button">Begin rescue</button>
+              <button class="text-button" id="reset-button" type="button">Reset progress</button>
+            </div>
+            <dl class="save-stats" aria-label="Saved adventure progress">
+              <div><dt>Unlocked</dt><dd id="unlocked-value">1 / 12</dd></div>
+              <div><dt>Plush shelf</dt><dd id="collection-value">0</dd></div>
+              <div><dt>Best score</dt><dd id="best-score-value">0</dd></div>
+            </dl>
+          </div>
+
+          <div class="hero-art" aria-hidden="true">
+            <div class="portal-ring ring-one"></div>
+            <div class="portal-ring ring-two"></div>
+            <div class="plush plush-bunny"><i></i><b>♥</b></div>
+            <div class="lemmy lemmy-one"><i></i><b></b></div>
+            <div class="lemmy lemmy-two"><i></i><b></b></div>
+            <span class="spark spark-one">✦</span>
+            <span class="spark spark-two">✦</span>
+          </div>
+        </div>
+
+        <section class="instructions" aria-labelledby="instructions-title">
+          <div>
+            <p class="section-kicker">How to rescue</p>
+            <h2 id="instructions-title">Pick a skill. Tap a Lemmy. Change the story.</h2>
+          </div>
+          <ol>
+            <li><b>Watch</b><span>The Lemmies keep walking on their own.</span></li>
+            <li><b>Choose</b><span>Build, dig, bash, float or turn at exactly the right moment.</span></li>
+            <li><b>Collect</b><span>Find every Jellycat doll and rescue enough Lemmies to win.</span></li>
+          </ol>
+        </section>
+
+        <section class="level-section" aria-labelledby="levels-title">
+          <div class="level-heading">
+            <div>
+              <p class="section-kicker">Twelve tiny worlds</p>
+              <h2 id="levels-title">Every level adds a new twist.</h2>
+            </div>
+            <p>Finish a rescue to unlock the next puzzle. Your collection stays on this device.</p>
+          </div>
+          <div class="level-grid" id="level-grid"></div>
+        </section>
+
+        <footer class="menu-footer">
+          <span>Made for brave little thinkers</span>
+          <span>Tap controls · Keyboard friendly · Offline ready</span>
+        </footer>
+      </section>
+
+      <!-- Full-screen game -->
+      <section class="game-screen" id="game-screen" aria-label="Jelly Lemmy game" hidden>
+        <header class="game-header">
+          <button class="icon-button" id="menu-button" type="button" aria-label="Back to menu">←</button>
+          <div class="level-name">
+            <span id="level-kicker">Level 1</span>
+            <strong id="level-name">Plush Parade</strong>
+          </div>
+          <div class="hud-stat">
+            <span>Home</span>
+            <strong id="rescue-value">0 / 4</strong>
+          </div>
+          <div class="hud-stat">
+            <span>Plush</span>
+            <strong id="doll-value">0 / 2</strong>
+          </div>
+          <div class="hud-stat timer-stat">
+            <span>Time</span>
+            <strong id="time-value">1:40</strong>
+          </div>
+          <button class="icon-button" id="sound-button" type="button" aria-label="Turn sound off">♪</button>
+          <button class="icon-button" id="pause-button" type="button" aria-label="Pause game">Ⅱ</button>
+        </header>
+
+        <div class="mission-bar">
+          <span id="mission-text">Collect every Jellycat doll, then reach the toy chest.</span>
+          <div class="release-meter" aria-label="Lemmies released">
+            <i id="release-fill"></i>
+          </div>
+        </div>
+
+        <div class="game-stage" id="game-stage">
+          <canvas
+            id="game-canvas"
+            width="960"
+            height="540"
+            aria-label="Puzzle world. Select a skill, then tap a Lemmy."
+          ></canvas>
+          <div class="toast" id="toast" aria-live="polite"></div>
+          <div class="tap-hint" id="tap-hint">Choose a skill below, then tap a Lemmy</div>
+        </div>
+
+        <div class="skill-dock" id="skill-dock" role="toolbar" aria-label="Lemmy skills">
+          <button class="skill-button" data-skill="turn" type="button">
+            <span aria-hidden="true">↶</span><b>Turn</b><small id="skill-turn">0</small>
+          </button>
+          <button class="skill-button" data-skill="build" type="button">
+            <span aria-hidden="true">╱</span><b>Build</b><small id="skill-build">0</small>
+          </button>
+          <button class="skill-button" data-skill="dig" type="button">
+            <span aria-hidden="true">↓</span><b>Dig</b><small id="skill-dig">0</small>
+          </button>
+          <button class="skill-button" data-skill="bash" type="button">
+            <span aria-hidden="true">→</span><b>Bash</b><small id="skill-bash">0</small>
+          </button>
+          <button class="skill-button" data-skill="float" type="button">
+            <span aria-hidden="true">☂</span><b>Float</b><small id="skill-float">0</small>
+          </button>
+          <button class="restart-button" id="restart-button" type="button" aria-label="Restart level">↺</button>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal" id="game-modal" role="dialog" aria-modal="true" hidden>
+      <div class="modal-card">
+        <span class="modal-sticker" id="modal-sticker" aria-hidden="true">♥</span>
+        <p class="modal-kicker" id="modal-kicker">Rescue complete</p>
+        <h2 id="modal-title">The plush friends are safe!</h2>
+        <p id="modal-copy"></p>
+        <div class="modal-stats" id="modal-stats"></div>
+        <button class="primary-button" id="modal-primary" type="button">Next level</button>
+        <button class="text-button" id="modal-secondary" type="button">Back to menu</button>
+      </div>
+    </div>
+
+    <div class="sr-only" id="announcer" aria-live="assertive"></div>
+    <script src="./game.js?v=1"></script>
+  </body>
+</html>
