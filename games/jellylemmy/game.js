@@ -65,28 +65,45 @@ const THEMES = {
   plum: { sky: "#25163f", glow: "#ad8bf2", soil: "#675099", soilTop: "#c8b1ff" },
 };
 
+const PLUSH_ASSET_VERSION = "9";
 const DOLL_TYPES = [
-  ["bunny", "Velvet Bunny"],
-  ["bear", "Cocoa Bear"],
-  ["frog", "Mossy Frog"],
-  ["cat", "Cloud Cat"],
-  ["duck", "Butter Duck"],
-  ["elephant", "Pebble Elephant"],
-  ["fox", "Toffee Fox"],
-  ["penguin", "Moon Penguin"],
-  ["dragon", "Pocket Dragon"],
-  ["puppy", "Pudding Puppy"],
-  ["mouse", "Button Mouse"],
-  ["whale", "Blueberry Whale"],
+  { type: "bunny", name: "Velvet Bunny", file: "plush-01-bunny.png", glow: "#ffb5cf" },
+  { type: "bear", name: "Cocoa Bear", file: "plush-02-bear.png", glow: "#e9a86f" },
+  { type: "frog", name: "Mossy Frog", file: "plush-03-frog.png", glow: "#8ce5a2" },
+  { type: "cat", name: "Cloud Cat", file: "plush-04-cat.png", glow: "#d8e9ff" },
+  { type: "duck", name: "Butter Duck", file: "plush-05-duck.png", glow: "#ffe57b" },
+  { type: "elephant", name: "Pebble Elephant", file: "plush-06-elephant.png", glow: "#a8c9ff" },
+  { type: "fox", name: "Toffee Fox", file: "plush-07-fox.png", glow: "#ff9b68" },
+  { type: "penguin", name: "Moon Penguin", file: "plush-08-penguin.png", glow: "#98a9ff" },
+  { type: "dragon", name: "Pocket Dragon", file: "plush-09-dragon.png", glow: "#c69bff" },
+  { type: "puppy", name: "Pudding Puppy", file: "plush-10-puppy.png", glow: "#edb57f" },
+  { type: "mouse", name: "Button Mouse", file: "plush-11-mouse.png", glow: "#ddbadc" },
+  { type: "whale", name: "Blueberry Whale", file: "plush-12-whale.png", glow: "#7ed8ff" },
+  { type: "axolotl", name: "Bubble Axolotl", file: "plush-13-axolotl.png", glow: "#ff9dca" },
+  { type: "panda", name: "Mochi Panda", file: "plush-14-panda.png", glow: "#e9f2ff" },
+  { type: "capybara", name: "Honey Capybara", file: "plush-15-capybara.png", glow: "#dca66c" },
+  { type: "octopus", name: "Coral Octopus", file: "plush-16-octopus.png", glow: "#ff8fae" },
+  { type: "dinosaur", name: "Sprout Dinosaur", file: "plush-17-dinosaur.png", glow: "#7ce0b0" },
+  { type: "lamb", name: "Marshmallow Lamb", file: "plush-18-lamb.png", glow: "#fff0dc" },
+  { type: "red-panda", name: "Maple Red Panda", file: "plush-19-red-panda.png", glow: "#ff936e" },
+  { type: "unicorn", name: "Starlight Unicorn", file: "plush-20-unicorn.png", glow: "#e8a9ff" },
 ];
+
+const plushSprites = DOLL_TYPES.map((dollType) => {
+  const image = new Image();
+  image.decoding = "async";
+  image.src = `./assets/${dollType.file}?v=${PLUSH_ASSET_VERSION}`;
+  return image;
+});
 
 function platform(x, y, width, height = 2, type = SOFT) {
   return { x, y, width, height, type };
 }
 
 function doll(x, y, typeIndex) {
-  const [type, name] = DOLL_TYPES[typeIndex % DOLL_TYPES.length];
-  return { x, y, type, name, id: `${typeIndex}-${name}` };
+  const styleIndex = typeIndex % DOLL_TYPES.length;
+  const { type, name } = DOLL_TYPES[styleIndex];
+  return { x, y, type, name, styleIndex, id: `${typeIndex}-${name}` };
 }
 
 const LEVELS = [
@@ -1076,6 +1093,54 @@ function roundedPath(x, y, width, height, radius) {
 }
 
 function drawPlush(item, cellWidth, cellHeight, time) {
+  const styleIndex = item.styleIndex ?? 0;
+  const dollType = DOLL_TYPES[styleIndex];
+  const sprite = plushSprites[styleIndex];
+  if (!imageIsReady(sprite)) {
+    drawPlushFallback(item, cellWidth, cellHeight, time);
+    return;
+  }
+
+  const x = item.x * cellWidth;
+  const ground = item.y * cellHeight;
+  const cellSize = Math.min(cellWidth, cellHeight);
+  const height = cellSize * (cellSize < 18 ? 2.35 : 2.08);
+  const width = height * (sprite.naturalWidth / sprite.naturalHeight);
+  const pulse = Math.sin(time * 0.004 + item.bob);
+  const bob = pulse * cellSize * 0.08;
+  const breathe = 1 + Math.sin(time * 0.0028 + item.bob) * 0.014;
+
+  context.save();
+  context.globalAlpha = item.collected ? 0.1 : 1;
+
+  // A soft contact shadow and breathing halo make each rendered plush feel
+  // physically present without baking scenery into the transparent artwork.
+  context.fillStyle = "rgba(3,1,12,0.42)";
+  context.beginPath();
+  context.ellipse(x, ground - cellSize * 0.03, width * 0.27, cellSize * 0.12, 0, 0, Math.PI * 2);
+  context.fill();
+
+  const halo = context.createRadialGradient(x, ground - height * 0.46, 0, x, ground - height * 0.46, width * 0.62);
+  halo.addColorStop(0, `${dollType.glow}42`);
+  halo.addColorStop(0.58, `${dollType.glow}18`);
+  halo.addColorStop(1, `${dollType.glow}00`);
+  context.fillStyle = halo;
+  context.beginPath();
+  context.arc(x, ground - height * 0.46, width * 0.64, 0, Math.PI * 2);
+  context.fill();
+
+  context.translate(x, ground + bob);
+  context.rotate(pulse * 0.018);
+  context.scale(breathe, breathe);
+  context.shadowColor = dollType.glow;
+  context.shadowBlur = cellSize * (0.48 + (pulse + 1) * 0.08);
+  context.drawImage(sprite, -width / 2, -height, width, height);
+  context.restore();
+}
+
+// Lightweight canvas fallback used only during the first moments of image
+// loading or if an asset fails. Normal play always uses the 3D renders above.
+function drawPlushFallback(item, cellWidth, cellHeight, time) {
   const x = item.x * cellWidth;
   const ground = item.y * cellHeight;
   const bob = Math.sin(time * 0.004 + item.bob) * 2.8;
