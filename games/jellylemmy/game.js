@@ -14,14 +14,16 @@ const SKILLS = ["turn", "build", "dig", "bash", "float"];
 
 // Every action uses several high-resolution poses. Walking uses a true gait
 // cycle with stable foot placement; falling has its own crisp, full-body arc.
-const LEMMY_ASSET_VERSION = "12";
+const LEMMY_ASSET_VERSION = "13";
 const LEMMY_SPRITE_FILES = {
-  walk1: "lemmy-walk-v2-01.png",
-  walk2: "lemmy-walk-v2-02.png",
-  walk3: "lemmy-walk-v2-03.png",
-  walk4: "lemmy-walk-v2-04.png",
-  walk5: "lemmy-walk-v2-05.png",
-  walk6: "lemmy-walk-v2-06.png",
+  walk1: "lemmy-walk-v3-01.png",
+  walk2: "lemmy-walk-v3-02.png",
+  walk3: "lemmy-walk-v3-03.png",
+  walk4: "lemmy-walk-v3-04.png",
+  walk5: "lemmy-walk-v3-05.png",
+  walk6: "lemmy-walk-v3-06.png",
+  walk7: "lemmy-walk-v3-07.png",
+  walk8: "lemmy-walk-v3-08.png",
   fall1: "lemmy-fall-v2-01.png",
   fall2: "lemmy-fall-v2-02.png",
   fall3: "lemmy-fall-v2-03.png",
@@ -52,7 +54,7 @@ const lemmySprites = Object.fromEntries(
 );
 
 const LEMMY_ANIMATIONS = {
-  walk: ["walk1", "walk2", "walk3", "walk4", "walk5", "walk6"],
+  walk: ["walk1", "walk2", "walk3", "walk4", "walk5", "walk6", "walk7", "walk8"],
   takeoff: ["walk3", "fall1", "fall2"],
   air: ["fall2", "fall3", "fall4", "fall5", "fall4", "fall3"],
   land: ["fall5", "land1", "walk2"],
@@ -1548,7 +1550,7 @@ function unitAnimation(unit) {
   if (unit.visualMotion === "land" && unit.visualTimer > 0) {
     return { name: "land", frameMs: 72, loop: false, crossfade: false };
   }
-  return { name: "walk", frameMs: 78, loop: true, crossfade: false };
+  return { name: "walk", frameMs: 90, loop: true, crossfade: false };
 }
 
 function animationBlend(animation, unit) {
@@ -1601,12 +1603,20 @@ function drawUnit(unit, cellWidth, cellHeight, time) {
   const width = height * (baseSprite.naturalWidth / baseSprite.naturalHeight);
   const animation = unitAnimation(unit);
   const frames = animationBlend(animation, unit);
-  const stride = Math.sin(frames.position * Math.PI);
   const walking = animation.name === "walk";
   const falling = unit.state === "fall";
   const stepping = animation.name === "step";
-  const bob = walking ? -Math.abs(stride) * height * 0.018 : 0;
-  const lean = falling ? -unit.dir * 0.04 : stepping ? -0.025 : walking ? stride * 0.018 : unit.state === "bash" ? 0.06 : 0;
+  const walkPhase = walking
+    ? (frames.position / LEMMY_ANIMATIONS.walk.length) * Math.PI * 2
+    : 0;
+  // A walk has two gentle weight transfers per complete left-right cycle.
+  // Tying this to the full gait avoids the rapid bobbing of the old per-frame motion.
+  const bob = walking ? -(Math.sin(walkPhase) ** 2) * height * 0.009 : 0;
+  const lean = falling
+    ? -unit.dir * 0.04
+    : stepping ? -0.025
+      : walking ? 0.012 + Math.sin(walkPhase) * 0.004
+        : unit.state === "bash" ? 0.06 : 0;
   const actionColor = unit.state === "build" ? "#ffd55e" : unit.state === "bash" ? "#ff65af" : "#67f0c5";
 
   context.save();
