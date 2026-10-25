@@ -24,7 +24,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=1" />
+    <link rel="stylesheet" href="./styles.css?v=2" />
   </head>
 
   <body>
@@ -151,7 +151,6 @@
               height="920"
               aria-label="Territory board. Swipe to move Hello Kitty."
             ></canvas>
-            <div class="event-banner" id="event-banner" aria-live="polite"></div>
             <div class="ready-message" id="ready-message">Swipe to begin!</div>
           </div>
 
@@ -167,6 +166,8 @@
             <span>Close the loop!</span>
           </p>
         </div>
+
+        <div class="event-banner" id="event-banner" aria-live="polite"></div>
       </section>
     </main>
 
@@ -183,6 +184,6 @@
     </div>
 
     <div class="sr-only" id="announcer" aria-live="assertive"></div>
-    <script src="./game.js?v=6"></script>
+    <script src="./game.js?v=7"></script>
   </body>
 </html>

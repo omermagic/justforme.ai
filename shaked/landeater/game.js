@@ -11,6 +11,7 @@ const EMPTY = 0;
 const LAND = 1;
 const TRAIL = 2;
 const MAX_GARDEN_TARGET = 84;
+const LAND_BOT_GARDEN_TARGET = 82;
 const SAVE_KEY = "shaked_landeater_save_v1";
 
 const DIRECTIONS = {
@@ -267,6 +268,7 @@ function currentWorld() {
 
 function difficultyForLevel(level) {
   const step = Math.max(0, level - 1);
+  const landBotActive = level >= 16;
   let label = "Sweet start";
   if (level >= 9) label = "Expert garden";
   else if (level >= 6) label = "Shadow storm";
@@ -275,7 +277,7 @@ function difficultyForLevel(level) {
 
   return {
     label,
-    target: Math.min(MAX_GARDEN_TARGET, 75 + step),
+    target: landBotActive ? LAND_BOT_GARDEN_TARGET : Math.min(MAX_GARDEN_TARGET, 75 + step),
     enemyCount: Math.min(9, 2 + Math.floor(level / 2)),
     baseEnemySpeed: Math.min(6, 2.45 + step * 0.2),
     chaserCount: level === 1 ? 0 : Math.min(4, Math.ceil(step / 2)),
@@ -289,7 +291,7 @@ function difficultyForLevel(level) {
     pickupInterval: Math.min(18000, 12000 + step * 350),
     shieldChance: Math.max(0.12, 0.28 - step * 0.012),
     playerMoveDelay: Math.max(70, 96 - step * 0.5),
-    landBotActive: level >= 16,
+    landBotActive,
     landBotMoveDelay: Math.max(155, 285 - Math.max(0, level - 16) * 10),
   };
 }
