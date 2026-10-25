@@ -80,6 +80,59 @@ const WORLDS = [
   },
 ];
 
+// Visual themes are deliberately separate from the game rules. They can be
+// changed freely without touching movement, collisions or level difficulty.
+const WORLD_VISUALS = [
+  {
+    theme: "meadow",
+    sky: "#130b26",
+    glow: "#512558",
+    terrainShadow: "#bd3e77",
+    edge: "#fff2f8",
+    detail: "#7cdb8d",
+  },
+  {
+    theme: "cloud",
+    sky: "#101936",
+    glow: "#375f91",
+    terrainShadow: "#579dcc",
+    edge: "#f8fdff",
+    detail: "#ffffff",
+  },
+  {
+    theme: "moon",
+    sky: "#170c2c",
+    glow: "#704381",
+    terrainShadow: "#8b67be",
+    edge: "#fff6d9",
+    detail: "#ffe47d",
+  },
+  {
+    theme: "ocean",
+    sky: "#042638",
+    glow: "#14778a",
+    terrainShadow: "#269f91",
+    edge: "#e7fffb",
+    detail: "#ff8eb5",
+  },
+  {
+    theme: "park",
+    sky: "#251306",
+    glow: "#8a5b20",
+    terrainShadow: "#d39d25",
+    edge: "#fff8d1",
+    detail: "#ffffff",
+  },
+  {
+    theme: "castle",
+    sky: "#150724",
+    glow: "#6d297f",
+    terrainShadow: "#bc3e7d",
+    edge: "#fff1fb",
+    detail: "#70efd3",
+  },
+];
+
 /* --------------------------------------------------------------------------
  * DOM
  * ----------------------------------------------------------------------- */
@@ -232,6 +285,8 @@ let lastFrame = performance.now();
 let bannerTimer = 0;
 let modalPrimaryAction = null;
 let modalSecondaryAction = null;
+let visualParticles = [];
+let captureWaves = [];
 
 const player = {
   x: Math.floor(COLS / 2),
@@ -239,6 +294,7 @@ const player = {
   lastLandX: Math.floor(COLS / 2),
   lastLandY: 1,
   direction: null,
+  facing: "down",
   trail: [],
 };
 
@@ -317,6 +373,7 @@ function resetPlayer() {
   player.lastLandX = player.x;
   player.lastLandY = player.y;
   player.direction = null;
+  player.facing = "down";
   player.trail = [];
   readyMessage.classList.remove("dismissed");
 }
@@ -352,6 +409,7 @@ function spawnEnemies() {
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
       type: index >= firstChaser ? "chaser" : "puff",
+      variant: index % 3,
       aggression: difficulty.chaseForce * (0.9 + Math.random() * 0.2),
       phase: Math.random() * Math.PI * 2,
     });
@@ -422,6 +480,8 @@ function prepareLevel(level, keepScore = false) {
   game.nextPickupType = difficulty.landBotActive ? "botSlow" : null;
   game.icePickupAt = levelStartedAt + difficulty.firstPickupDelay + 3500;
   game.icePickupPending = game.level >= ICE_CUBE_LEVEL;
+  visualParticles = [];
+  captureWaves = [];
 
   createBoard();
   resetPlayer();
@@ -503,6 +563,17 @@ function collectPickup(pickup, automatically = false) {
     showBanner("Milk time: shadows slowed!");
   }
   if (!automatically) game.fever = Math.min(100, game.fever + 8);
+  const pickupColor =
+    pickup.type === "ice"
+      ? "#bff8ff"
+      : pickup.type === "botSlow"
+        ? "#7de9f7"
+        : pickup.type === "shield"
+          ? "#ff8fbe"
+          : pickup.type === "slow"
+            ? "#ffffff"
+            : "#ff5f7f";
+  spawnVisualBurst(pickup.x + 0.5, pickup.y + 0.5, pickupColor, 18, "spark");
   playSound("bonus");
   haptic(18);
 }
@@ -510,6 +581,12 @@ function collectPickup(pickup, automatically = false) {
 function claimTerritory() {
   if (!player.trail.length) return;
   const before = interiorLandCount();
+  const previousLand = new Uint8Array(COLS * ROWS);
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let column = 0; column < COLS; column += 1) {
+      if (board[row][column] === LAND) previousLand[row * COLS + column] = 1;
+    }
+  }
 
   player.trail.forEach(({ x, y }) => {
     board[y][x] = LAND;
@@ -550,6 +627,14 @@ function claimTerritory() {
   claimedPickups.forEach((pickup) => collectPickup(pickup, true));
 
   const after = interiorLandCount();
+  const claimedCells = [];
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let column = 0; column < COLS; column += 1) {
+      if (board[row][column] === LAND && !previousLand[row * COLS + column]) {
+        claimedCells.push({ x: column, y: row });
+      }
+    }
+  }
   const interiorCells = (COLS - BORDER * 2) * (ROWS - BORDER * 2);
   const newlyClaimed = Math.max(0, after - before);
   const bitePercent = (newlyClaimed / interiorCells) * 100;
@@ -561,6 +646,7 @@ function claimTerritory() {
   const points = Math.round(newlyClaimed * 6 * comboMultiplier * feverMultiplier);
   game.score += points;
   game.fever = Math.min(100, game.fever + Math.max(6, bitePercent * 2.7));
+  triggerCaptureEffect(claimedCells);
   player.trail = [];
 
   if (bitePercent >= 12) showBanner(`Huge bite! +${points.toLocaleString()}`);
@@ -584,6 +670,7 @@ function activateFever() {
 function movePlayer() {
   if (!player.direction || game.resolving) return;
   const direction = DIRECTIONS[player.direction];
+  player.facing = player.direction;
   const nextX = player.x + direction.x;
   const nextY = player.y + direction.y;
 
@@ -637,6 +724,7 @@ function clearTrail() {
 function loseLife(message) {
   if (!game.running || game.resolving) return;
   game.resolving = true;
+  spawnVisualBurst(player.x + 0.5, player.y + 0.5, "#ff7aa8", 24, "heart");
   clearTrail();
   playSound("hit");
   haptic([45, 35, 45]);
@@ -941,6 +1029,299 @@ function cellBox(column, row) {
   };
 }
 
+function currentVisual() {
+  return WORLD_VISUALS[(game.level - 1) % WORLD_VISUALS.length];
+}
+
+function roundedRectPath(x, y, width, height, radius) {
+  const safeRadius = Math.min(radius, Math.abs(width) / 2, Math.abs(height) / 2);
+  context.beginPath();
+  context.moveTo(x + safeRadius, y);
+  context.arcTo(x + width, y, x + width, y + height, safeRadius);
+  context.arcTo(x + width, y + height, x, y + height, safeRadius);
+  context.arcTo(x, y + height, x, y, safeRadius);
+  context.arcTo(x, y, x + width, y, safeRadius);
+  context.closePath();
+}
+
+function cellHash(column, row, salt = 0) {
+  const value = Math.sin(column * 127.1 + row * 311.7 + salt * 74.7) * 43758.5453;
+  return value - Math.floor(value);
+}
+
+function spawnVisualBurst(x, y, color, count = 16, type = "spark") {
+  const bornAt = performance.now();
+  for (let index = 0; index < count; index += 1) {
+    const angle = (index / count) * Math.PI * 2 + Math.random() * 0.45;
+    const speed = 2.2 + Math.random() * 5.2;
+    visualParticles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 1.5,
+      color,
+      type,
+      size: 0.18 + Math.random() * 0.28,
+      bornAt,
+      life: 520 + Math.random() * 520,
+      spin: Math.random() * Math.PI,
+    });
+  }
+  if (visualParticles.length > 220) visualParticles.splice(0, visualParticles.length - 220);
+}
+
+function triggerCaptureEffect(cells) {
+  if (!cells.length) return;
+  const stride = Math.max(1, Math.ceil(cells.length / 260));
+  const sampledCells = cells.filter((_, index) => index % stride === 0);
+  captureWaves.push({ bornAt: performance.now(), cells: sampledCells, origin: { ...player } });
+  if (captureWaves.length > 2) captureWaves.shift();
+
+  const burstStride = Math.max(1, Math.ceil(cells.length / 18));
+  cells.forEach((cell, index) => {
+    if (index % burstStride === 0) {
+      spawnVisualBurst(cell.x + 0.5, cell.y + 0.5, currentWorld().accent, 3, "leaf");
+    }
+  });
+}
+
+function drawWorldAtmosphere(time) {
+  const visual = currentVisual();
+  const unit = Math.min(viewWidth / COLS, viewHeight / ROWS);
+  context.save();
+
+  for (let index = 0; index < 28; index += 1) {
+    const baseX = cellHash(index, 2, game.level) * viewWidth;
+    const baseY = cellHash(index, 7, game.level + 3) * viewHeight;
+    const drift = Math.sin(time * 0.00035 + index) * unit * 0.65;
+    const size = unit * (0.08 + cellHash(index, 9) * 0.22);
+    context.globalAlpha = 0.12 + cellHash(index, 3) * 0.2;
+    context.fillStyle = index % 4 === 0 ? currentWorld().accent : "#ffffff";
+
+    if (visual.theme === "ocean") {
+      context.strokeStyle = context.fillStyle;
+      context.lineWidth = Math.max(0.7, size * 0.22);
+      context.beginPath();
+      context.arc(baseX + drift, baseY - ((time * 0.012 + index * 13) % viewHeight), size * 1.8, 0, Math.PI * 2);
+      context.stroke();
+    } else if (visual.theme === "cloud") {
+      context.beginPath();
+      context.ellipse(baseX + drift, baseY, size * 2.5, size, 0, 0, Math.PI * 2);
+      context.fill();
+    } else {
+      context.save();
+      context.translate(baseX + drift, baseY);
+      context.rotate(time * 0.00035 + index);
+      context.beginPath();
+      context.moveTo(0, -size * 2);
+      context.lineTo(size * 0.48, -size * 0.48);
+      context.lineTo(size * 2, 0);
+      context.lineTo(size * 0.48, size * 0.48);
+      context.lineTo(0, size * 2);
+      context.lineTo(-size * 0.48, size * 0.48);
+      context.lineTo(-size * 2, 0);
+      context.lineTo(-size * 0.48, -size * 0.48);
+      context.closePath();
+      context.fill();
+      context.restore();
+    }
+  }
+  context.restore();
+}
+
+function isLandPatch(column, row) {
+  return (
+    board[row]?.[column] === LAND &&
+    board[row - 1]?.[column] === LAND &&
+    board[row + 1]?.[column] === LAND &&
+    board[row]?.[column - 1] === LAND &&
+    board[row]?.[column + 1] === LAND
+  );
+}
+
+function drawTerrainDetail(column, row, time) {
+  if (!isLandPatch(column, row) || cellHash(column, row, game.level) < 0.965) return;
+  const visual = currentVisual();
+  const box = cellBox(column, row);
+  const unit = Math.min(box.width, box.height);
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  const sway = Math.sin(time * 0.002 + column + row) * 0.12;
+
+  context.save();
+  context.translate(x, y);
+  context.rotate(sway);
+  context.globalAlpha = 0.72;
+  context.strokeStyle = visual.detail;
+  context.fillStyle = visual.detail;
+  context.lineWidth = Math.max(0.7, unit * 0.08);
+
+  if (visual.theme === "meadow") {
+    context.beginPath();
+    context.moveTo(0, unit * 0.45);
+    context.lineTo(0, -unit * 0.25);
+    context.stroke();
+    for (let petal = 0; petal < 5; petal += 1) {
+      const angle = (petal / 5) * Math.PI * 2;
+      context.beginPath();
+      context.arc(Math.cos(angle) * unit * 0.26, -unit * 0.28 + Math.sin(angle) * unit * 0.26, unit * 0.13, 0, Math.PI * 2);
+      context.fill();
+    }
+    context.fillStyle = "#ffd84d";
+    context.beginPath();
+    context.arc(0, -unit * 0.28, unit * 0.12, 0, Math.PI * 2);
+    context.fill();
+  } else if (visual.theme === "cloud") {
+    context.beginPath();
+    context.arc(-unit * 0.24, 0, unit * 0.25, 0, Math.PI * 2);
+    context.arc(0, -unit * 0.12, unit * 0.34, 0, Math.PI * 2);
+    context.arc(unit * 0.3, 0, unit * 0.23, 0, Math.PI * 2);
+    context.fill();
+  } else if (visual.theme === "moon") {
+    context.beginPath();
+    context.arc(0, 0, unit * 0.44, 0.35, Math.PI * 1.65);
+    context.arc(unit * 0.18, -unit * 0.08, unit * 0.38, Math.PI * 1.55, Math.PI * 0.45, true);
+    context.fill();
+  } else if (visual.theme === "ocean") {
+    context.beginPath();
+    context.arc(-unit * 0.2, 0, unit * 0.24, 0, Math.PI * 2);
+    context.arc(unit * 0.22, -unit * 0.25, unit * 0.14, 0, Math.PI * 2);
+    context.stroke();
+  } else if (visual.theme === "park") {
+    for (let point = 0; point < 10; point += 1) {
+      const angle = -Math.PI / 2 + (point / 10) * Math.PI * 2;
+      const radius = point % 2 ? unit * 0.2 : unit * 0.48;
+      const px = Math.cos(angle) * radius;
+      const py = Math.sin(angle) * radius;
+      if (!point) context.beginPath(), context.moveTo(px, py);
+      else context.lineTo(px, py);
+    }
+    context.closePath();
+    context.fill();
+  } else {
+    roundedRectPath(-unit * 0.34, -unit * 0.34, unit * 0.68, unit * 0.68, unit * 0.12);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(0, -unit * 0.52);
+    context.lineTo(unit * 0.12, -unit * 0.12);
+    context.lineTo(unit * 0.52, 0);
+    context.lineTo(unit * 0.12, unit * 0.12);
+    context.lineTo(0, unit * 0.52);
+    context.lineTo(-unit * 0.12, unit * 0.12);
+    context.lineTo(-unit * 0.52, 0);
+    context.lineTo(-unit * 0.12, -unit * 0.12);
+    context.closePath();
+    context.fill();
+  }
+  context.restore();
+}
+
+function drawTerrainEdges() {
+  const visual = currentVisual();
+  const cellWidth = viewWidth / COLS;
+  const cellHeight = viewHeight / ROWS;
+  context.save();
+  context.lineCap = "round";
+  context.lineWidth = Math.max(1, Math.min(cellWidth, cellHeight) * 0.12);
+  context.strokeStyle = visual.edge;
+  context.shadowColor = visual.edge;
+  context.shadowBlur = Math.min(cellWidth, cellHeight) * 0.45;
+
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let column = 0; column < COLS; column += 1) {
+      if (board[row][column] !== LAND) continue;
+      const x = column * cellWidth;
+      const y = row * cellHeight;
+      context.beginPath();
+      if (board[row - 1]?.[column] !== LAND) {
+        context.moveTo(x, y);
+        context.lineTo(x + cellWidth, y);
+      }
+      if (board[row + 1]?.[column] !== LAND) {
+        context.moveTo(x, y + cellHeight);
+        context.lineTo(x + cellWidth, y + cellHeight);
+      }
+      if (board[row]?.[column - 1] !== LAND) {
+        context.moveTo(x, y);
+        context.lineTo(x, y + cellHeight);
+      }
+      if (board[row]?.[column + 1] !== LAND) {
+        context.moveTo(x + cellWidth, y);
+        context.lineTo(x + cellWidth, y + cellHeight);
+      }
+      context.stroke();
+    }
+  }
+  context.restore();
+}
+
+function drawCaptureEffects(time) {
+  const world = currentWorld();
+  const cellWidth = viewWidth / COLS;
+  const cellHeight = viewHeight / ROWS;
+  captureWaves = captureWaves.filter((wave) => time - wave.bornAt < 1050);
+
+  context.save();
+  for (const wave of captureWaves) {
+    for (const cell of wave.cells) {
+      const distance = Math.hypot(cell.x - wave.origin.x, cell.y - wave.origin.y);
+      const localAge = time - wave.bornAt - distance * 8;
+      if (localAge < 0 || localAge > 620) continue;
+      const progress = localAge / 620;
+      context.globalAlpha = Math.sin(progress * Math.PI) * 0.68;
+      context.fillStyle = progress < 0.42 ? "#ffffff" : world.accent;
+      context.fillRect(
+        cell.x * cellWidth,
+        cell.y * cellHeight,
+        cellWidth + 0.5,
+        cellHeight + 0.5,
+      );
+    }
+  }
+
+  visualParticles = visualParticles.filter((particle) => time - particle.bornAt < particle.life);
+  for (const particle of visualParticles) {
+    const age = time - particle.bornAt;
+    const progress = age / particle.life;
+    const seconds = age / 1000;
+    const column = particle.x + particle.vx * seconds;
+    const row = particle.y + particle.vy * seconds + 5.5 * seconds * seconds;
+    const box = cellBox(column, row);
+    const unit = Math.min(box.width, box.height);
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    const size = unit * particle.size * (1 - progress * 0.45);
+    context.save();
+    context.translate(x, y);
+    context.rotate(particle.spin + progress * 4);
+    context.globalAlpha = 1 - progress;
+    context.fillStyle = particle.color;
+    context.shadowColor = particle.color;
+    context.shadowBlur = size * 2;
+    if (particle.type === "heart") {
+      drawHeart(0, 0, size, particle.color);
+    } else if (particle.type === "leaf") {
+      context.beginPath();
+      context.ellipse(0, 0, size * 0.7, size * 1.25, 0.6, 0, Math.PI * 2);
+      context.fill();
+    } else {
+      context.beginPath();
+      context.moveTo(0, -size * 1.7);
+      context.lineTo(size * 0.45, -size * 0.45);
+      context.lineTo(size * 1.7, 0);
+      context.lineTo(size * 0.45, size * 0.45);
+      context.lineTo(0, size * 1.7);
+      context.lineTo(-size * 0.45, size * 0.45);
+      context.lineTo(-size * 1.7, 0);
+      context.lineTo(-size * 0.45, -size * 0.45);
+      context.closePath();
+      context.fill();
+    }
+    context.restore();
+  }
+  context.restore();
+}
+
 function drawHeart(x, y, size, color) {
   context.save();
   context.translate(x, y);
@@ -958,66 +1339,175 @@ function drawKitty(column, row, time) {
   const box = cellBox(column, row);
   const unit = Math.min(box.width, box.height);
   const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2 + Math.sin(time * 0.009) * unit * 0.08;
+  const moving = Boolean(player.direction);
+  const stride = moving ? Math.sin(time * 0.022) : Math.sin(time * 0.004) * 0.15;
+  const bounce = moving ? Math.abs(Math.cos(time * 0.022)) * unit * 0.12 : Math.sin(time * 0.004) * unit * 0.05;
+  const y = box.y + box.height / 2 - bounce;
+  const directionLean =
+    player.facing === "left" ? -0.08 : player.facing === "right" ? 0.08 : 0;
 
   context.save();
   context.translate(x, y);
-  context.lineWidth = Math.max(1.1, unit * 0.13);
-  context.strokeStyle = "#29183f";
+  context.rotate(directionLean);
+  context.lineWidth = Math.max(0.8, unit * 0.09);
+  context.strokeStyle = "#3c274d";
   context.lineJoin = "round";
+  context.lineCap = "round";
+
+  // Soft contact shadow gives the tiny character a grounded, toy-like feel.
+  context.save();
+  context.translate(0, unit * 0.82 + bounce);
+  context.scale(1, 0.35);
+  const shadow = context.createRadialGradient(0, 0, 0, 0, 0, unit * 0.92);
+  shadow.addColorStop(0, "rgba(7,3,18,0.5)");
+  shadow.addColorStop(1, "rgba(7,3,18,0)");
+  context.fillStyle = shadow;
+  context.beginPath();
+  context.arc(0, 0, unit * 0.92, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+
+  // Legs and shoes animate on opposite beats.
+  const legSwing = stride * unit * 0.22;
+  context.strokeStyle = "#f8f6f2";
+  context.lineWidth = Math.max(1.2, unit * 0.22);
+  context.beginPath();
+  context.moveTo(-unit * 0.25, unit * 0.42);
+  context.lineTo(-unit * 0.25 + legSwing, unit * 0.78);
+  context.moveTo(unit * 0.25, unit * 0.42);
+  context.lineTo(unit * 0.25 - legSwing, unit * 0.78);
+  context.stroke();
+  context.fillStyle = "#f8f6f2";
+  context.strokeStyle = "#3c274d";
+  context.lineWidth = Math.max(0.7, unit * 0.08);
+  for (const foot of [
+    { x: -unit * 0.25 + legSwing, y: unit * 0.79, turn: legSwing * 0.3 },
+    { x: unit * 0.25 - legSwing, y: unit * 0.79, turn: -legSwing * 0.3 },
+  ]) {
+    context.beginPath();
+    context.ellipse(foot.x + foot.turn, foot.y, unit * 0.22, unit * 0.12, 0, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
+  }
+
+  // Dress and animated arms.
+  const dressGradient = context.createLinearGradient(0, -unit * 0.05, 0, unit * 0.62);
+  dressGradient.addColorStop(0, "#ff78ad");
+  dressGradient.addColorStop(0.58, "#f24487");
+  dressGradient.addColorStop(1, "#c72d6c");
+  context.fillStyle = dressGradient;
+  context.strokeStyle = "#3c274d";
+  context.lineWidth = Math.max(0.8, unit * 0.09);
+  context.beginPath();
+  context.moveTo(-unit * 0.42, -unit * 0.04);
+  context.quadraticCurveTo(-unit * 0.58, unit * 0.34, -unit * 0.68, unit * 0.57);
+  context.quadraticCurveTo(0, unit * 0.75, unit * 0.68, unit * 0.57);
+  context.quadraticCurveTo(unit * 0.58, unit * 0.34, unit * 0.42, -unit * 0.04);
+  context.closePath();
+  context.fill();
+  context.stroke();
+  context.fillStyle = "rgba(255,255,255,0.32)";
+  context.beginPath();
+  context.ellipse(-unit * 0.2, unit * 0.2, unit * 0.1, unit * 0.3, -0.25, 0, Math.PI * 2);
+  context.fill();
+
+  const armSwing = stride * unit * 0.2;
+  context.strokeStyle = "#fffdfb";
+  context.lineWidth = Math.max(1.3, unit * 0.2);
+  context.beginPath();
+  context.moveTo(-unit * 0.38, unit * 0.06);
+  context.lineTo(-unit * 0.67 - armSwing, unit * 0.34);
+  context.moveTo(unit * 0.38, unit * 0.06);
+  context.lineTo(unit * 0.67 + armSwing, unit * 0.34);
+  context.stroke();
+
+  // Ears sit behind the head.
+  const furGradient = context.createLinearGradient(-unit * 0.5, -unit * 0.8, unit * 0.45, unit * 0.38);
+  furGradient.addColorStop(0, "#ffffff");
+  furGradient.addColorStop(0.55, "#fffdfb");
+  furGradient.addColorStop(1, "#e8dde7");
+  context.fillStyle = furGradient;
+  context.strokeStyle = "#3c274d";
+  context.lineWidth = Math.max(0.9, unit * 0.09);
 
   context.beginPath();
-  context.moveTo(-unit * 0.62, -unit * 0.32);
-  context.lineTo(-unit * 0.45, -unit * 0.9);
-  context.lineTo(-unit * 0.12, -unit * 0.52);
-  context.moveTo(unit * 0.15, -unit * 0.52);
-  context.lineTo(unit * 0.48, -unit * 0.9);
-  context.lineTo(unit * 0.62, -unit * 0.3);
-  context.fillStyle = "#fffdfb";
+  context.moveTo(-unit * 0.63, -unit * 0.34);
+  context.lineTo(-unit * 0.46, -unit * 0.94);
+  context.quadraticCurveTo(-unit * 0.2, -unit * 0.72, -unit * 0.08, -unit * 0.48);
+  context.lineTo(unit * 0.1, -unit * 0.48);
+  context.quadraticCurveTo(unit * 0.24, -unit * 0.72, unit * 0.5, -unit * 0.94);
+  context.lineTo(unit * 0.64, -unit * 0.32);
+  context.closePath();
   context.fill();
   context.stroke();
 
+  // Head with a porcelain-style highlight and soft underside shading.
+  context.shadowColor = "rgba(18,7,30,0.32)";
+  context.shadowBlur = unit * 0.35;
+  context.shadowOffsetY = unit * 0.12;
   context.beginPath();
-  context.ellipse(0, 0, unit * 0.72, unit * 0.6, 0, 0, Math.PI * 2);
-  context.fillStyle = "#fffdfb";
+  context.ellipse(0, -unit * 0.22, unit * 0.72, unit * 0.59, 0, 0, Math.PI * 2);
+  context.fillStyle = furGradient;
   context.fill();
   context.stroke();
+  context.shadowBlur = 0;
+  context.shadowOffsetY = 0;
 
+  context.fillStyle = "rgba(255,255,255,0.8)";
+  context.beginPath();
+  context.ellipse(-unit * 0.23, -unit * 0.53, unit * 0.23, unit * 0.1, -0.35, 0, Math.PI * 2);
+  context.fill();
+
+  // Eyes follow the movement direction by a tiny amount.
+  const eyeShiftX = player.facing === "left" ? -unit * 0.025 : player.facing === "right" ? unit * 0.025 : 0;
+  const eyeShiftY = player.facing === "up" ? -unit * 0.025 : player.facing === "down" ? unit * 0.02 : 0;
   context.fillStyle = "#29183f";
   context.beginPath();
-  context.ellipse(-unit * 0.25, -unit * 0.05, unit * 0.055, unit * 0.105, 0, 0, Math.PI * 2);
-  context.ellipse(unit * 0.25, -unit * 0.05, unit * 0.055, unit * 0.105, 0, 0, Math.PI * 2);
+  context.ellipse(-unit * 0.25 + eyeShiftX, -unit * 0.28 + eyeShiftY, unit * 0.055, unit * 0.105, 0, 0, Math.PI * 2);
+  context.ellipse(unit * 0.25 + eyeShiftX, -unit * 0.28 + eyeShiftY, unit * 0.055, unit * 0.105, 0, 0, Math.PI * 2);
   context.fill();
 
   context.beginPath();
-  context.ellipse(0, unit * 0.11, unit * 0.09, unit * 0.06, 0, 0, Math.PI * 2);
+  context.ellipse(eyeShiftX * 0.45, -unit * 0.1 + eyeShiftY * 0.35, unit * 0.09, unit * 0.065, 0, 0, Math.PI * 2);
   context.fillStyle = "#ffd84d";
   context.fill();
   context.stroke();
 
-  context.lineWidth = Math.max(0.8, unit * 0.06);
+  context.strokeStyle = "#493554";
+  context.lineWidth = Math.max(0.65, unit * 0.055);
   context.beginPath();
-  context.moveTo(-unit * 0.42, unit * 0.08);
-  context.lineTo(-unit * 0.85, -unit * 0.02);
-  context.moveTo(-unit * 0.42, unit * 0.22);
-  context.lineTo(-unit * 0.84, unit * 0.29);
-  context.moveTo(unit * 0.42, unit * 0.08);
-  context.lineTo(unit * 0.85, -unit * 0.02);
-  context.moveTo(unit * 0.42, unit * 0.22);
-  context.lineTo(unit * 0.84, unit * 0.29);
+  context.moveTo(-unit * 0.43, -unit * 0.12);
+  context.lineTo(-unit * 0.88, -unit * 0.2);
+  context.moveTo(-unit * 0.43, 0);
+  context.lineTo(-unit * 0.88, unit * 0.06);
+  context.moveTo(unit * 0.43, -unit * 0.12);
+  context.lineTo(unit * 0.88, -unit * 0.2);
+  context.moveTo(unit * 0.43, 0);
+  context.lineTo(unit * 0.88, unit * 0.06);
   context.stroke();
 
+  // Dimensional bow with two highlighted loops.
+  context.strokeStyle = "#7e1f53";
+  context.lineWidth = Math.max(0.8, unit * 0.08);
   context.beginPath();
-  context.ellipse(unit * 0.52, -unit * 0.56, unit * 0.28, unit * 0.19, -0.35, 0, Math.PI * 2);
-  context.ellipse(unit * 0.9, -unit * 0.55, unit * 0.28, unit * 0.19, 0.35, 0, Math.PI * 2);
-  context.fillStyle = "#ff4f91";
+  context.ellipse(unit * 0.45, -unit * 0.68, unit * 0.29, unit * 0.2, -0.36, 0, Math.PI * 2);
+  context.ellipse(unit * 0.88, -unit * 0.66, unit * 0.29, unit * 0.2, 0.36, 0, Math.PI * 2);
+  const bowGradient = context.createLinearGradient(unit * 0.4, -unit * 0.9, unit * 0.9, -unit * 0.45);
+  bowGradient.addColorStop(0, "#ff91bd");
+  bowGradient.addColorStop(0.55, "#ff4f91");
+  bowGradient.addColorStop(1, "#c92068");
+  context.fillStyle = bowGradient;
   context.fill();
   context.stroke();
   context.beginPath();
-  context.arc(unit * 0.71, -unit * 0.55, unit * 0.13, 0, Math.PI * 2);
-  context.fillStyle = "#e93479";
+  context.arc(unit * 0.67, -unit * 0.67, unit * 0.145, 0, Math.PI * 2);
+  context.fillStyle = "#d62e73";
   context.fill();
   context.stroke();
+  context.fillStyle = "rgba(255,255,255,0.55)";
+  context.beginPath();
+  context.arc(unit * 0.62, -unit * 0.72, unit * 0.04, 0, Math.PI * 2);
+  context.fill();
   context.restore();
 }
 
@@ -1027,45 +1517,145 @@ function drawEnemy(enemy, time) {
   const x = box.x;
   const y = box.y;
   const frozen = game.enemiesFrozenUntil > time;
-  const pulse = frozen ? 1 : 1 + Math.sin(time * 0.006 + enemy.phase) * 0.08;
+  const pulse = frozen ? 1 : 1 + Math.sin(time * 0.007 + enemy.phase) * 0.055;
+  const speedAngle = Math.atan2(enemy.vy, enemy.vx);
+  const blink = Math.sin(time * 0.0021 + enemy.phase * 3) > 0.965 ? 0.18 : 1;
+  const isChaser = enemy.type === "chaser";
 
   context.save();
   context.translate(x, y);
+  context.rotate(speedAngle * 0.035);
   context.scale(pulse, pulse);
+
+  // Hover shadow.
+  context.save();
+  context.translate(0, unit * 0.58);
+  context.scale(1, 0.32);
+  const shadow = context.createRadialGradient(0, 0, 0, 0, 0, unit * 0.72);
+  shadow.addColorStop(0, "rgba(0,0,0,0.55)");
+  shadow.addColorStop(1, "rgba(0,0,0,0)");
+  context.fillStyle = shadow;
   context.beginPath();
-  for (let point = 0; point < 10; point += 1) {
-    const angle = (point / 10) * Math.PI * 2;
-    const radius = unit * (point % 2 ? 0.72 : 0.58);
-    const px = Math.cos(angle) * radius;
-    const py = Math.sin(angle) * radius;
-    if (point === 0) context.moveTo(px, py);
-    else context.lineTo(px, py);
-  }
-  context.closePath();
-  context.fillStyle = frozen ? "#8deaff" : enemy.type === "chaser" ? "#ff4f73" : "#8d69d4";
-  context.shadowColor = frozen ? "#dffcff" : enemy.type === "chaser" ? "#ff4f73" : "#c3a6ff";
-  context.shadowBlur = unit * 0.8;
+  context.arc(0, 0, unit * 0.72, 0, Math.PI * 2);
   context.fill();
+  context.restore();
+
+  // Animated smoky feet make every enemy feel alive rather than like an icon.
+  const footWave = time * 0.012 + enemy.phase;
+  for (let foot = -1; foot <= 1; foot += 1) {
+    const offsetX = foot * unit * 0.32;
+    const offsetY = unit * (0.42 + Math.sin(footWave + foot * 1.7) * 0.1);
+    context.fillStyle = frozen ? "#69cfe8" : isChaser ? "#a92559" : "#5a3b9b";
+    context.beginPath();
+    context.ellipse(offsetX, offsetY, unit * 0.23, unit * 0.32, foot * 0.25, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  if (isChaser) {
+    context.fillStyle = frozen ? "#8deaff" : "#ff4f73";
+    context.strokeStyle = frozen ? "#dffcff" : "#631736";
+    context.lineWidth = Math.max(0.8, unit * 0.09);
+    context.beginPath();
+    context.moveTo(-unit * 0.52, -unit * 0.2);
+    context.lineTo(-unit * 0.72, -unit * 0.78);
+    context.lineTo(-unit * 0.18, -unit * 0.5);
+    context.moveTo(unit * 0.52, -unit * 0.2);
+    context.lineTo(unit * 0.72, -unit * 0.78);
+    context.lineTo(unit * 0.18, -unit * 0.5);
+    context.fill();
+    context.stroke();
+  } else {
+    // Tiny floating ears vary by enemy so the group feels like a cast.
+    const earTilt = enemy.variant === 1 ? 0.16 : enemy.variant === 2 ? -0.16 : 0;
+    context.fillStyle = frozen ? "#8deaff" : "#9675e5";
+    context.beginPath();
+    context.ellipse(-unit * 0.47, -unit * 0.34, unit * 0.2, unit * 0.36, -0.55 + earTilt, 0, Math.PI * 2);
+    context.ellipse(unit * 0.47, -unit * 0.34, unit * 0.2, unit * 0.36, 0.55 + earTilt, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  const bodyGradient = context.createRadialGradient(
+    -unit * 0.26,
+    -unit * 0.34,
+    unit * 0.04,
+    0,
+    0,
+    unit * 0.88,
+  );
+  if (frozen) {
+    bodyGradient.addColorStop(0, "#effeff");
+    bodyGradient.addColorStop(0.34, "#9cedff");
+    bodyGradient.addColorStop(1, "#287cae");
+  } else if (isChaser) {
+    bodyGradient.addColorStop(0, "#ffb4c4");
+    bodyGradient.addColorStop(0.3, "#ff5578");
+    bodyGradient.addColorStop(1, "#9f194d");
+  } else {
+    bodyGradient.addColorStop(0, "#d7c7ff");
+    bodyGradient.addColorStop(0.32, "#9676df");
+    bodyGradient.addColorStop(1, "#4d2b88");
+  }
+  context.fillStyle = bodyGradient;
+  context.strokeStyle = frozen ? "#dffcff" : isChaser ? "#681733" : "#34205c";
+  context.lineWidth = Math.max(0.8, unit * 0.08);
+  context.shadowColor = frozen ? "#dffcff" : isChaser ? "#ff4f73" : "#a98cff";
+  context.shadowBlur = unit * 0.9;
+  context.beginPath();
+  context.ellipse(0, -unit * 0.04, unit * 0.7, unit * 0.67, 0, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
   context.shadowBlur = 0;
+
+  // Gloss and cheek lighting.
+  context.fillStyle = "rgba(255,255,255,0.38)";
+  context.beginPath();
+  context.ellipse(-unit * 0.27, -unit * 0.38, unit * 0.23, unit * 0.1, -0.35, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = isChaser ? "rgba(255,205,216,0.45)" : "rgba(255,210,238,0.36)";
+  context.beginPath();
+  context.arc(-unit * 0.38, unit * 0.14, unit * 0.12, 0, Math.PI * 2);
+  context.arc(unit * 0.38, unit * 0.14, unit * 0.12, 0, Math.PI * 2);
+  context.fill();
+
+  const targetAngle = Math.atan2(player.y + 0.5 - enemy.y, player.x + 0.5 - enemy.x);
+  const lookX = Math.cos(targetAngle) * unit * 0.035;
+  const lookY = Math.sin(targetAngle) * unit * 0.035;
   context.fillStyle = "white";
   context.beginPath();
-  context.arc(-unit * 0.2, -unit * 0.06, unit * 0.15, 0, Math.PI * 2);
-  context.arc(unit * 0.2, -unit * 0.06, unit * 0.15, 0, Math.PI * 2);
+  context.ellipse(-unit * 0.22, -unit * 0.1, unit * 0.17, unit * 0.18 * blink, 0, 0, Math.PI * 2);
+  context.ellipse(unit * 0.22, -unit * 0.1, unit * 0.17, unit * 0.18 * blink, 0, 0, Math.PI * 2);
   context.fill();
   context.fillStyle = "#29183f";
   context.beginPath();
-  context.arc(-unit * 0.17, -unit * 0.04, unit * 0.065, 0, Math.PI * 2);
-  context.arc(unit * 0.17, -unit * 0.04, unit * 0.065, 0, Math.PI * 2);
+  context.arc(-unit * 0.2 + lookX, -unit * 0.09 + lookY, unit * 0.07 * blink, 0, Math.PI * 2);
+  context.arc(unit * 0.2 + lookX, -unit * 0.09 + lookY, unit * 0.07 * blink, 0, Math.PI * 2);
   context.fill();
 
+  context.strokeStyle = frozen ? "#2778a0" : "#3c214b";
+  context.lineWidth = Math.max(0.7, unit * 0.06);
+  context.beginPath();
+  if (isChaser) {
+    context.moveTo(-unit * 0.26, -unit * 0.28);
+    context.lineTo(-unit * 0.08, -unit * 0.18);
+    context.moveTo(unit * 0.26, -unit * 0.28);
+    context.lineTo(unit * 0.08, -unit * 0.18);
+    context.moveTo(-unit * 0.16, unit * 0.25);
+    context.quadraticCurveTo(0, unit * 0.1, unit * 0.16, unit * 0.25);
+  } else {
+    context.arc(0, unit * 0.12, unit * 0.17, 0.15, Math.PI - 0.15);
+  }
+  context.stroke();
+
   if (frozen) {
-    context.strokeStyle = "rgba(255,255,255,0.9)";
-    context.lineWidth = Math.max(0.8, unit * 0.08);
+    context.strokeStyle = "rgba(255,255,255,0.92)";
+    context.lineWidth = Math.max(0.7, unit * 0.055);
     context.beginPath();
-    context.moveTo(-unit * 0.55, -unit * 0.55);
-    context.lineTo(unit * 0.55, unit * 0.55);
-    context.moveTo(unit * 0.55, -unit * 0.55);
-    context.lineTo(-unit * 0.55, unit * 0.55);
+    context.moveTo(-unit * 0.48, -unit * 0.5);
+    context.lineTo(-unit * 0.1, -unit * 0.12);
+    context.lineTo(-unit * 0.34, unit * 0.38);
+    context.moveTo(unit * 0.42, -unit * 0.54);
+    context.lineTo(unit * 0.12, -unit * 0.1);
+    context.lineTo(unit * 0.48, unit * 0.34);
     context.stroke();
   }
   context.restore();
@@ -1083,53 +1673,121 @@ function drawLandBot(bot, time) {
   const unit = Math.min(box.width, box.height);
   const x = box.x + box.width / 2;
   const y = box.y + box.height / 2 + Math.sin(time * 0.012 + bot.phase) * unit * 0.07;
+  const moveX = bot.x - bot.previousX;
+  const facing = moveX < 0 ? -1 : 1;
+  const treadSpin = (time / Math.max(70, moveDelay)) % 1;
 
   context.save();
   context.translate(x, y);
-  context.shadowColor = botSlowed ? "#d7faff" : "#43f1ff";
-  context.shadowBlur = unit * 0.75;
+  context.scale(facing, 1);
 
-  context.fillStyle = "#17284d";
-  context.strokeStyle = "#ffffff";
-  context.lineWidth = Math.max(1, unit * 0.1);
+  // Ground shadow and articulated treads.
+  context.fillStyle = "rgba(4,8,20,0.48)";
   context.beginPath();
-  context.roundRect(-unit * 0.72, -unit * 0.48, unit * 1.44, unit * 0.96, unit * 0.35);
+  context.ellipse(0, unit * 0.62, unit * 0.86, unit * 0.2, 0, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "#101a35";
+  context.strokeStyle = "#7389a7";
+  context.lineWidth = Math.max(0.7, unit * 0.07);
+  roundedRectPath(-unit * 0.8, unit * 0.3, unit * 1.6, unit * 0.42, unit * 0.2);
+  context.fill();
+  context.stroke();
+  for (let tread = -2; tread <= 2; tread += 1) {
+    const treadX = (tread + treadSpin) * unit * 0.27;
+    context.fillStyle = "#425371";
+    context.beginPath();
+    context.arc(treadX, unit * 0.51, unit * 0.1, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  context.shadowColor = botSlowed ? "#d7faff" : "#43f1ff";
+  context.shadowBlur = unit * 0.9;
+
+  const shell = context.createLinearGradient(-unit * 0.7, -unit * 0.55, unit * 0.6, unit * 0.45);
+  shell.addColorStop(0, "#7594ba");
+  shell.addColorStop(0.18, "#263e67");
+  shell.addColorStop(0.75, "#142443");
+  shell.addColorStop(1, "#081326");
+  context.fillStyle = shell;
+  context.strokeStyle = "#d9f7ff";
+  context.lineWidth = Math.max(0.9, unit * 0.08);
+  roundedRectPath(-unit * 0.72, -unit * 0.48, unit * 1.44, unit * 0.94, unit * 0.32);
   context.fill();
   context.stroke();
   context.shadowBlur = 0;
 
-  context.strokeStyle = "#17284d";
+  // Glass faceplate.
+  const screen = context.createLinearGradient(0, -unit * 0.38, 0, unit * 0.22);
+  screen.addColorStop(0, "rgba(65,247,255,0.34)");
+  screen.addColorStop(1, "rgba(4,25,52,0.75)");
+  context.fillStyle = screen;
+  context.strokeStyle = "#5fe8f1";
+  context.lineWidth = Math.max(0.6, unit * 0.055);
+  roundedRectPath(-unit * 0.52, -unit * 0.33, unit * 1.04, unit * 0.55, unit * 0.2);
+  context.fill();
+  context.stroke();
+  context.fillStyle = "rgba(255,255,255,0.22)";
+  context.beginPath();
+  context.ellipse(-unit * 0.22, -unit * 0.25, unit * 0.2, unit * 0.06, -0.15, 0, Math.PI * 2);
+  context.fill();
+
+  // Antenna flexes while the bot moves.
+  context.strokeStyle = "#bdeff4";
+  context.lineWidth = Math.max(0.8, unit * 0.065);
   context.beginPath();
   context.moveTo(0, -unit * 0.47);
-  context.lineTo(0, -unit * 0.82);
+  context.quadraticCurveTo(unit * 0.1, -unit * 0.68, Math.sin(time * 0.01) * unit * 0.08, -unit * 0.84);
   context.stroke();
   context.fillStyle = botSlowed ? "#7de9ff" : "#ff4f91";
+  context.shadowColor = context.fillStyle;
+  context.shadowBlur = unit * 0.55;
   context.beginPath();
   context.arc(0, -unit * 0.9, unit * 0.13, 0, Math.PI * 2);
   context.fill();
+  context.shadowBlur = 0;
 
-  context.fillStyle = "#54efff";
+  // Expressive LED eyes track Kitty.
+  const look = Math.sign(player.lastLandX - bot.x) * unit * 0.035;
+  context.fillStyle = botSlowed ? "#b9f7ff" : "#54efff";
+  context.shadowColor = context.fillStyle;
+  context.shadowBlur = unit * 0.42;
   context.beginPath();
-  context.ellipse(-unit * 0.26, -unit * 0.05, unit * 0.13, unit * 0.17, 0, 0, Math.PI * 2);
-  context.ellipse(unit * 0.26, -unit * 0.05, unit * 0.13, unit * 0.17, 0, 0, Math.PI * 2);
+  context.ellipse(-unit * 0.25 + look, -unit * 0.08, unit * 0.13, unit * 0.12, 0, 0, Math.PI * 2);
+  context.ellipse(unit * 0.25 + look, -unit * 0.08, unit * 0.13, unit * 0.12, 0, 0, Math.PI * 2);
   context.fill();
+  context.shadowBlur = 0;
 
   context.strokeStyle = "#ff8fbe";
-  context.lineWidth = Math.max(1, unit * 0.08);
+  context.lineWidth = Math.max(0.8, unit * 0.07);
   context.beginPath();
-  context.arc(0, unit * 0.1, unit * 0.25, 0.15, Math.PI - 0.15);
+  context.arc(0, unit * 0.04, unit * 0.25, 0.2, Math.PI - 0.2);
   context.stroke();
 
-  context.fillStyle = "#283d69";
-  context.fillRect(-unit * 0.62, unit * 0.42, unit * 0.42, unit * 0.2);
-  context.fillRect(unit * 0.2, unit * 0.42, unit * 0.42, unit * 0.2);
+  // Side grabbing arms make the bot read as a real moving machine.
+  const armBob = Math.sin(time * 0.014 + bot.phase) * unit * 0.08;
+  context.strokeStyle = "#b6d2e5";
+  context.lineWidth = Math.max(1, unit * 0.1);
+  context.beginPath();
+  context.moveTo(-unit * 0.64, -unit * 0.05);
+  context.lineTo(-unit * 0.93, unit * 0.16 + armBob);
+  context.lineTo(-unit * 0.84, unit * 0.4 + armBob);
+  context.moveTo(unit * 0.64, -unit * 0.05);
+  context.lineTo(unit * 0.93, unit * 0.16 - armBob);
+  context.lineTo(unit * 0.84, unit * 0.4 - armBob);
+  context.stroke();
+  context.fillStyle = "#ff6da5";
+  context.beginPath();
+  context.arc(-unit * 0.84, unit * 0.42 + armBob, unit * 0.13, 0, Math.PI * 2);
+  context.arc(unit * 0.84, unit * 0.42 - armBob, unit * 0.13, 0, Math.PI * 2);
+  context.fill();
 
   if (botSlowed) {
     context.fillStyle = "#ffffff";
-    context.font = `bold ${unit * 0.55}px Arial`;
+    context.font = `900 ${unit * 0.48}px Arial`;
     context.textAlign = "center";
-    context.fillText("z", unit * 0.72, -unit * 0.72);
-    context.fillText("z", unit * 0.98, -unit * 1.08);
+    context.fillText("z", unit * 0.75, -unit * 0.72);
+    context.fillText("z", unit * 1.02, -unit * 1.03);
   }
   context.restore();
 }
@@ -1139,35 +1797,151 @@ function drawPickup(pickup, time) {
   const unit = Math.min(box.width, box.height);
   const x = box.x + box.width / 2;
   const y = box.y + box.height / 2 + Math.sin(time * 0.007 + pickup.phase) * unit * 0.18;
+  const spin = Math.sin(time * 0.0025 + pickup.phase) * 0.12;
 
   context.save();
   context.translate(x, y);
-  context.shadowColor = "#fff";
-  context.shadowBlur = unit;
+  context.rotate(spin);
+
+  // Floating light pedestal shared by every collectible.
+  context.strokeStyle = "rgba(255,255,255,0.5)";
+  context.lineWidth = Math.max(0.7, unit * 0.06);
+  context.globalAlpha = 0.55 + Math.sin(time * 0.008 + pickup.phase) * 0.18;
+  context.beginPath();
+  context.ellipse(0, unit * 0.52, unit * 0.58, unit * 0.17, 0, 0, Math.PI * 2);
+  context.stroke();
+  context.globalAlpha = 1;
+
   if (pickup.type === "strawberry") {
-    drawHeart(0, 0, unit * 0.7, "#ff4f73");
-    context.fillStyle = "#69dfc2";
-    context.fillRect(-unit * 0.25, -unit * 0.48, unit * 0.5, unit * 0.14);
+    context.shadowColor = "#ff4f73";
+    context.shadowBlur = unit;
+    const berry = context.createLinearGradient(-unit * 0.45, -unit * 0.5, unit * 0.4, unit * 0.55);
+    berry.addColorStop(0, "#ff9cb1");
+    berry.addColorStop(0.35, "#ff4f73");
+    berry.addColorStop(1, "#bc164d");
+    drawHeart(0, unit * 0.08, unit * 0.78, berry);
+    context.shadowBlur = 0;
+    context.fillStyle = "#7cf0bb";
+    for (let leaf = -1; leaf <= 1; leaf += 1) {
+      context.beginPath();
+      context.ellipse(leaf * unit * 0.2, -unit * 0.45, unit * 0.12, unit * 0.3, leaf * 0.45, 0, Math.PI * 2);
+      context.fill();
+    }
+    context.fillStyle = "#ffe9b0";
+    for (let seed = 0; seed < 5; seed += 1) {
+      context.beginPath();
+      context.arc((seed % 2 ? 1 : -1) * unit * 0.17, -unit * 0.1 + seed * unit * 0.12, unit * 0.035, 0, Math.PI * 2);
+      context.fill();
+    }
   } else if (pickup.type === "shield") {
-    context.font = `${unit * 1.25}px Arial`;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText("🎀", 0, 0);
+    context.shadowColor = "#ff8fbe";
+    context.shadowBlur = unit;
+    context.fillStyle = "rgba(255,189,220,0.18)";
+    context.strokeStyle = "#ffd6e8";
+    context.lineWidth = Math.max(1, unit * 0.09);
+    context.beginPath();
+    context.arc(0, 0, unit * 0.72, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
+    context.shadowBlur = 0;
+    const bow = context.createLinearGradient(0, -unit * 0.4, 0, unit * 0.4);
+    bow.addColorStop(0, "#ff9cc4");
+    bow.addColorStop(1, "#e4317b");
+    context.fillStyle = bow;
+    context.strokeStyle = "#8c2457";
+    context.lineWidth = Math.max(0.7, unit * 0.07);
+    context.beginPath();
+    context.ellipse(-unit * 0.3, 0, unit * 0.34, unit * 0.23, -0.3, 0, Math.PI * 2);
+    context.ellipse(unit * 0.3, 0, unit * 0.34, unit * 0.23, 0.3, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
+    context.beginPath();
+    context.arc(0, 0, unit * 0.17, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
   } else if (pickup.type === "ice") {
-    context.font = `${unit * 1.2}px Arial`;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText("🧊", 0, 0);
+    context.shadowColor = "#bff8ff";
+    context.shadowBlur = unit * 1.2;
+    const ice = context.createLinearGradient(-unit * 0.55, -unit * 0.6, unit * 0.55, unit * 0.62);
+    ice.addColorStop(0, "rgba(255,255,255,0.94)");
+    ice.addColorStop(0.35, "rgba(157,239,255,0.9)");
+    ice.addColorStop(1, "rgba(32,136,191,0.9)");
+    context.fillStyle = ice;
+    context.strokeStyle = "#e8feff";
+    context.lineWidth = Math.max(0.9, unit * 0.08);
+    roundedRectPath(-unit * 0.55, -unit * 0.55, unit * 1.1, unit * 1.1, unit * 0.22);
+    context.fill();
+    context.stroke();
+    context.shadowBlur = 0;
+    context.fillStyle = "rgba(255,255,255,0.58)";
+    context.beginPath();
+    context.moveTo(-unit * 0.42, -unit * 0.36);
+    context.lineTo(unit * 0.06, -unit * 0.46);
+    context.lineTo(-unit * 0.1, unit * 0.06);
+    context.closePath();
+    context.fill();
+    context.strokeStyle = "rgba(255,255,255,0.72)";
+    context.beginPath();
+    context.moveTo(-unit * 0.16, -unit * 0.02);
+    context.lineTo(unit * 0.18, unit * 0.32);
+    context.lineTo(unit * 0.4, unit * 0.04);
+    context.stroke();
   } else if (pickup.type === "botSlow") {
-    context.font = `${unit * 1.2}px Arial`;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText("🧁", 0, 0);
+    context.shadowColor = "#7de9f7";
+    context.shadowBlur = unit;
+    context.fillStyle = "#7de9f7";
+    context.strokeStyle = "#193c58";
+    context.lineWidth = Math.max(0.8, unit * 0.07);
+    context.beginPath();
+    context.moveTo(-unit * 0.5, unit * 0.05);
+    context.lineTo(-unit * 0.36, unit * 0.6);
+    context.lineTo(unit * 0.36, unit * 0.6);
+    context.lineTo(unit * 0.5, unit * 0.05);
+    context.closePath();
+    context.fill();
+    context.stroke();
+    const frosting = context.createLinearGradient(0, -unit * 0.6, 0, unit * 0.18);
+    frosting.addColorStop(0, "#fff9ff");
+    frosting.addColorStop(1, "#ff9fcd");
+    context.fillStyle = frosting;
+    context.beginPath();
+    context.arc(-unit * 0.3, 0, unit * 0.31, Math.PI, 0);
+    context.arc(0, -unit * 0.18, unit * 0.38, Math.PI, 0);
+    context.arc(unit * 0.3, 0, unit * 0.31, Math.PI, 0);
+    context.lineTo(unit * 0.52, unit * 0.16);
+    context.lineTo(-unit * 0.52, unit * 0.16);
+    context.closePath();
+    context.fill();
+    context.stroke();
+    context.shadowBlur = 0;
+    context.fillStyle = "#26395a";
+    context.beginPath();
+    context.arc(-unit * 0.16, unit * 0.05, unit * 0.055, 0, Math.PI * 2);
+    context.arc(unit * 0.16, unit * 0.05, unit * 0.055, 0, Math.PI * 2);
+    context.fill();
+    context.strokeStyle = "#ff4f91";
+    context.beginPath();
+    context.arc(0, unit * 0.15, unit * 0.14, 0.1, Math.PI - 0.1);
+    context.stroke();
   } else {
-    context.font = `${unit * 1.2}px Arial`;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText("🥛", 0, 0);
+    context.shadowColor = "#ffffff";
+    context.shadowBlur = unit;
+    const bottle = context.createLinearGradient(-unit * 0.5, 0, unit * 0.5, 0);
+    bottle.addColorStop(0, "#bfe8ed");
+    bottle.addColorStop(0.4, "#ffffff");
+    bottle.addColorStop(1, "#8fc4d2");
+    context.fillStyle = bottle;
+    context.strokeStyle = "#37637a";
+    context.lineWidth = Math.max(0.8, unit * 0.07);
+    roundedRectPath(-unit * 0.42, -unit * 0.42, unit * 0.84, unit * 1.04, unit * 0.18);
+    context.fill();
+    context.stroke();
+    context.fillStyle = "#7de9f7";
+    roundedRectPath(-unit * 0.29, -unit * 0.62, unit * 0.58, unit * 0.25, unit * 0.08);
+    context.fill();
+    context.stroke();
+    context.shadowBlur = 0;
+    drawHeart(0, unit * 0.13, unit * 0.24, "#ff6da5");
   }
   context.restore();
 }
@@ -1175,22 +1949,82 @@ function drawPickup(pickup, time) {
 function drawGame(time = performance.now()) {
   if (!viewWidth || !viewHeight || !board.length) return;
   const world = currentWorld();
+  const visual = currentVisual();
   const cellWidth = viewWidth / COLS;
   const cellHeight = viewHeight / ROWS;
+  const unit = Math.min(cellWidth, cellHeight);
   const feverActive = game.feverUntil > time;
 
   const gradient = context.createRadialGradient(
-    viewWidth * 0.5,
-    viewHeight * 0.42,
+    viewWidth * 0.46,
+    viewHeight * 0.36,
     0,
     viewWidth * 0.5,
-    viewHeight * 0.42,
-    viewHeight * 0.72,
+    viewHeight * 0.5,
+    viewHeight * 0.76,
   );
-  gradient.addColorStop(0, feverActive ? "#592969" : world.emptyGlow);
-  gradient.addColorStop(1, world.empty);
+  gradient.addColorStop(0, feverActive ? "#6f2f78" : visual.glow);
+  gradient.addColorStop(0.52, world.emptyGlow);
+  gradient.addColorStop(1, visual.sky);
   context.fillStyle = gradient;
   context.fillRect(0, 0, viewWidth, viewHeight);
+  drawWorldAtmosphere(time);
+
+  // A soft moving vignette gives the unclaimed garden depth without affecting
+  // the collision grid underneath it.
+  const fog = context.createLinearGradient(
+    Math.sin(time * 0.00022) * viewWidth * 0.25,
+    0,
+    viewWidth,
+    viewHeight,
+  );
+  fog.addColorStop(0, "rgba(255,255,255,0.025)");
+  fog.addColorStop(0.45, "rgba(255,255,255,0)");
+  fog.addColorStop(1, "rgba(0,0,0,0.18)");
+  context.fillStyle = fog;
+  context.fillRect(0, 0, viewWidth, viewHeight);
+
+  const terrainGradient = context.createLinearGradient(0, 0, viewWidth, viewHeight);
+  terrainGradient.addColorStop(0, world.landAlt);
+  terrainGradient.addColorStop(0.42, world.land);
+  terrainGradient.addColorStop(1, visual.terrainShadow);
+
+  // Fill connected territory without outlining every grid cell.
+  context.fillStyle = terrainGradient;
+  context.beginPath();
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let column = 0; column < COLS; column += 1) {
+      if (board[row][column] !== LAND) continue;
+      context.rect(
+        column * cellWidth - 0.2,
+        row * cellHeight - 0.2,
+        cellWidth + 0.45,
+        cellHeight + 0.45,
+      );
+    }
+  }
+  context.fill();
+
+  // Broad translucent highlights make the land read like one polished surface.
+  context.save();
+  context.globalCompositeOperation = "screen";
+  context.globalAlpha = 0.16;
+  const terrainLight = context.createLinearGradient(0, 0, viewWidth, 0);
+  terrainLight.addColorStop(0, "rgba(255,255,255,0.58)");
+  terrainLight.addColorStop(0.36, "rgba(255,255,255,0)");
+  terrainLight.addColorStop(0.72, "rgba(255,255,255,0.23)");
+  terrainLight.addColorStop(1, "rgba(255,255,255,0)");
+  context.fillStyle = terrainLight;
+  context.beginPath();
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let column = 0; column < COLS; column += 1) {
+      if (board[row][column] === LAND) {
+        context.rect(column * cellWidth - 0.2, row * cellHeight - 0.2, cellWidth + 0.5, cellHeight + 0.5);
+      }
+    }
+  }
+  context.fill();
+  context.restore();
 
   for (let row = 0; row < ROWS; row += 1) {
     for (let column = 0; column < COLS; column += 1) {
@@ -1198,27 +2032,32 @@ function drawGame(time = performance.now()) {
       const x = column * cellWidth;
       const y = row * cellHeight;
       if (cell === LAND) {
-        context.fillStyle = (row + column) % 2 ? world.land : world.landAlt;
-        context.fillRect(x, y, cellWidth + 0.4, cellHeight + 0.4);
-        context.strokeStyle = "rgba(41,24,63,0.08)";
-        context.strokeRect(x + 0.25, y + 0.25, cellWidth - 0.5, cellHeight - 0.5);
-        if ((row * 3 + column) % 17 === 0) {
-          drawHeart(x + cellWidth / 2, y + cellHeight / 2, Math.min(cellWidth, cellHeight) * 0.22, "rgba(255,255,255,0.55)");
-        }
+        drawTerrainDetail(column, row, time);
       } else if (cell === TRAIL) {
-        context.fillStyle = feverActive ? "#ffd84d" : "#ffedf5";
+        const ribbon = context.createLinearGradient(x, y, x + cellWidth, y + cellHeight);
+        ribbon.addColorStop(0, "#ffffff");
+        ribbon.addColorStop(0.45, feverActive ? "#ffe873" : "#ff9ac4");
+        ribbon.addColorStop(1, feverActive ? "#f3a900" : "#ef367e");
+        context.fillStyle = ribbon;
         context.shadowColor = feverActive ? "#ffd84d" : "#ff6aaa";
-        context.shadowBlur = Math.min(cellWidth, cellHeight) * 1.1;
-        context.fillRect(x + cellWidth * 0.22, y, cellWidth * 0.56, cellHeight + 0.5);
-        context.shadowBlur = 0;
-      } else if ((row + column * 2) % 23 === 0) {
-        context.fillStyle = "rgba(255,255,255,0.13)";
-        context.beginPath();
-        context.arc(x + cellWidth / 2, y + cellHeight / 2, 0.8, 0, Math.PI * 2);
+        context.shadowBlur = unit * 1.35;
+        roundedRectPath(
+          x + cellWidth * 0.18,
+          y - cellHeight * 0.05,
+          cellWidth * 0.64,
+          cellHeight * 1.1,
+          cellWidth * 0.3,
+        );
         context.fill();
+        context.fillStyle = "rgba(255,255,255,0.62)";
+        context.fillRect(x + cellWidth * 0.34, y, cellWidth * 0.13, cellHeight);
+        context.shadowBlur = 0;
       }
     }
   }
+
+  drawTerrainEdges();
+  drawCaptureEffects(time);
 
   pickups.forEach((pickup) => drawPickup(pickup, time));
   enemies.forEach((enemy) => drawEnemy(enemy, time));
@@ -1226,9 +2065,14 @@ function drawGame(time = performance.now()) {
   drawKitty(player.x, player.y, time);
 
   if (feverActive) {
-    context.strokeStyle = `hsla(${(time * 0.12) % 360}, 95%, 72%, 0.8)`;
+    const hue = (time * 0.12) % 360;
+    context.strokeStyle = `hsla(${hue}, 95%, 76%, 0.86)`;
+    context.shadowColor = `hsla(${hue}, 100%, 70%, 0.9)`;
+    context.shadowBlur = 12;
     context.lineWidth = 5;
-    context.strokeRect(3, 3, viewWidth - 6, viewHeight - 6);
+    roundedRectPath(4, 4, viewWidth - 8, viewHeight - 8, 14);
+    context.stroke();
+    context.shadowBlur = 0;
   }
 }
 
