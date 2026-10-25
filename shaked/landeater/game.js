@@ -160,6 +160,8 @@ const comboValue = document.getElementById("combo-value");
 const feverFill = document.getElementById("fever-fill");
 const feverValue = document.getElementById("fever-value");
 const boardWrap = document.getElementById("board-wrap");
+const staticLayerCanvas = document.getElementById("game-background");
+const staticLayerContext = staticLayerCanvas.getContext("2d");
 const gameCanvas = document.getElementById("game-canvas");
 const context = gameCanvas.getContext("2d");
 const eventBanner = document.getElementById("event-banner");
@@ -287,6 +289,13 @@ let modalPrimaryAction = null;
 let modalSecondaryAction = null;
 let visualParticles = [];
 let captureWaves = [];
+let staticLayerDirty = true;
+const visualPerformance = {
+  frames: 0,
+  sampleStartedAt: performance.now(),
+  fps: 60,
+  reduced: Boolean(navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4),
+};
 
 const player = {
   x: Math.floor(COLS / 2),
@@ -365,6 +374,7 @@ function createBoard() {
         : EMPTY,
     ),
   );
+  staticLayerDirty = true;
 }
 
 function resetPlayer() {
@@ -646,6 +656,7 @@ function claimTerritory() {
   const points = Math.round(newlyClaimed * 6 * comboMultiplier * feverMultiplier);
   game.score += points;
   game.fever = Math.min(100, game.fever + Math.max(6, bitePercent * 2.7));
+  staticLayerDirty = true;
   triggerCaptureEffect(claimedCells);
   player.trail = [];
 
@@ -977,15 +988,41 @@ function resumeGame() {
  * UI
  * ----------------------------------------------------------------------- */
 
+const hudCache = {};
+
+function updateText(element, key, value) {
+  if (hudCache[key] === value) return;
+  hudCache[key] = value;
+  element.textContent = value;
+}
+
 function updateHUD() {
-  scoreValue.textContent = game.score.toLocaleString();
-  livesValue.textContent = `${"♥ ".repeat(Math.max(0, game.lives)).trim()}${game.shield ? `  🎀×${game.shield}` : ""}`;
-  livesValue.setAttribute("aria-label", `${game.lives} lives and ${game.shield} shields`);
-  landValue.textContent = String(Math.min(100, Math.floor(game.captured)));
-  landFill.style.width = `${Math.min(100, (game.captured / game.target) * 100)}%`;
-  comboValue.textContent = `×${game.combo + 1}`;
-  feverFill.style.width = `${game.fever}%`;
-  feverValue.textContent = game.feverUntil > performance.now() ? "×2" : `${Math.floor(game.fever)}%`;
+  const score = game.score.toLocaleString();
+  const lives = `${"♥ ".repeat(Math.max(0, game.lives)).trim()}${game.shield ? `  🎀×${game.shield}` : ""}`;
+  const livesLabel = `${game.lives} lives and ${game.shield} shields`;
+  const land = String(Math.min(100, Math.floor(game.captured)));
+  const landWidth = `${Math.min(100, (game.captured / game.target) * 100)}%`;
+  const combo = `×${game.combo + 1}`;
+  const feverWidth = `${game.fever}%`;
+  const fever = game.feverUntil > performance.now() ? "×2" : `${Math.floor(game.fever)}%`;
+
+  updateText(scoreValue, "score", score);
+  updateText(livesValue, "lives", lives);
+  if (hudCache.livesLabel !== livesLabel) {
+    hudCache.livesLabel = livesLabel;
+    livesValue.setAttribute("aria-label", livesLabel);
+  }
+  updateText(landValue, "land", land);
+  if (hudCache.landWidth !== landWidth) {
+    hudCache.landWidth = landWidth;
+    landFill.style.width = landWidth;
+  }
+  updateText(comboValue, "combo", combo);
+  if (hudCache.feverWidth !== feverWidth) {
+    hudCache.feverWidth = feverWidth;
+    feverFill.style.width = feverWidth;
+  }
+  updateText(feverValue, "fever", fever);
 }
 
 function showBanner(message) {
@@ -1011,12 +1048,13 @@ function announce(message) {
 function resizeCanvas() {
   const bounds = boardWrap.getBoundingClientRect();
   if (!bounds.width || !bounds.height) return;
-  const density = Math.min(devicePixelRatio || 1, 2);
+  const density = Math.min(devicePixelRatio || 1, 1.5);
   viewWidth = bounds.width;
   viewHeight = bounds.height;
   gameCanvas.width = Math.round(viewWidth * density);
   gameCanvas.height = Math.round(viewHeight * density);
   context.setTransform(density, 0, 0, density, 0, 0);
+  staticLayerDirty = true;
   drawGame(performance.now());
 }
 
@@ -1031,6 +1069,10 @@ function cellBox(column, row) {
 
 function currentVisual() {
   return WORLD_VISUALS[(game.level - 1) % WORLD_VISUALS.length];
+}
+
+function effectBlur(value) {
+  return visualPerformance.reduced ? 0 : value;
 }
 
 function roundedRectPath(x, y, width, height, radius) {
@@ -1051,8 +1093,9 @@ function cellHash(column, row, salt = 0) {
 
 function spawnVisualBurst(x, y, color, count = 16, type = "spark") {
   const bornAt = performance.now();
-  for (let index = 0; index < count; index += 1) {
-    const angle = (index / count) * Math.PI * 2 + Math.random() * 0.45;
+  const particleCount = visualPerformance.reduced ? Math.max(3, Math.ceil(count * 0.55)) : count;
+  for (let index = 0; index < particleCount; index += 1) {
+    const angle = (index / particleCount) * Math.PI * 2 + Math.random() * 0.45;
     const speed = 2.2 + Math.random() * 5.2;
     visualParticles.push({
       x,
@@ -1297,7 +1340,7 @@ function drawCaptureEffects(time) {
     context.globalAlpha = 1 - progress;
     context.fillStyle = particle.color;
     context.shadowColor = particle.color;
-    context.shadowBlur = size * 2;
+    context.shadowBlur = effectBlur(size * 2);
     if (particle.type === "heart") {
       drawHeart(0, 0, size, particle.color);
     } else if (particle.type === "leaf") {
@@ -1443,7 +1486,7 @@ function drawKitty(column, row, time) {
 
   // Head with a porcelain-style highlight and soft underside shading.
   context.shadowColor = "rgba(18,7,30,0.32)";
-  context.shadowBlur = unit * 0.35;
+  context.shadowBlur = effectBlur(unit * 0.35);
   context.shadowOffsetY = unit * 0.12;
   context.beginPath();
   context.ellipse(0, -unit * 0.22, unit * 0.72, unit * 0.59, 0, 0, Math.PI * 2);
@@ -1599,7 +1642,7 @@ function drawEnemy(enemy, time) {
   context.strokeStyle = frozen ? "#dffcff" : isChaser ? "#681733" : "#34205c";
   context.lineWidth = Math.max(0.8, unit * 0.08);
   context.shadowColor = frozen ? "#dffcff" : isChaser ? "#ff4f73" : "#a98cff";
-  context.shadowBlur = unit * 0.9;
+  context.shadowBlur = effectBlur(unit * 0.9);
   context.beginPath();
   context.ellipse(0, -unit * 0.04, unit * 0.7, unit * 0.67, 0, 0, Math.PI * 2);
   context.fill();
@@ -1702,7 +1745,7 @@ function drawLandBot(bot, time) {
   }
 
   context.shadowColor = botSlowed ? "#d7faff" : "#43f1ff";
-  context.shadowBlur = unit * 0.9;
+  context.shadowBlur = effectBlur(unit * 0.9);
 
   const shell = context.createLinearGradient(-unit * 0.7, -unit * 0.55, unit * 0.6, unit * 0.45);
   shell.addColorStop(0, "#7594ba");
@@ -1741,7 +1784,7 @@ function drawLandBot(bot, time) {
   context.stroke();
   context.fillStyle = botSlowed ? "#7de9ff" : "#ff4f91";
   context.shadowColor = context.fillStyle;
-  context.shadowBlur = unit * 0.55;
+  context.shadowBlur = effectBlur(unit * 0.55);
   context.beginPath();
   context.arc(0, -unit * 0.9, unit * 0.13, 0, Math.PI * 2);
   context.fill();
@@ -1751,7 +1794,7 @@ function drawLandBot(bot, time) {
   const look = Math.sign(player.lastLandX - bot.x) * unit * 0.035;
   context.fillStyle = botSlowed ? "#b9f7ff" : "#54efff";
   context.shadowColor = context.fillStyle;
-  context.shadowBlur = unit * 0.42;
+  context.shadowBlur = effectBlur(unit * 0.42);
   context.beginPath();
   context.ellipse(-unit * 0.25 + look, -unit * 0.08, unit * 0.13, unit * 0.12, 0, 0, Math.PI * 2);
   context.ellipse(unit * 0.25 + look, -unit * 0.08, unit * 0.13, unit * 0.12, 0, 0, Math.PI * 2);
@@ -1814,7 +1857,7 @@ function drawPickup(pickup, time) {
 
   if (pickup.type === "strawberry") {
     context.shadowColor = "#ff4f73";
-    context.shadowBlur = unit;
+    context.shadowBlur = effectBlur(unit);
     const berry = context.createLinearGradient(-unit * 0.45, -unit * 0.5, unit * 0.4, unit * 0.55);
     berry.addColorStop(0, "#ff9cb1");
     berry.addColorStop(0.35, "#ff4f73");
@@ -1835,7 +1878,7 @@ function drawPickup(pickup, time) {
     }
   } else if (pickup.type === "shield") {
     context.shadowColor = "#ff8fbe";
-    context.shadowBlur = unit;
+    context.shadowBlur = effectBlur(unit);
     context.fillStyle = "rgba(255,189,220,0.18)";
     context.strokeStyle = "#ffd6e8";
     context.lineWidth = Math.max(1, unit * 0.09);
@@ -1861,7 +1904,7 @@ function drawPickup(pickup, time) {
     context.stroke();
   } else if (pickup.type === "ice") {
     context.shadowColor = "#bff8ff";
-    context.shadowBlur = unit * 1.2;
+    context.shadowBlur = effectBlur(unit * 1.2);
     const ice = context.createLinearGradient(-unit * 0.55, -unit * 0.6, unit * 0.55, unit * 0.62);
     ice.addColorStop(0, "rgba(255,255,255,0.94)");
     ice.addColorStop(0.35, "rgba(157,239,255,0.9)");
@@ -1888,7 +1931,7 @@ function drawPickup(pickup, time) {
     context.stroke();
   } else if (pickup.type === "botSlow") {
     context.shadowColor = "#7de9f7";
-    context.shadowBlur = unit;
+    context.shadowBlur = effectBlur(unit);
     context.fillStyle = "#7de9f7";
     context.strokeStyle = "#193c58";
     context.lineWidth = Math.max(0.8, unit * 0.07);
@@ -1925,7 +1968,7 @@ function drawPickup(pickup, time) {
     context.stroke();
   } else {
     context.shadowColor = "#ffffff";
-    context.shadowBlur = unit;
+    context.shadowBlur = effectBlur(unit);
     const bottle = context.createLinearGradient(-unit * 0.5, 0, unit * 0.5, 0);
     bottle.addColorStop(0, "#bfe8ed");
     bottle.addColorStop(0.4, "#ffffff");
@@ -1946,14 +1989,61 @@ function drawPickup(pickup, time) {
   context.restore();
 }
 
-function drawGame(time = performance.now()) {
+function storeStaticLayer() {
+  if (!staticLayerContext) return;
+  if (
+    staticLayerCanvas.width !== gameCanvas.width ||
+    staticLayerCanvas.height !== gameCanvas.height
+  ) {
+    staticLayerCanvas.width = gameCanvas.width;
+    staticLayerCanvas.height = gameCanvas.height;
+  }
+  staticLayerContext.setTransform(1, 0, 0, 1, 0, 0);
+  staticLayerContext.clearRect(0, 0, staticLayerCanvas.width, staticLayerCanvas.height);
+  staticLayerContext.drawImage(gameCanvas, 0, 0);
+  staticLayerDirty = false;
+}
+
+function drawStaticLayer() {
+  context.clearRect(0, 0, viewWidth, viewHeight);
+}
+
+function drawRibbonTrail(feverActive) {
+  if (!player.trail.length) return;
+  const cellWidth = viewWidth / COLS;
+  const cellHeight = viewHeight / ROWS;
+  const unit = Math.min(cellWidth, cellHeight);
+  const ribbon = context.createLinearGradient(0, 0, viewWidth, viewHeight);
+  ribbon.addColorStop(0, "#ffffff");
+  ribbon.addColorStop(0.45, feverActive ? "#ffe873" : "#ff9ac4");
+  ribbon.addColorStop(1, feverActive ? "#f3a900" : "#ef367e");
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.strokeStyle = ribbon;
+  context.lineWidth = unit * 0.64;
+  context.shadowColor = feverActive ? "#ffd84d" : "#ff6aaa";
+  context.shadowBlur = effectBlur(unit * 1.35);
+  context.beginPath();
+  player.trail.forEach((cell, index) => {
+    const x = (cell.x + 0.5) * cellWidth;
+    const y = (cell.y + 0.5) * cellHeight;
+    if (!index) context.moveTo(x, y);
+    else context.lineTo(x, y);
+  });
+  context.stroke();
+  context.shadowBlur = 0;
+  context.strokeStyle = "rgba(255,255,255,0.58)";
+  context.lineWidth = unit * 0.13;
+  context.stroke();
+  context.shadowBlur = 0;
+}
+
+function rebuildStaticLayer(time) {
   if (!viewWidth || !viewHeight || !board.length) return;
   const world = currentWorld();
   const visual = currentVisual();
   const cellWidth = viewWidth / COLS;
   const cellHeight = viewHeight / ROWS;
-  const unit = Math.min(cellWidth, cellHeight);
-  const feverActive = game.feverUntil > time;
 
   const gradient = context.createRadialGradient(
     viewWidth * 0.46,
@@ -1963,7 +2053,7 @@ function drawGame(time = performance.now()) {
     viewHeight * 0.5,
     viewHeight * 0.76,
   );
-  gradient.addColorStop(0, feverActive ? "#6f2f78" : visual.glow);
+  gradient.addColorStop(0, visual.glow);
   gradient.addColorStop(0.52, world.emptyGlow);
   gradient.addColorStop(1, visual.sky);
   context.fillStyle = gradient;
@@ -2028,35 +2118,38 @@ function drawGame(time = performance.now()) {
 
   for (let row = 0; row < ROWS; row += 1) {
     for (let column = 0; column < COLS; column += 1) {
-      const cell = board[row][column];
-      const x = column * cellWidth;
-      const y = row * cellHeight;
-      if (cell === LAND) {
-        drawTerrainDetail(column, row, time);
-      } else if (cell === TRAIL) {
-        const ribbon = context.createLinearGradient(x, y, x + cellWidth, y + cellHeight);
-        ribbon.addColorStop(0, "#ffffff");
-        ribbon.addColorStop(0.45, feverActive ? "#ffe873" : "#ff9ac4");
-        ribbon.addColorStop(1, feverActive ? "#f3a900" : "#ef367e");
-        context.fillStyle = ribbon;
-        context.shadowColor = feverActive ? "#ffd84d" : "#ff6aaa";
-        context.shadowBlur = unit * 1.35;
-        roundedRectPath(
-          x + cellWidth * 0.18,
-          y - cellHeight * 0.05,
-          cellWidth * 0.64,
-          cellHeight * 1.1,
-          cellWidth * 0.3,
-        );
-        context.fill();
-        context.fillStyle = "rgba(255,255,255,0.62)";
-        context.fillRect(x + cellWidth * 0.34, y, cellWidth * 0.13, cellHeight);
-        context.shadowBlur = 0;
-      }
+      if (board[row][column] === LAND) drawTerrainDetail(column, row, time);
     }
   }
 
   drawTerrainEdges();
+  storeStaticLayer();
+}
+
+function drawGame(time = performance.now()) {
+  if (!viewWidth || !viewHeight || !board.length) return;
+  const cacheSizeChanged =
+    staticLayerCanvas.width !== gameCanvas.width || staticLayerCanvas.height !== gameCanvas.height;
+  if (staticLayerDirty || cacheSizeChanged) rebuildStaticLayer(time);
+  drawStaticLayer();
+
+  const feverActive = game.feverUntil > time;
+  if (feverActive) {
+    const feverGlow = context.createRadialGradient(
+      viewWidth * 0.5,
+      viewHeight * 0.42,
+      0,
+      viewWidth * 0.5,
+      viewHeight * 0.42,
+      viewHeight * 0.7,
+    );
+    feverGlow.addColorStop(0, "rgba(174,66,185,0.2)");
+    feverGlow.addColorStop(1, "rgba(89,41,105,0)");
+    context.fillStyle = feverGlow;
+    context.fillRect(0, 0, viewWidth, viewHeight);
+  }
+
+  drawRibbonTrail(feverActive);
   drawCaptureEffects(time);
 
   pickups.forEach((pickup) => drawPickup(pickup, time));
@@ -2068,7 +2161,7 @@ function drawGame(time = performance.now()) {
     const hue = (time * 0.12) % 360;
     context.strokeStyle = `hsla(${hue}, 95%, 76%, 0.86)`;
     context.shadowColor = `hsla(${hue}, 100%, 70%, 0.9)`;
-    context.shadowBlur = 12;
+    context.shadowBlur = effectBlur(12);
     context.lineWidth = 5;
     roundedRectPath(4, 4, viewWidth - 8, viewHeight - 8, 14);
     context.stroke();
@@ -2201,6 +2294,17 @@ function gameLoop(time) {
   }
 
   if (!gameScreen.hidden) drawGame(time);
+  visualPerformance.frames += 1;
+  const sampleDuration = time - visualPerformance.sampleStartedAt;
+  if (sampleDuration >= 2000) {
+    visualPerformance.fps = (visualPerformance.frames * 1000) / sampleDuration;
+    if (visualPerformance.fps < 48) visualPerformance.reduced = true;
+    else if (visualPerformance.fps > 57) visualPerformance.reduced = false;
+    gameCanvas.dataset.renderFps = String(Math.round(visualPerformance.fps));
+    gameCanvas.dataset.effects = visualPerformance.reduced ? "reduced" : "full";
+    visualPerformance.frames = 0;
+    visualPerformance.sampleStartedAt = time;
+  }
   animationFrame = requestAnimationFrame(gameLoop);
 }
 

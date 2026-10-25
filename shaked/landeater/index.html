@@ -24,7 +24,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=3" />
+    <link rel="stylesheet" href="./styles.css?v=4" />
   </head>
 
   <body>
@@ -145,6 +145,7 @@
 
         <div class="game-main">
           <div class="board-wrap" id="board-wrap">
+            <canvas id="game-background" width="600" height="920" aria-hidden="true"></canvas>
             <canvas
               id="game-canvas"
               width="600"
@@ -184,6 +185,6 @@
     </div>
 
     <div class="sr-only" id="announcer" aria-live="assertive"></div>
-    <script src="./game.js?v=9"></script>
+    <script src="./game.js?v=11"></script>
   </body>
 </html>
