@@ -10,6 +10,7 @@ const BORDER = 2;
 const EMPTY = 0;
 const LAND = 1;
 const TRAIL = 2;
+const MAX_GARDEN_TARGET = 84;
 const SAVE_KEY = "shaked_landeater_save_v1";
 
 const DIRECTIONS = {
@@ -274,7 +275,7 @@ function difficultyForLevel(level) {
 
   return {
     label,
-    target: Math.min(88, 75 + step),
+    target: Math.min(MAX_GARDEN_TARGET, 75 + step),
     enemyCount: Math.min(9, 2 + Math.floor(level / 2)),
     baseEnemySpeed: Math.min(6, 2.45 + step * 0.2),
     chaserCount: level === 1 ? 0 : Math.min(4, Math.ceil(step / 2)),
