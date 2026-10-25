@@ -606,6 +606,31 @@
         transform: translate(-50%, -54%) rotate(-12deg);
       }
 
+      .math-orbit {
+        border-radius: 28px;
+        border-color: rgba(125, 233, 247, 0.8);
+        box-shadow:
+          inset 0 0 0 25px #102532,
+          inset 0 0 0 26px rgba(125, 233, 247, 0.5),
+          inset 0 0 0 54px #102532,
+          inset 0 0 0 55px rgba(182, 251, 121, 0.38);
+        transform: rotate(5deg);
+      }
+
+      .math-orbit::before,
+      .math-orbit::after {
+        border-color: rgba(125, 233, 247, 0.42);
+        border-radius: 14px;
+      }
+
+      .math-orbit span {
+        color: #b6fb79;
+        font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-style: normal;
+        font-weight: 900;
+        transform: translate(-50%, -54%) rotate(-5deg);
+      }
+
       .prep-coming {
         display: grid;
         min-height: 370px;
@@ -959,7 +984,7 @@
             <p class="section-number">02 / Prepare</p>
             <h2 id="prep-title">Study smart. <em>Stress less.</em></h2>
             <p class="section-description">
-              Focused practice for the next test. Geography is first; more subjects can slot right in.
+              Focused practice for the next test, with instant feedback and progress saved on the device.
             </p>
           </header>
 
@@ -980,9 +1005,21 @@
               <div class="globe" aria-hidden="true"><span>G</span></div>
             </a>
 
-            <div class="prep-coming reveal" aria-label="More test preparation subjects are coming">
-              <p>More subjects are already waiting for their turn.</p>
-            </div>
+            <a class="prep-card reveal" href="/ron/math/">
+              <div class="prep-card-copy">
+                <span class="card-kicker">Mathematics · Portuguese</span>
+                <h3>Ron’s Math Machine</h3>
+                <p>
+                  Unlimited 7th-grade practice, full simulations and step-by-step explanations.
+                </p>
+                <div class="prep-meta">
+                  <span>Unlimited questions</span>
+                  <span>Exam mode</span>
+                  <span>Saved progress</span>
+                </div>
+              </div>
+              <div class="globe math-orbit" aria-hidden="true"><span>∑</span></div>
+            </a>
           </div>
         </div>
       </section>
