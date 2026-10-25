@@ -12,6 +12,8 @@ const LAND = 1;
 const TRAIL = 2;
 const MAX_GARDEN_TARGET = 84;
 const LAND_BOT_GARDEN_TARGET = 82;
+const ICE_CUBE_LEVEL = 20;
+const ICE_FREEZE_DURATION = 4000;
 const SAVE_KEY = "shaked_landeater_save_v1";
 
 const DIRECTIONS = {
@@ -256,10 +258,13 @@ const game = {
   feverUntil: 0,
   shield: 0,
   slowUntil: 0,
+  enemiesFrozenUntil: 0,
   landBotSlowUntil: 0,
   lastPlayerMove: 0,
   nextPickupAt: 0,
   nextPickupType: null,
+  icePickupAt: 0,
+  icePickupPending: false,
 };
 
 function currentWorld() {
@@ -395,6 +400,7 @@ function spawnPickup(forceType = null) {
 function prepareLevel(level, keepScore = false) {
   game.level = Math.max(1, level);
   const difficulty = difficultyForLevel(game.level);
+  const levelStartedAt = performance.now();
   if (!keepScore) game.score = 0;
   game.scoreDecayElapsed = 0;
   game.levelStartScore = game.score;
@@ -406,13 +412,16 @@ function prepareLevel(level, keepScore = false) {
   game.feverUntil = 0;
   game.shield = 0;
   game.slowUntil = 0;
+  game.enemiesFrozenUntil = 0;
   game.landBotSlowUntil = 0;
   game.running = true;
   game.paused = false;
   game.resolving = false;
-  game.lastPlayerMove = performance.now();
-  game.nextPickupAt = performance.now() + difficulty.firstPickupDelay;
+  game.lastPlayerMove = levelStartedAt;
+  game.nextPickupAt = levelStartedAt + difficulty.firstPickupDelay;
   game.nextPickupType = difficulty.landBotActive ? "botSlow" : null;
+  game.icePickupAt = levelStartedAt + difficulty.firstPickupDelay + 3500;
+  game.icePickupPending = game.level >= ICE_CUBE_LEVEL;
 
   createBoard();
   resetPlayer();
@@ -424,13 +433,16 @@ function prepareLevel(level, keepScore = false) {
   worldName.textContent = currentWorld().name;
   levelLabel.textContent = `Level ${game.level} · ${difficulty.label}`;
   targetValue.textContent = String(game.target);
-  readyMessage.textContent = difficulty.landBotActive
-    ? `LAND BOT ALERT · Save ${difficulty.target}%`
-    : `${difficulty.label} · Save ${difficulty.target}%`;
+  readyMessage.textContent =
+    game.level === ICE_CUBE_LEVEL
+      ? `ICE CUBE UNLOCKED · Save ${difficulty.target}%`
+      : difficulty.landBotActive
+        ? `LAND BOT ALERT · Save ${difficulty.target}%`
+        : `${difficulty.label} · Save ${difficulty.target}%`;
   hideModal();
   updateHUD();
   announce(
-    `${currentWorld().name}, level ${game.level}. ${difficulty.enemyCount} shadows and ${difficulty.chaserCount} hunters.${difficulty.landBotActive ? " The Garden Bot now patrols the safe land." : ""} Save ${difficulty.target} percent. Swipe to begin.`,
+    `${currentWorld().name}, level ${game.level}. ${difficulty.enemyCount} shadows and ${difficulty.chaserCount} hunters.${difficulty.landBotActive ? " The Garden Bot now patrols the safe land." : ""}${game.level === ICE_CUBE_LEVEL ? " Ice Cube unlocked: freeze every shadow for four seconds." : ""} Save ${difficulty.target} percent. Swipe to begin.`,
   );
   playSound("start");
 }
@@ -478,6 +490,10 @@ function collectPickup(pickup, automatically = false) {
   } else if (pickup.type === "shield") {
     game.shield = Math.min(2, game.shield + 1);
     showBanner("Bow shield ready!");
+  } else if (pickup.type === "ice") {
+    game.enemiesFrozenUntil = performance.now() + ICE_FREEZE_DURATION;
+    showBanner("Ice Cube: shadows frozen!");
+    announce("Ice Cube activated. Every shadow is frozen for four seconds.");
   } else if (pickup.type === "botSlow") {
     game.landBotSlowUntil = performance.now() + 8000;
     showBanner("Robot cupcake: bot slowed!");
@@ -653,6 +669,7 @@ function loseLife(message) {
 }
 
 function moveEnemies(elapsed, time) {
+  if (game.enemiesFrozenUntil > time) return;
   const difficulty = difficultyForLevel(game.level);
   const slowFactor = game.slowUntil > time ? 0.47 : game.feverUntil > time ? 0.65 : 1;
 
@@ -1009,7 +1026,8 @@ function drawEnemy(enemy, time) {
   const unit = Math.min(box.width, box.height);
   const x = box.x;
   const y = box.y;
-  const pulse = 1 + Math.sin(time * 0.006 + enemy.phase) * 0.08;
+  const frozen = game.enemiesFrozenUntil > time;
+  const pulse = frozen ? 1 : 1 + Math.sin(time * 0.006 + enemy.phase) * 0.08;
 
   context.save();
   context.translate(x, y);
@@ -1024,8 +1042,8 @@ function drawEnemy(enemy, time) {
     else context.lineTo(px, py);
   }
   context.closePath();
-  context.fillStyle = enemy.type === "chaser" ? "#ff4f73" : "#8d69d4";
-  context.shadowColor = enemy.type === "chaser" ? "#ff4f73" : "#c3a6ff";
+  context.fillStyle = frozen ? "#8deaff" : enemy.type === "chaser" ? "#ff4f73" : "#8d69d4";
+  context.shadowColor = frozen ? "#dffcff" : enemy.type === "chaser" ? "#ff4f73" : "#c3a6ff";
   context.shadowBlur = unit * 0.8;
   context.fill();
   context.shadowBlur = 0;
@@ -1039,6 +1057,17 @@ function drawEnemy(enemy, time) {
   context.arc(-unit * 0.17, -unit * 0.04, unit * 0.065, 0, Math.PI * 2);
   context.arc(unit * 0.17, -unit * 0.04, unit * 0.065, 0, Math.PI * 2);
   context.fill();
+
+  if (frozen) {
+    context.strokeStyle = "rgba(255,255,255,0.9)";
+    context.lineWidth = Math.max(0.8, unit * 0.08);
+    context.beginPath();
+    context.moveTo(-unit * 0.55, -unit * 0.55);
+    context.lineTo(unit * 0.55, unit * 0.55);
+    context.moveTo(unit * 0.55, -unit * 0.55);
+    context.lineTo(-unit * 0.55, unit * 0.55);
+    context.stroke();
+  }
   context.restore();
 }
 
@@ -1124,6 +1153,11 @@ function drawPickup(pickup, time) {
     context.textAlign = "center";
     context.textBaseline = "middle";
     context.fillText("🎀", 0, 0);
+  } else if (pickup.type === "ice") {
+    context.font = `${unit * 1.2}px Arial`;
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText("🧊", 0, 0);
   } else if (pickup.type === "botSlow") {
     context.font = `${unit * 1.2}px Arial`;
     context.textAlign = "center";
@@ -1305,6 +1339,14 @@ function gameLoop(time) {
       game.scoreDecayElapsed -= seconds;
     }
     pickups = pickups.filter((pickup) => pickup.expiresAt > time);
+    if (
+      game.icePickupPending &&
+      time >= game.icePickupAt &&
+      pickups.length < difficulty.maxPickups
+    ) {
+      spawnPickup("ice");
+      game.icePickupPending = false;
+    }
     if (time >= game.nextPickupAt) {
       spawnPickup(game.nextPickupType);
       game.nextPickupType = null;
