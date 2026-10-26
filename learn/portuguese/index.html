@@ -1083,9 +1083,20 @@ function installBank(arr){bank=arr;bankFull=arr.length>=4900;bankById=new Map(ba
 async function fetchBank(){if(loadingBank)return;loadingBank=true;importStatus='Downloading European Portuguese words…';if(view==='home')home();let ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),18000);try{let resp=await fetch(SOURCE_URL,{signal:ctrl.signal,mode:'cors',cache:'no-store'});if(!resp.ok)throw Error('Download unavailable (HTTP '+resp.status+')');let result=parseGlossTSV(await resp.text());if(result.length<4900)throw Error('Only '+result.length+' words returned');installBank(result);if(view==='home'||view==='settings')render()}catch(e){importStatus='Full pack not loaded · '+(bankFull?'saved pack available':'starter available');notify('Could not download full pack. You can import glosses.tsv manually. '+e.message);if(view==='home')home()}finally{loadingBank=false;clearTimeout(timer)}}
 function norm(s){return String(s||'').toLocaleLowerCase('pt-PT').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'')}
 function primaryMeaning(en){let s=(en||'').split(';')[0].trim();return s.length>72?s.slice(0,69)+'…':s}
-// A word is eligible only when its review date has arrived, and seenIds makes
-// it impossible for the same word to appear twice in one three-minute run.
+// Correct words appear at most once per mission. A failed word is deliberately
+// queued again after several different questions, while it is still memorable.
+function queueFailedWord(activeSession,wordId){
+ const retryNumber=(activeSession.retryCounts.get(wordId)||0)+1;
+ activeSession.retryCounts.set(wordId,retryNumber);
+ const questionsBeforeRetry=Math.min(7,4+retryNumber-1);
+ activeSession.retryQueue.push({id:wordId,readyAt:activeSession.questions+questionsBeforeRetry});
+}
 function chooseWord(){
+ const retryIndex=session.retryQueue.findIndex(item=>item.readyAt<=session.questions);
+ if(retryIndex>=0){
+  const [{id}]=session.retryQueue.splice(retryIndex,1),retryWord=bankById.get(id);
+  if(retryWord)return retryWord;
+ }
  const p=player(),now=Date.now(),history=p.words||{},skill=estimatedSkillRank(p),seenThisRun=session.seenIds;
  const lower=Math.max(1,Math.round(skill-Math.max(120,skill*.22))),upper=Math.min(bank.length,Math.round(skill+Math.max(240,skill*.28)));
  const due=[],fresh=[],unseen=[];
@@ -1113,7 +1124,7 @@ function chooseWord(){
 function makeQuestion(w){let direction=session.mode==='recall'?'reverse':session.mode==='sprint'?'forward':Math.random()<.5?'reverse':'forward';let st=player().words[w.id];let kind=session.mode==='sprint'?'choice':(session.mode==='recall'&&Math.random()<.35)?'type':session.mode==='mixed'&&st?.streak>=2&&Math.random()<.35?'type':'choice';if(w.pos==='det'||w.pos==='pron'||w.pos==='mwe'||w.pt.length>20)kind='choice';if(kind==='type')direction='reverse';let answers=direction==='reverse'?w.pt:primaryMeaning(w.en),prompt=direction==='reverse'?primaryMeaning(w.en):w.pt;
  let cands=bank.filter(o=>o.id!==w.id&&o.pos===w.pos&&Math.abs(o.rank-w.rank)<1800&&norm(o.pt)!==norm(w.pt)&&norm(primaryMeaning(o.en))!==norm(primaryMeaning(w.en)));if(cands.length<3)cands=bank.filter(o=>o.id!==w.id&&norm(primaryMeaning(o.en))!==norm(primaryMeaning(w.en)));let options=[answers],seen=new Set([norm(answers)]),lim=0;while(options.length<4&&lim++<150){let o=cands[Math.floor(Math.random()*cands.length)];if(!o)break;let t=direction==='reverse'?o.pt:primaryMeaning(o.en);if(t&&!seen.has(norm(t))){options.push(t);seen.add(norm(t))}}if(options.length<4)kind='type',direction='reverse',prompt=primaryMeaning(w.en),answers=w.pt;
  options.sort(()=>Math.random()-.5);return{w,direction,kind,answer:answers,prompt,options,locked:false,started:Date.now()}}
-function startSession(mode){clearTimeout(feedbackTimeout);stopSessionClock();session={mode,remaining:180,questions:0,right:0,score:0,combo:0,bestCombo:0,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),current:null,paused:false,levelAtStart:estimatedSkillRank()};view='game';nextQuestion();intervalHandle=setInterval(tick,140)}
+function startSession(mode){clearTimeout(feedbackTimeout);stopSessionClock();session={mode,remaining:180,questions:0,right:0,score:0,combo:0,bestCombo:0,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),retryQueue:[],retryCounts:new Map(),current:null,paused:false,levelAtStart:estimatedSkillRank()};view='game';nextQuestion();intervalHandle=setInterval(tick,140)}
 let lastFrame=0;function tick(){if(!session||view!=='game')return;let t=performance.now();if(!lastFrame){lastFrame=t;return}if(document.hidden||session.paused){lastFrame=t;return}let dt=Math.min(.5,(t-lastFrame)/1000);lastFrame=t;session.remaining-=dt;if(session.remaining<=0){session.remaining=0;finishSession();return}let el=document.querySelector('#clock'),bar=document.querySelector('#timeFill');if(el)el.textContent=timerText(session.remaining);if(bar)bar.style.width=(100*session.remaining/180).toFixed(2)+'%'}function timerText(s){return `${Math.floor(s/60)}:${String(Math.ceil(s)%60).padStart(2,'0')}`}
 function stopSessionClock(){clearInterval(intervalHandle);intervalHandle=null;lastFrame=0;try{window.speechSynthesis?.cancel()}catch{}}
 function nextQuestion(){if(!session)return;if(session.remaining<=0)return finishSession();let w=chooseWord();if(!w)return finishSession();session.current=makeQuestion(w);game()}
@@ -1153,8 +1164,8 @@ function answer(given,clicked){
   }
   gain=(q.kind==='type'?20:10)+Math.min(25,s.combo*2);s.score+=gain;p.xp=(p.xp||0)+gain;
  }else{
-  s.combo=0;prior.wrong++;prior.retiredEasy=false;prior.streak=0;prior.verifiedDays=0;prior.lastCorrectDay='';prior.ease=Math.max(1.3,prior.ease-.18);prior.interval=0;prior.due=now+20*MIN;s.wrongIds.add(q.w.id);
-  reviewNote='Queued for a later mission — not again in this run.';
+  s.combo=0;prior.wrong++;prior.retiredEasy=false;prior.streak=0;prior.verifiedDays=0;prior.lastCorrectDay='';prior.ease=Math.max(1.3,prior.ease-.18);prior.interval=0;prior.due=now;s.wrongIds.add(q.w.id);queueFailedWord(s,q.w.id);
+  reviewNote='Coming back after a few other words.';
  }
  const newSkill=updateSkillEstimate(p,q.w,right);
  reviewNote+=` Level: ${skillBand(newSkill,p.skillAnswers)} · range ${newSkill}.`;
