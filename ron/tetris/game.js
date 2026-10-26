@@ -199,12 +199,15 @@ const dragonValue = document.getElementById("dragon-value");
 const dragonFill = document.getElementById("dragon-fill");
 const dragonButton = document.getElementById("dragon-button");
 const dragonPowerLabel = document.getElementById("dragon-power-label");
+const dragonEffect = document.getElementById("dragon-effect");
+const dragonMeter = dragonButton.closest(".dragon-meter");
 const hudDragonName = document.getElementById("hud-dragon-name");
 const hudShieldCount = document.getElementById("hud-shield-count");
 
 const pickaxeButton = document.getElementById("pickaxe-button");
 const tntButton = document.getElementById("tnt-button");
 const diamondButton = document.getElementById("diamond-button");
+const diamondEffect = document.getElementById("diamond-effect");
 const pickaxeCount = document.getElementById("pickaxe-count");
 const tntCount = document.getElementById("tnt-count");
 const diamondCount = document.getElementById("diamond-count");
@@ -310,6 +313,7 @@ let lastHudUpdate = 0;
 let dropAccumulator = 0;
 let audioContext = null;
 let bannerTimer = 0;
+let powerEffectTimer = 0;
 let primaryModalAction = null;
 let secondaryModalAction = null;
 
@@ -831,7 +835,7 @@ function usePickaxe() {
   game.inventory.pickaxe -= 1;
   game.score += 120;
   if (crystal) collectCrystals(1);
-  showBanner("Pickaxe strike");
+  showPowerFeedback("pickaxe", "PICKAXE — REMOVED 1 HIGH BLOCK", pickaxeButton);
   playSound("power");
   updateHUD();
   checkMissionComplete();
@@ -860,7 +864,7 @@ function useTnt() {
   game.inventory.tnt -= 1;
   game.score += 300;
   if (crystals) collectCrystals(crystals);
-  showBanner("TNT blast!");
+  showPowerFeedback("tnt", "TNT — BLASTED A 3 × 3 AREA", tntButton);
   playSound("power");
   updateHUD();
   checkMissionComplete();
@@ -870,7 +874,7 @@ function useDiamond() {
   if (!canUsePower("diamond")) return;
   game.inventory.diamond -= 1;
   game.slowUntil = performance.now() + 10000;
-  showBanner("Time slowed: 10 seconds");
+  showPowerFeedback("slow", "TIME CRYSTAL — SLOW FOR 10 SECONDS", diamondButton);
   playSound("crystal");
   updateHUD();
 }
@@ -887,7 +891,11 @@ function unleashDragon() {
   game.dragon = 0;
   const cleared = removeRows(occupiedRows);
   resolveClear(cleared, "dragon");
-  showBanner(`DRAGON MODE — ${evolution.waveRows}-ROW WAVE!`);
+  showPowerFeedback(
+    "dragon",
+    `DRAGON WAVE — CLEARED ${evolution.waveRows} BOTTOM ROWS`,
+    dragonButton,
+  );
   playSound("power");
 }
 
@@ -1306,8 +1314,10 @@ function updateHUD() {
   comboValue.textContent = `×${Math.max(0, game.combo + 1)}`;
   dragonPowerLabel.textContent = `${evolution.name} power`;
   dragonValue.textContent = `${game.dragon}%`;
+  dragonEffect.textContent = `Clears ${evolution.waveRows} bottom ${evolution.waveRows === 1 ? "row" : "rows"}`;
   dragonFill.style.width = `${game.dragon}%`;
   dragonButton.disabled = game.dragon < 100 || !game.running || game.paused;
+  dragonMeter.classList.toggle("is-ready", game.dragon >= 100 && game.running && !game.paused);
   pickaxeCount.textContent = `×${game.inventory.pickaxe}`;
   tntCount.textContent = `×${game.inventory.tnt}`;
   diamondCount.textContent = `×${game.inventory.diamond}`;
@@ -1317,7 +1327,19 @@ function updateHUD() {
     : "No shield";
   pickaxeButton.disabled = !canUsePower("pickaxe") || !board.flat().some(Boolean);
   tntButton.disabled = !canUsePower("tnt") || !board.flat().some(Boolean);
-  diamondButton.disabled = !canUsePower("diamond") || game.slowUntil > performance.now();
+  const slowSeconds = Math.max(0, Math.ceil((game.slowUntil - performance.now()) / 1000));
+  diamondButton.disabled = !canUsePower("diamond") || slowSeconds > 0;
+  diamondButton.classList.toggle("is-active", slowSeconds > 0);
+  boardFrame.classList.toggle("time-slowed", slowSeconds > 0);
+  diamondEffect.textContent = slowSeconds > 0 ? `Active · ${slowSeconds}s` : "Slow 10 sec";
+  pickaxeButton.setAttribute("aria-label", `Pickaxe: remove one high block. ${game.inventory.pickaxe} available`);
+  tntButton.setAttribute("aria-label", `TNT: blast a three by three area. ${game.inventory.tnt} available`);
+  diamondButton.setAttribute(
+    "aria-label",
+    slowSeconds > 0
+      ? `Time crystal active for ${slowSeconds} more seconds`
+      : `Time crystal: slow falling pieces for ten seconds. ${game.inventory.diamond} available`,
+  );
   soundButton.textContent = save.sound ? "♪" : "×";
   soundButton.setAttribute("aria-label", save.sound ? "Turn sound off" : "Turn sound on");
   drawPreviews();
@@ -1382,6 +1404,23 @@ function showBanner(message) {
   void eventBanner.offsetWidth;
   eventBanner.classList.add("show");
   bannerTimer = window.setTimeout(() => eventBanner.classList.remove("show"), 1350);
+}
+
+function showPowerFeedback(type, message, button) {
+  clearTimeout(powerEffectTimer);
+  const effectClasses = ["power-pickaxe", "power-tnt", "power-slow", "power-dragon"];
+  boardFrame.classList.remove(...effectClasses);
+  document.querySelectorAll(".power-button.is-using").forEach((item) => item.classList.remove("is-using"));
+  button?.classList.remove("is-using");
+  void boardFrame.offsetWidth;
+  boardFrame.classList.add(`power-${type}`);
+  button?.classList.add("is-using");
+  showBanner(message);
+  announce(message);
+  powerEffectTimer = window.setTimeout(() => {
+    boardFrame.classList.remove(...effectClasses);
+    button?.classList.remove("is-using");
+  }, 760);
 }
 
 function showModal(options) {
@@ -1514,6 +1553,16 @@ function clearGesture(pointerId = null) {
   gestureStart = null;
 }
 
+function pointerHitsActivePiece(clientX, clientY) {
+  if (!activePiece) return false;
+  const bounds = gameCanvas.getBoundingClientRect();
+  const boardColumn = Math.floor(((clientX - bounds.left) / bounds.width) * BOARD_COLUMNS);
+  const boardRow = Math.floor(((clientY - bounds.top) / bounds.height) * BOARD_ROWS);
+  const localRow = boardRow - activePiece.row;
+  const localColumn = boardColumn - activePiece.column;
+  return Boolean(activePiece.matrix[localRow]?.[localColumn]);
+}
+
 gameCanvas.addEventListener("pointerdown", (event) => {
   if (!event.isPrimary) return;
   event.preventDefault();
@@ -1547,22 +1596,24 @@ gameCanvas.addEventListener("pointerup", (event) => {
   const horizontalDistance = Math.abs(deltaX);
   const verticalDistance = Math.abs(deltaY);
   const elapsed = Math.max(1, performance.now() - gestureStart.startTime);
-  const downwardSpeed = deltaY / elapsed;
-  const minimumSwipe = 12;
+  const minimumSwipe = 14;
 
-  if (horizontalDistance >= minimumSwipe && horizontalDistance >= verticalDistance) {
+  if (
+    horizontalDistance < minimumSwipe &&
+    verticalDistance < minimumSwipe &&
+    elapsed <= 500 &&
+    pointerHitsActivePiece(event.clientX, event.clientY)
+  ) {
+    rotatePiece();
+  } else if (horizontalDistance >= minimumSwipe && horizontalDistance >= verticalDistance) {
     const moves = Math.max(1, Math.min(5, Math.round(horizontalDistance / 28)));
     for (let move = 0; move < moves; move += 1) movePiece(Math.sign(deltaX));
   } else if (deltaY <= -minimumSwipe) {
     rotatePiece();
   } else if (deltaY >= minimumSwipe) {
-    const isFullDrop = deltaY >= 130 || (deltaY >= 82 && downwardSpeed >= 0.85);
-    if (isFullDrop) {
-      hardDrop();
-    } else {
-      const rows = Math.max(2, Math.min(8, Math.round(deltaY / 16)));
-      softDropRows(rows);
-    }
+    // Mobile downward gestures only glide. They never hard-drop or lock a piece.
+    const rows = Math.max(1, Math.min(6, Math.round(deltaY / 24)));
+    softDropRows(rows);
   }
 
   clearGesture(event.pointerId);

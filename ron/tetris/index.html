@@ -24,7 +24,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=10" />
+    <link rel="stylesheet" href="./styles.css?v=11" />
   </head>
 
   <body data-world="0">
@@ -207,16 +207,17 @@
               <div class="dragon-meter-copy">
                 <span id="dragon-power-label">Dragon power</span>
                 <strong id="dragon-value">0%</strong>
+                <small id="dragon-effect">Clears the bottom rows</small>
               </div>
               <div class="dragon-track"><i id="dragon-fill"></i></div>
-              <button id="dragon-button" type="button" disabled>Unleash</button>
+              <button id="dragon-button" type="button" disabled>Clear rows</button>
             </div>
 
             <p class="swipe-guide" aria-label="Touch controls">
               <span>← → move</span>
               <span>↑ rotate</span>
-              <span>↓ boost</span>
-              <span>flick ↓ drop</span>
+              <span>tap piece · rotate</span>
+              <span>↓ glide safely</span>
             </p>
           </section>
 
@@ -231,19 +232,22 @@
               <small id="hud-shield-count">No shield</small>
             </div>
             <div class="power-grid" aria-label="Power-up inventory">
-              <button class="power-button" id="pickaxe-button" type="button">
+              <button class="power-button" id="pickaxe-button" type="button" aria-label="Pickaxe: remove one high block">
                 <span aria-hidden="true">⛏</span>
                 <strong>Pickaxe</strong>
+                <em>Remove 1 block</em>
                 <small id="pickaxe-count">×1</small>
               </button>
-              <button class="power-button" id="tnt-button" type="button">
+              <button class="power-button" id="tnt-button" type="button" aria-label="TNT: blast a three by three area">
                 <span aria-hidden="true">TNT</span>
                 <strong>Blast</strong>
+                <em>Clear 3 × 3</em>
                 <small id="tnt-count">×0</small>
               </button>
-              <button class="power-button" id="diamond-button" type="button">
+              <button class="power-button" id="diamond-button" type="button" aria-label="Time crystal: slow falling pieces for ten seconds">
                 <span aria-hidden="true">◆</span>
                 <strong>Slow time</strong>
+                <em id="diamond-effect">Slow 10 sec</em>
                 <small id="diamond-count">×0</small>
               </button>
             </div>
@@ -271,6 +275,6 @@
     </div>
 
     <div class="sr-only" id="announcer" aria-live="assertive"></div>
-    <script src="./game.js?v=10"></script>
+    <script src="./game.js?v=11"></script>
   </body>
 </html>
