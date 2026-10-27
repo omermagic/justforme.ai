@@ -1,7 +1,7 @@
 // Normal visits check GitHub Pages for a new release, but never leave the app
 // hanging on a weak connection. Assets remain available from the local shell.
 const CACHE_PREFIX='palavra-quest-shell-';
-const RELEASE='20';
+const RELEASE='21';
 const CACHE=CACHE_PREFIX+'v'+RELEASE;
 const SHELL=['./index.html','./manifest.webmanifest','./icon.svg'];
 const NAVIGATION_TIMEOUT_MS=4500;
