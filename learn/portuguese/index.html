@@ -1514,7 +1514,8 @@ let prefs=lsRead(PREF_KEY,{sound:true});let bank=Array.isArray(EMBEDDED_BANK)&&E
 let bankFull=Array.isArray(bank)&&bank.length>=4900;if(!bankFull)bank=START_WORDS;
 let bankById=new Map(bank.map(w=>[w.id,w]));let importStatus=bankFull?'5,000-word pack installed':'Starter pack ready · full pack not installed';
 let clozeCatalogCache=null,clozeCatalogBank=null,clozeCardsByWordCache=null;
-let view='home',session=null,uiMessage='',loadingBank=false,feedbackTimeout=0,intervalHandle=null, audio=null;
+let view='home',session=null,uiMessage='',loadingBank=false,feedbackTimeout=0,intervalHandle=null,audio=null;
+let speechGapTimer=0,speechGeneration=0,sentenceSpeechActive=false,queuedAutomaticSpeech='';
 function saveProgress(){if(!lsWrite(PROGRESS_KEY,learning))notify('Storage is full or blocked. Export your progress, and allow site storage.')}function savePrefs(){lsWrite(PREF_KEY,prefs)}
 function localProgress(){return learning}
 function dayKey(){let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
@@ -1696,7 +1697,11 @@ function makeQuestion(w,preferCloze=false){if(preferCloze){let cloze=makeClozeQu
  options=shuffled(options);return{w,direction,kind,answer:answers,prompt,options,locked:false,started:Date.now()}}
 function startSession(mode){clearTimeout(feedbackTimeout);stopSessionClock();session={mode,remaining:180,accountedSeconds:0,masteredAtStart:metrics().known,questions:0,right:0,combo:0,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),retryQueue:[],retryCounts:new Map(),current:null,paused:false,levelAtStart:estimatedSkillRank()};view='game';nextQuestion();intervalHandle=setInterval(tick,140)}
 let lastFrame=0;function tick(){if(!session||view!=='game')return;let t=performance.now();if(!lastFrame){lastFrame=t;return}if(document.hidden||session.paused){lastFrame=t;return}let dt=Math.min(.5,(t-lastFrame)/1000);lastFrame=t;session.remaining-=dt;recordSessionTime();if(session.remaining<=0){session.remaining=0;finishSession();return}let el=document.querySelector('#clock'),bar=document.querySelector('#timeFill');if(el)el.textContent=timerText(session.remaining);if(bar)bar.style.width=(100*session.remaining/180).toFixed(2)+'%'}function timerText(s){return `${Math.floor(s/60)}:${String(Math.ceil(s)%60).padStart(2,'0')}`}
-function stopSessionClock(){clearInterval(intervalHandle);intervalHandle=null;lastFrame=0;try{window.speechSynthesis?.cancel()}catch{}}
+function resetSpeech(){
+ clearTimeout(speechGapTimer);speechGapTimer=0;sentenceSpeechActive=false;queuedAutomaticSpeech='';speechGeneration++;
+ try{window.speechSynthesis?.cancel()}catch{}
+}
+function stopSessionClock(){clearInterval(intervalHandle);intervalHandle=null;lastFrame=0;resetSpeech()}
 function recordSessionTime(force=false){
  if(!session)return;
  const elapsed=Math.max(0,Math.floor(180-session.remaining)),delta=elapsed-(session.accountedSeconds||0);
@@ -1706,13 +1711,41 @@ function recordSessionTime(force=false){
 function nextQuestion(){if(!session)return;if(session.remaining<=0)return finishSession();const retryReady=session.retryQueue.some(item=>item.readyAt<=session.questions),clozeChance=session.mode==='recall'?0.22:session.mode==='sprint'?0.3:0.34,wantsCloze=!retryReady&&Math.random()<clozeChance;let w=wantsCloze?chooseClozeWord():null;if(!w)w=chooseWord();if(!w)return finishSession();session.current=makeQuestion(w,wantsCloze);game()}
 function questionPromptHTML(q){return q.direction==='cloze'?safe(q.prompt).replace('___','<span class="sentence-blank">_____</span>'):safe(q.prompt)}
 function game(){if(!session)return view='home',render();let s=session,q=s.current,w=q?.w;if(!q)return;let label=q.direction==='cloze'?'COMPLETE THE SENTENCE':q.kind==='type'?'SPELL IT IN PORTUGUESE':q.direction==='reverse'?'ENGLISH → PORTUGUESE':'PORTUGUESE → ENGLISH';shell(`<main class="game-shell"><div class="game-head"><button class="btn btn-ghost btn-small" id="exitSession">← End run</button><div class="game-metrics"><div class="metric clock"><small>⏱</small><span id="clock">${timerText(s.remaining)}</span></div><div class="metric combo"><small>🔥</small><span id="combo">${s.combo} combo</span></div><div class="metric"><small>🧠</small><span id="mastered">${metrics().known} mastered</span></div></div></div><div class="track"><div class="fill" id="timeFill" style="width:${100*s.remaining/180}%"></div></div><div class="question"><div class="question-top"><span class="qtype">${label}</span><span class="rank">WORD ${w.rank.toLocaleString()} · ${safe(w.pos)}</span></div><div class="word${q.direction==='cloze'?' cloze-sentence':''}">${questionPromptHTML(q)}</div><div class="word-sub">${q.direction==='cloze'?`🇬🇧 ${safe(q.hint)}`:q.kind==='type'?'Type the Portuguese word or phrase':q.direction==='reverse'?'Which Portuguese word matches?':'What does this mean in English?'}</div><button class="listen" id="listenBtn" title="Play European Portuguese pronunciation">${q.direction==='forward'?'🔊 Hear again':q.direction==='cloze'?'🔊 Hear the missing word':'🔊 Hear Portuguese (hint)'}</button>${q.kind==='choice'?`<div class="choices">${q.options.map((o,i)=>`<button class="choice" data-choice="${i}"><span class="letter">${'ABCD'[i]}</span><span>${safe(o)}</span></button>`).join('')}</div><div style="text-align:center;margin-top:14px"><button class="btn btn-outline btn-small" id="dontKnowChoice">🤷 I don't know yet</button></div>`:`<div class="type-wrap"><input autocomplete="off" autocapitalize="off" spellcheck="false" class="type-input" id="typedAnswer" placeholder="Write the Portuguese answer" aria-label="Answer"><div class="type-actions"><button class="btn btn-primary" id="submitTyped">Check answer ↗</button><button class="btn btn-ghost" id="dontKnow">Not sure</button></div></div>`}<div class="feedback hidden" id="feedback" role="status"></div><div class="tip" id="tipLine">${session.mode==='sprint'?'Choose quickly to build a combo!':'Wrong answers are not failures: they teach the scheduler what to bring back.'}</div></div><div class="backline"><span>${s.questions} answers this run · ${s.newIds.size} new words</span><span>🇵🇹 Offline-friendly</span></div></main>`);
- document.querySelector('#exitSession').onclick=()=>{if(confirm('End your run early? Your answered words are already saved.'))finishSession()};document.querySelector('#listenBtn').onclick=()=>speakPortuguese(q.locked&&q.completeSentence?q.completeSentence:w.pt);
+ document.querySelector('#exitSession').onclick=()=>{if(confirm('End your run early? Your answered words are already saved.'))finishSession()};document.querySelector('#listenBtn').onclick=()=>{const completedSentence=Boolean(q.locked&&q.completeSentence);speakPortuguese(completedSentence?q.completeSentence:w.pt,false,completedSentence)};
  if(q.kind==='choice'){document.querySelectorAll('[data-choice]').forEach(btn=>btn.onclick=()=>answer(q.options[Number(btn.dataset.choice)],btn));document.querySelector('#dontKnowChoice').onclick=()=>answer('',null,true)}else{let input=document.querySelector('#typedAnswer');document.querySelector('#submitTyped').onclick=()=>answer(input.value.trim(),null);document.querySelector('#dontKnow').onclick=()=>answer('',null,true);input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();answer(input.value.trim(),null)}};setTimeout(()=>{if(view==='game'&&!q.locked)input.focus({preventScroll:true})},70)}
  // Portuguese-to-English: pronounce the prompt on arrival. English-to-Portuguese:
  // wait until the answer so speech does not give away the recall challenge.
  if(prefs.sound&&q.direction==='forward')speakPortuguese(w.pt,true);
 }
-function speakPortuguese(word,automatic=false){if(!('speechSynthesis'in window)){if(!automatic)notify('Speech is unavailable on this browser.');return}try{speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(word);u.lang='pt-PT';u.rate=.84;let voices=speechSynthesis.getVoices();let voice=voices.find(v=>v.lang.toLowerCase()==='pt-pt')||voices.find(v=>v.lang.toLowerCase().startsWith('pt'));if(voice)u.voice=voice;speechSynthesis.speak(u)}catch{if(!automatic)notify('Could not start speech playback.')}}
+function speakPortuguese(word,automatic=false,pauseAfterSentence=false){
+ if(!('speechSynthesis'in window)){if(!automatic)notify('Speech is unavailable on this browser.');return}
+ // A new question can appear before its completed sentence has finished.
+ // Keep only that question's latest prompt, then play it after a quiet second.
+ if(automatic&&!pauseAfterSentence&&(sentenceSpeechActive||speechGapTimer)){
+  queuedAutomaticSpeech=word;return;
+ }
+ clearTimeout(speechGapTimer);speechGapTimer=0;queuedAutomaticSpeech='';sentenceSpeechActive=false;
+ const generation=++speechGeneration;
+ try{
+  speechSynthesis.cancel();
+  let u=new SpeechSynthesisUtterance(word);u.lang='pt-PT';u.rate=.84;
+  let voices=speechSynthesis.getVoices();let voice=voices.find(v=>v.lang.toLowerCase()==='pt-pt')||voices.find(v=>v.lang.toLowerCase().startsWith('pt'));if(voice)u.voice=voice;
+  if(pauseAfterSentence){
+   sentenceSpeechActive=true;let finished=false;
+   const finish=()=>{
+    if(finished||generation!==speechGeneration)return;
+    finished=true;sentenceSpeechActive=false;
+    speechGapTimer=setTimeout(()=>{
+     if(generation!==speechGeneration)return;
+     speechGapTimer=0;const nextWord=queuedAutomaticSpeech;queuedAutomaticSpeech='';
+     if(nextWord)speakPortuguese(nextWord,true);
+    },1000);
+   };
+   u.onend=finish;u.onerror=finish;
+  }
+  speechSynthesis.speak(u);
+ }catch{sentenceSpeechActive=false;if(!automatic)notify('Could not start speech playback.')}
+}
 function beep(correct){if(!prefs.sound)return;try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();let o=audio.createOscillator(),g=audio.createGain(),t=audio.currentTime;o.type='sine';o.frequency.setValueAtTime(correct?590:210,t);o.frequency.exponentialRampToValueAtTime(correct?940:170,t+.11);g.gain.setValueAtTime(.035,t);g.gain.exponentialRampToValueAtTime(.0001,t+.18);o.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+.2)}catch{}}
 // Confident answers to words far below the current range retire those words.
 // Other correct answers use long, expanding review intervals.
@@ -1722,6 +1755,9 @@ function answer(given,clicked,skipped=false){
  // An empty typed submission is ignored, but the explicit "Not sure" action
  // must be graded as a miss so the answer is revealed and scheduled again.
  if(q.locked||q.kind==='type'&&!given&&!skipped)return;
+ // If this prompt was waiting behind the previous sentence and the learner
+ // already answered it, do not read the stale word later.
+ if(q.direction==='forward')queuedAutomaticSpeech='';
  const right=norm(given)===norm(q.answer),now=Date.now(),p=localProgress(),skillBefore=estimatedSkillRank(p),responseMs=now-q.started;
  const prior=p.words[q.w.id]||{seen:0,right:0,wrong:0,streak:0,interval:0,ease:2.2,due:0};
  const newWord=prior.seen===0,wasMastered=isMastered(prior);
@@ -1751,7 +1787,7 @@ function answer(given,clicked,skipped=false){
  // Reveal and pronounce the natural sentence after a cloze answer. Reverse
  // questions still pronounce the Portuguese word only after grading.
  if(q.direction==='cloze'){let wordEl=document.querySelector('.word');if(wordEl)wordEl.textContent=q.completeSentence}
- if(prefs.sound&&q.direction==='cloze')speakPortuguese(q.completeSentence,true);else if(prefs.sound&&q.direction==='reverse')speakPortuguese(q.w.pt,true);
+ if(prefs.sound&&q.direction==='cloze')speakPortuguese(q.completeSentence,true,true);else if(prefs.sound&&q.direction==='reverse')speakPortuguese(q.w.pt,true);
  const listenBtn=document.querySelector('#listenBtn');if(listenBtn)listenBtn.textContent='🔊 Hear again';
  if(q.kind==='choice'){document.querySelector('#dontKnowChoice')?.setAttribute('disabled','');document.querySelectorAll('[data-choice]').forEach((el)=>{el.disabled=true;let t=q.options[Number(el.dataset.choice)];if(norm(t)===norm(q.answer))el.classList.add('correct');else if(el===clicked)el.classList.add('wrong');else el.classList.add('muted')})}else{document.querySelector('#typedAnswer')?.setAttribute('disabled','');document.querySelector('#submitTyped')?.setAttribute('disabled','');document.querySelector('#dontKnow')?.setAttribute('disabled','')}
  let f=document.querySelector('#feedback');let display=`<div><strong>${right?(newlyMastered?'✨ Word mastered!':'✨ Nailed it!'):`💡 ${safe(q.w.pt)} = ${safe(primaryMeaning(q.w.en))}`}</strong>${right?`${safe(q.w.pt)} = ${safe(primaryMeaning(q.w.en))}`:`Remember: ${safe(q.w.pt)} means ${safe(primaryMeaning(q.w.en))}.`}<br><small>${safe(reviewNote)}</small></div><div class="ficon">${right?'✅':'🧩'}</div>`;f.innerHTML=display;f.classList.remove('hidden');f.classList.add(right?'good':'bad');document.querySelector('#combo').textContent=s.combo+' combo';document.querySelector('#mastered').textContent=metrics(p).known+' mastered';
