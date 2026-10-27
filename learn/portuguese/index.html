@@ -1497,7 +1497,12 @@ function lsRead(key,fallback){try{let x=localStorage.getItem(key);return x?JSON.
 function lsWrite(key,data){try{localStorage.setItem(key,JSON.stringify(data));return true}catch{return false}}
 function normalizeProgress(raw={}){
  const start=[1,301,1501].includes(Number(raw.start))?Number(raw.start):1;
- const progress={start,words:raw.words&&typeof raw.words==='object'?raw.words:{},totalSeconds:Number(raw.totalSeconds)||0,hist:raw.hist&&typeof raw.hist==='object'?raw.hist:{},created:Number(raw.created)||Date.now()};
+ const words={};
+ if(raw.words&&typeof raw.words==='object'&&!Array.isArray(raw.words)){
+  for(const [id,state] of Object.entries(raw.words))if(state&&typeof state==='object'&&!Array.isArray(state))words[id]=state;
+ }
+ const hist=raw.hist&&typeof raw.hist==='object'&&!Array.isArray(raw.hist)?raw.hist:{};
+ const progress={start,words,totalSeconds:Math.max(0,Number(raw.totalSeconds)||0),hist,created:Number(raw.created)||Date.now()};
  if(Number.isFinite(raw.skillRank))progress.skillRank=raw.skillRank;
  if(Number.isFinite(raw.skillAnswers))progress.skillAnswers=raw.skillAnswers;
  return progress;
@@ -1510,7 +1515,8 @@ function loadDeviceProgress(){
  const migrated=normalizeProgress(previous||{});lsWrite(PROGRESS_KEY,migrated);return migrated;
 }
 let learning=loadDeviceProgress();
-let prefs=lsRead(PREF_KEY,{sound:true});let bank=Array.isArray(EMBEDDED_BANK)&&EMBEDDED_BANK.length>=4900?EMBEDDED_BANK:lsRead(BANK_CACHE_KEY,null);
+let prefs=lsRead(PREF_KEY,{sound:true});if(!prefs||typeof prefs!=='object'||Array.isArray(prefs))prefs={sound:true};else prefs.sound=prefs.sound!==false;
+let bank=Array.isArray(EMBEDDED_BANK)&&EMBEDDED_BANK.length>=4900?EMBEDDED_BANK:lsRead(BANK_CACHE_KEY,null);
 let bankFull=Array.isArray(bank)&&bank.length>=4900;if(!bankFull)bank=START_WORDS;
 let bankById=new Map(bank.map(w=>[w.id,w]));let importStatus=bankFull?'5,000-word pack installed':'Starter pack ready · full pack not installed';
 let clozeCatalogCache=null,clozeCatalogBank=null,clozeCardsByWordCache=null;
@@ -1803,7 +1809,7 @@ function finishSession(){if(!session)return;clearTimeout(feedbackTimeout);record
 function result(){let s=session,m=metrics(),accuracy=s.questions?Math.round(100*s.right/s.questions):0,elapsed=Math.min(180,Math.max(0,180-s.remaining)),masteredThisRun=Math.max(0,m.known-s.masteredAtStart);let heading=s.questions===0?'Adventure paused':accuracy>=85?'Brilliant run!':accuracy>=60?"You're building momentum!":'Every word is progress!';shell(`<main class="center-panel"><div class="big-emoji">${accuracy>=85&&s.questions?'🏆':accuracy>=60?'🚀':'🧭'}</div><div class="eyebrow">THREE-MINUTE QUEST COMPLETE</div><h1>${heading}</h1><p>Your vocabulary map just got smarter. Missed words will return sooner; known words will wait until you need them again.</p><div class="result-grid"><div class="result-stat"><b>${formatSessionTime(elapsed)}</b><span>PRACTISED</span></div><div class="result-stat"><b>${s.right}/${s.questions}</b><span>CORRECT</span></div><div class="result-stat"><b>${masteredThisRun}</b><span>MASTERED</span></div></div><div class="info" style="text-align:left"><b>🧠 Learning progress</b><br>${s.wrongIds.size} tricky word${s.wrongIds.size===1?'':'s'} queued for extra practice · ${m.known} words mastered overall · ${formatStudyTime(m.totalSeconds)} total active practice</div><div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:25px"><button id="playAgain" class="btn btn-primary">⚡ One more mission</button><button id="backHome" class="btn btn-ghost">Dashboard</button></div></main>`);document.querySelector('#playAgain').onclick=()=>startSession(s.mode);document.querySelector('#backHome').onclick=()=>{session=null;view='home';render()}}
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view==='game'&&session?.current?.kind==='choice'&&!session.current.locked&&['1','2','3','4'].includes(e.key)){let el=document.querySelectorAll('[data-choice]')[Number(e.key)-1];if(el)el.click()}});
-render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=20',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
