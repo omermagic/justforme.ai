@@ -43,6 +43,7 @@ gtag('js',new Date());gtag('config','G-E3JJGMR427');
 .stats{grid-template-columns:repeat(5,minmax(0,1fr))}
 .feedback small{color:rgba(244,247,255,.78);font-size:11px;font-weight:650}
 .word.cloze-sentence{font-size:clamp(25px,3.7vw,40px);line-height:1.28;letter-spacing:-.035em;max-width:720px;margin-left:auto;margin-right:auto}.sentence-blank{display:inline-block;min-width:112px;color:var(--gold);letter-spacing:.08em;border-bottom:3px solid #ffc96b99;line-height:1}
+.word.listening-word{margin-top:19px}.listening-prompt{display:flex;flex-direction:column;align-items:center;gap:5px}.listening-prompt span{width:82px;height:82px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 28%,#c7fff1,#54ddc6 55%,#25889a);font-size:39px;box-shadow:0 0 0 10px #54e6c41a,0 14px 42px #0007}.listening-prompt small{font-size:15px;letter-spacing:.04em;color:#d6fff5}
 .fluency-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}.fluency-head h3{font-size:22px;margin:7px 0 0}.fluency-percent{font-size:52px;line-height:.9;font-weight:950;letter-spacing:-.07em;color:var(--gold);white-space:nowrap}.fluency-percent small{font-size:22px;letter-spacing:-.02em}.fluency-bar{height:18px;border-radius:999px;padding:3px;background:#071a2f;border:1px solid #80d7c34d;overflow:hidden;box-shadow:inset 0 2px 8px #0008}.fluency-bar span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#36d5b1,#92f6cf 60%,#ffd477);box-shadow:0 0 20px #54ebbd88;transition:width .6s ease}.fluency-milestones{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#91abc2;font-size:11px;margin-top:11px}.fluency-milestones b{color:var(--mint)}
 @media(max-width:800px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.fluency-percent{font-size:42px}.fluency-head h3{font-size:18px}.fluency-milestones span:nth-child(2){display:none}.word.cloze-sentence{font-size:25px}.sentence-blank{min-width:82px}}
@@ -1685,6 +1686,44 @@ function chooseClozeWord(){
  return word;
 }
 function shuffled(items){let result=[...items];for(let i=result.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]]}return result}
+const LISTENING_CHANCE=.28;
+const MEANING_FAMILIES=[
+ /\b(mother|father|parent|brother|sister|son|daughter|husband|wife|family|grandmother|grandfather)\b/i,
+ /\b(man|woman|person|people|child|children|boy|girl|friend|neighbour|student|teacher|doctor|worker)\b/i,
+ /\b(day|week|month|year|morning|afternoon|evening|night|today|tomorrow|yesterday|hour|minute|time)\b/i,
+ /\b(home|house|room|kitchen|bedroom|bathroom|door|window|garden|building|apartment|flat)\b/i,
+ /\b(city|town|village|street|road|country|place|school|hospital|shop|store|office|station|airport)\b/i,
+ /\b(food|bread|meat|fish|fruit|vegetable|water|milk|coffee|tea|wine|meal|breakfast|lunch|dinner)\b/i,
+ /\b(head|face|eye|ear|mouth|hand|arm|leg|foot|heart|body|hair|blood)\b/i,
+ /\b(happy|sad|angry|afraid|calm|tired|surprised|worried|pleased|feeling|emotion|love|hate)\b/i,
+ /\b(big|small|large|little|long|short|high|low|wide|narrow|heavy|light)\b/i,
+ /\b(good|bad|better|worse|right|wrong|easy|difficult|important|possible|necessary|useful)\b/i,
+ /\b(red|blue|green|yellow|black|white|brown|grey|color|colour|dark|bright)\b/i,
+ /\b(hot|cold|warm|cool|dry|wet|weather|rain|sun|wind|snow|cloud|storm)\b/i,
+ /\b(go|come|walk|run|arrive|leave|enter|return|travel|drive|fly|bring|take|move)\b/i,
+ /\b(say|tell|speak|talk|ask|answer|call|write|read|explain|conversation|word|language)\b/i,
+ /\b(know|think|remember|forget|understand|learn|believe|decide|choose|idea|reason|mind)\b/i,
+ /\b(see|look|watch|hear|listen|feel|touch|smell|taste|notice|show)\b/i,
+ /\b(work|study|teach|buy|sell|pay|cost|money|job|business|company|service|price)\b/i,
+ /\b(tree|flower|plant|animal|dog|cat|bird|sea|river|mountain|earth|nature|forest)\b/i
+];
+function meaningFamilyIds(meaning){let ids=[];MEANING_FAMILIES.forEach((pattern,index)=>{if(pattern.test(meaning))ids.push(index)});return ids}
+function listeningCandidates(w){
+ const target=primaryMeaning(w.en),targetFamilies=meaningFamilyIds(target),targetWords=target.split(/\s+/).length;
+ const candidates=bank.filter(other=>other.id!==w.id&&other.pos===w.pos&&norm(primaryMeaning(other.en))!==norm(target));
+ const scored=candidates.map(other=>{
+  const meaning=primaryMeaning(other.en),families=meaningFamilyIds(meaning),shared=targetFamilies.filter(id=>families.includes(id)).length;
+  const rankCloseness=Math.max(0,500-Math.abs(other.rank-w.rank)/4);
+  const lengthCloseness=Math.max(0,120-Math.abs(meaning.length-target.length)*10);
+  const wordShape=meaning.split(/\s+/).length===targetWords?80:0;
+  return{other,shared,score:shared*2500+rankCloseness+lengthCloseness+wordShape};
+ }).sort((a,b)=>b.score-a.score);
+ const sameFamily=scored.filter(item=>item.shared>0);
+ return(sameFamily.length>=3?sameFamily:scored).map(item=>item.other);
+}
+function shouldUseListeningQuestion(wordState){
+ return prefs.sound&&'speechSynthesis'in window&&!isMastered(wordState)&&Math.random()<LISTENING_CHANCE;
+}
 function makeClozeQuestion(w){
  const cards=getClozeCardsByWord().get(w.id),card=cards?.[Math.floor(Math.random()*cards.length)];
  if(!card)return null;
@@ -1698,9 +1737,21 @@ function makeClozeQuestion(w){
  if(options.length!==4)return null;
  return{w,direction:'cloze',kind:'choice',answer:w.pt,prompt:card.sentence,hint:card.hint,completeSentence:card.sentence.replace('___',w.pt),options,locked:false,hintUsed:false,started:Date.now()};
 }
-function makeQuestion(w,preferCloze=false){if(preferCloze){let cloze=makeClozeQuestion(w);if(cloze)return cloze}let direction=session.mode==='recall'?'reverse':session.mode==='sprint'?'forward':Math.random()<.5?'reverse':'forward';let st=localProgress().words[w.id];let kind=session.mode==='sprint'?'choice':(session.mode==='recall'&&Math.random()<.35)?'type':session.mode==='mixed'&&st?.streak>=2&&Math.random()<.35?'type':'choice';if(w.pos==='det'||w.pos==='pron'||w.pos==='mwe'||w.pt.length>20)kind='choice';if(kind==='type')direction='reverse';let answers=direction==='reverse'?w.pt:primaryMeaning(w.en),prompt=direction==='reverse'?primaryMeaning(w.en):w.pt;
- let cands=bank.filter(o=>o.id!==w.id&&o.pos===w.pos&&Math.abs(o.rank-w.rank)<1800&&norm(o.pt)!==norm(w.pt)&&norm(primaryMeaning(o.en))!==norm(primaryMeaning(w.en)));if(cands.length<3)cands=bank.filter(o=>o.id!==w.id&&norm(primaryMeaning(o.en))!==norm(primaryMeaning(w.en)));let options=[answers],seen=new Set([norm(answers)]),lim=0;while(options.length<4&&lim++<150){let o=cands[Math.floor(Math.random()*cands.length)];if(!o)break;let t=direction==='reverse'?o.pt:primaryMeaning(o.en);if(t&&!seen.has(norm(t))){options.push(t);seen.add(norm(t))}}if(options.length<4)kind='type',direction='reverse',prompt=primaryMeaning(w.en),answers=w.pt;
- options=shuffled(options);return{w,direction,kind,answer:answers,prompt,options,locked:false,hintUsed:false,started:Date.now()}}
+function makeQuestion(w,preferCloze=false){
+ if(preferCloze){const cloze=makeClozeQuestion(w);if(cloze)return cloze}
+ const wordState=localProgress().words[w.id],listening=shouldUseListeningQuestion(wordState);
+ let direction=listening?'listen':session.mode==='recall'?'reverse':session.mode==='sprint'?'forward':Math.random()<.5?'reverse':'forward';
+ let kind=listening||session.mode==='sprint'?'choice':(session.mode==='recall'&&Math.random()<.35)?'type':session.mode==='mixed'&&wordState?.streak>=2&&Math.random()<.35?'type':'choice';
+ if(w.pos==='det'||w.pos==='pron'||w.pos==='mwe'||w.pt.length>20)kind='choice';
+ if(kind==='type')direction='reverse';
+ let answer=direction==='reverse'?w.pt:primaryMeaning(w.en),prompt=direction==='reverse'?primaryMeaning(w.en):direction==='listen'?'':w.pt;
+ let candidates=direction==='listen'?shuffled(listeningCandidates(w).slice(0,28)):bank.filter(other=>other.id!==w.id&&other.pos===w.pos&&Math.abs(other.rank-w.rank)<1800&&norm(other.pt)!==norm(w.pt)&&norm(primaryMeaning(other.en))!==norm(primaryMeaning(w.en)));
+ if(candidates.length<3)candidates=bank.filter(other=>other.id!==w.id&&norm(primaryMeaning(other.en))!==norm(primaryMeaning(w.en)));
+ const options=[answer],seen=new Set([norm(answer)]);let attempts=0;
+ while(options.length<4&&attempts++<150){const other=candidates[Math.floor(Math.random()*candidates.length)];if(!other)break;const option=direction==='reverse'?other.pt:primaryMeaning(other.en);if(option&&!seen.has(norm(option))){options.push(option);seen.add(norm(option))}}
+ if(options.length<4){kind='type';direction='reverse';prompt=primaryMeaning(w.en);answer=w.pt}
+ return{w,direction,kind,answer,prompt,options:shuffled(options),locked:false,hintUsed:false,started:Date.now()};
+}
 function startSession(mode){clearTimeout(feedbackTimeout);stopSessionClock();session={mode,remaining:180,accountedSeconds:0,masteredAtStart:metrics().known,questions:0,right:0,combo:0,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),retryQueue:[],retryCounts:new Map(),current:null,paused:false,levelAtStart:estimatedSkillRank()};view='game';nextQuestion();intervalHandle=setInterval(tick,140)}
 let lastFrame=0;function tick(){if(!session||view!=='game')return;let t=performance.now();if(!lastFrame){lastFrame=t;return}if(document.hidden||session.paused){lastFrame=t;return}let dt=Math.min(.5,(t-lastFrame)/1000);lastFrame=t;session.remaining-=dt;recordSessionTime();if(session.remaining<=0){session.remaining=0;finishSession();return}let el=document.querySelector('#clock'),bar=document.querySelector('#timeFill');if(el)el.textContent=timerText(session.remaining);if(bar)bar.style.width=(100*session.remaining/180).toFixed(2)+'%'}function timerText(s){return `${Math.floor(s/60)}:${String(Math.ceil(s)%60).padStart(2,'0')}`}
 function resetSpeech(){
@@ -1715,8 +1766,11 @@ function recordSessionTime(force=false){
  const p=localProgress();p.totalSeconds=(Number(p.totalSeconds)||0)+delta;session.accountedSeconds=elapsed;saveProgress();
 }
 function nextQuestion(){if(!session)return;if(session.remaining<=0)return finishSession();const retryReady=session.retryQueue.some(item=>item.readyAt<=session.questions),clozeChance=session.mode==='recall'?0.22:session.mode==='sprint'?0.3:0.34,wantsCloze=!retryReady&&Math.random()<clozeChance;let w=wantsCloze?chooseClozeWord():null;if(!w)w=chooseWord();if(!w)return finishSession();session.current=makeQuestion(w,wantsCloze);game()}
-function questionPromptHTML(q){return q.direction==='cloze'?safe(q.prompt).replace('___','<span class="sentence-blank">_____</span>'):safe(q.prompt)}
-function game(){if(!session)return view='home',render();let s=session,q=s.current,w=q?.w;if(!q)return;let label=q.direction==='cloze'?'COMPLETE THE SENTENCE':q.kind==='type'?'SPELL IT IN PORTUGUESE':q.direction==='reverse'?'ENGLISH → PORTUGUESE':'PORTUGUESE → ENGLISH';shell(`<main class="game-shell"><div class="game-head"><button class="btn btn-ghost btn-small" id="exitSession">← End run</button><div class="game-metrics"><div class="metric clock"><small>⏱</small><span id="clock">${timerText(s.remaining)}</span></div><div class="metric combo"><small>🔥</small><span id="combo">${s.combo} combo</span></div><div class="metric"><small>🧠</small><span id="mastered">${metrics().known} mastered</span></div></div></div><div class="track"><div class="fill" id="timeFill" style="width:${100*s.remaining/180}%"></div></div><div class="question"><div class="question-top"><span class="qtype">${label}</span><span class="rank">WORD ${w.rank.toLocaleString()} · ${safe(w.pos)}</span></div><div class="word${q.direction==='cloze'?' cloze-sentence':''}">${questionPromptHTML(q)}</div><div class="word-sub">${q.direction==='cloze'?`🇬🇧 ${safe(q.hint)}`:q.kind==='type'?'Type the Portuguese word or phrase':q.direction==='reverse'?'Which Portuguese word matches?':'What does this mean in English?'}</div><button class="listen" id="listenBtn" title="Play European Portuguese pronunciation">${q.direction==='forward'?'🔊 Hear again':q.direction==='cloze'?'🔊 Hear the missing word':'🔊 Hear Portuguese (hint)'}</button>${q.kind==='choice'?`<div class="choices">${q.options.map((o,i)=>`<button class="choice" data-choice="${i}"><span class="letter">${'ABCD'[i]}</span><span>${safe(o)}</span></button>`).join('')}</div><div style="text-align:center;margin-top:14px"><button class="btn btn-outline btn-small" id="dontKnowChoice">🤷 I don't know yet</button></div>`:`<div class="type-wrap"><input autocomplete="off" autocapitalize="off" spellcheck="false" class="type-input" id="typedAnswer" placeholder="Write the Portuguese answer" aria-label="Answer"><div class="type-actions"><button class="btn btn-primary" id="submitTyped">Check answer ↗</button><button class="btn btn-ghost" id="dontKnow">Not sure</button></div></div>`}<div class="feedback hidden" id="feedback" role="status"></div><div class="tip" id="tipLine">${session.mode==='sprint'?'Choose quickly to build a combo!':'Wrong answers are not failures: they teach the scheduler what to bring back.'}</div></div><div class="backline"><span>${s.questions} answers this run · ${s.newIds.size} new words</span><span>🇵🇹 Offline-friendly</span></div></main>`);
+function questionPromptHTML(q){
+ if(q.direction==='listen')return '<span class="listening-prompt"><span>🎧</span><small>Listen carefully</small></span>';
+ return q.direction==='cloze'?safe(q.prompt).replace('___','<span class="sentence-blank">_____</span>'):safe(q.prompt);
+}
+function game(){if(!session)return view='home',render();let s=session,q=s.current,w=q?.w;if(!q)return;let label=q.direction==='cloze'?'COMPLETE THE SENTENCE':q.direction==='listen'?'LISTEN → MEANING':q.kind==='type'?'SPELL IT IN PORTUGUESE':q.direction==='reverse'?'ENGLISH → PORTUGUESE':'PORTUGUESE → ENGLISH';shell(`<main class="game-shell"><div class="game-head"><button class="btn btn-ghost btn-small" id="exitSession">← End run</button><div class="game-metrics"><div class="metric clock"><small>⏱</small><span id="clock">${timerText(s.remaining)}</span></div><div class="metric combo"><small>🔥</small><span id="combo">${s.combo} combo</span></div><div class="metric"><small>🧠</small><span id="mastered">${metrics().known} mastered</span></div></div></div><div class="track"><div class="fill" id="timeFill" style="width:${100*s.remaining/180}%"></div></div><div class="question"><div class="question-top"><span class="qtype">${label}</span><span class="rank">WORD ${w.rank.toLocaleString()} · ${safe(w.pos)}</span></div><div class="word${q.direction==='cloze'?' cloze-sentence':q.direction==='listen'?' listening-word':''}">${questionPromptHTML(q)}</div><div class="word-sub">${q.direction==='cloze'?`🇬🇧 ${safe(q.hint)}`:q.direction==='listen'?'Which English meaning matches the word you hear?':q.kind==='type'?'Type the Portuguese word or phrase':q.direction==='reverse'?'Which Portuguese word matches?':'What does this mean in English?'}</div><button class="listen" id="listenBtn" title="Play European Portuguese pronunciation">${q.direction==='listen'?'🔊 Play word again':q.direction==='forward'?'🔊 Hear again':q.direction==='cloze'?'🔊 Hear the missing word':'🔊 Hear Portuguese (hint)'}</button>${q.kind==='choice'?`<div class="choices">${q.options.map((o,i)=>`<button class="choice" data-choice="${i}"><span class="letter">${'ABCD'[i]}</span><span>${safe(o)}</span></button>`).join('')}</div><div style="text-align:center;margin-top:14px"><button class="btn btn-outline btn-small" id="dontKnowChoice">🤷 I don't know yet</button></div>`:`<div class="type-wrap"><input autocomplete="off" autocapitalize="off" spellcheck="false" class="type-input" id="typedAnswer" placeholder="Write the Portuguese answer" aria-label="Answer"><div class="type-actions"><button class="btn btn-primary" id="submitTyped">Check answer ↗</button><button class="btn btn-ghost" id="dontKnow">Not sure</button></div></div>`}<div class="feedback hidden" id="feedback" role="status"></div><div class="tip" id="tipLine">${q.direction==='listen'?'Audio replays are part of this listening challenge.':session.mode==='sprint'?'Choose quickly to build a combo!':'Wrong answers are not failures: they teach the scheduler what to bring back.'}</div></div><div class="backline"><span>${s.questions} answers this run · ${s.newIds.size} new words</span><span>🇵🇹 Offline-friendly</span></div></main>`);
  document.querySelector('#exitSession').onclick=()=>{if(confirm('End your run early? Your answered words are already saved.'))finishSession()};document.querySelector('#listenBtn').onclick=()=>{
   const replayingAnswer=Boolean(q.locked&&(q.direction==='cloze'||q.direction==='reverse'));
   const isHint=!q.locked&&(q.direction==='cloze'||q.direction==='reverse');
@@ -1724,9 +1778,9 @@ function game(){if(!session)return view='home',render();let s=session,q=s.curren
   if(isHint&&played){q.hintUsed=true;const tip=document.querySelector('#tipLine');if(tip)tip.textContent='Hint used — this answer will count as “not known” and return soon.'}
  };
  if(q.kind==='choice'){document.querySelectorAll('[data-choice]').forEach(btn=>btn.onclick=()=>answer(q.options[Number(btn.dataset.choice)],btn));document.querySelector('#dontKnowChoice').onclick=()=>answer('',null,true)}else{let input=document.querySelector('#typedAnswer');document.querySelector('#submitTyped').onclick=()=>answer(input.value.trim(),null);document.querySelector('#dontKnow').onclick=()=>answer('',null,true);input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();answer(input.value.trim(),null)}};setTimeout(()=>{if(view==='game'&&!q.locked)input.focus({preventScroll:true})},70)}
- // Portuguese-to-English: pronounce the prompt on arrival. English-to-Portuguese:
- // wait until the answer so speech does not give away the recall challenge.
- if(prefs.sound&&q.direction==='forward')speakPortuguese(w.pt,true);
+ // Portuguese-to-English and listening challenges pronounce the prompt on
+ // arrival. Recall questions wait until grading so speech gives nothing away.
+ if(prefs.sound&&(q.direction==='forward'||q.direction==='listen'))speakPortuguese(w.pt,true);
 }
 function speakPortuguese(word,automatic=false,pauseAfterAnswer=false){
  if(!('speechSynthesis'in window)){if(!automatic)notify('Speech is unavailable on this browser.');return false}
@@ -1815,7 +1869,7 @@ function finishSession(){if(!session)return;clearTimeout(feedbackTimeout);record
 function result(){let s=session,m=metrics(),accuracy=s.questions?Math.round(100*s.right/s.questions):0,elapsed=Math.min(180,Math.max(0,180-s.remaining)),masteredThisRun=Math.max(0,m.known-s.masteredAtStart);let heading=s.questions===0?'Adventure paused':accuracy>=85?'Brilliant run!':accuracy>=60?"You're building momentum!":'Every word is progress!';shell(`<main class="center-panel"><div class="big-emoji">${accuracy>=85&&s.questions?'🏆':accuracy>=60?'🚀':'🧭'}</div><div class="eyebrow">THREE-MINUTE QUEST COMPLETE</div><h1>${heading}</h1><p>Your vocabulary map just got smarter. Missed words will return sooner; known words will wait until you need them again.</p><div class="result-grid"><div class="result-stat"><b>${formatSessionTime(elapsed)}</b><span>PRACTISED</span></div><div class="result-stat"><b>${s.right}/${s.questions}</b><span>CORRECT</span></div><div class="result-stat"><b>${masteredThisRun}</b><span>MASTERED</span></div></div><div class="info" style="text-align:left"><b>🧠 Learning progress</b><br>${s.wrongIds.size} tricky word${s.wrongIds.size===1?'':'s'} queued for extra practice · ${m.known} words mastered overall · ${formatStudyTime(m.totalSeconds)} total active practice</div><div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:25px"><button id="playAgain" class="btn btn-primary">⚡ One more mission</button><button id="backHome" class="btn btn-ghost">Dashboard</button></div></main>`);document.querySelector('#playAgain').onclick=()=>startSession(s.mode);document.querySelector('#backHome').onclick=()=>{session=null;view='home';render()}}
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view==='game'&&session?.current?.kind==='choice'&&!session.current.locked&&['1','2','3','4'].includes(e.key)){let el=document.querySelectorAll('[data-choice]')[Number(e.key)-1];if(el)el.click()}});
-render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=22',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=23',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
