@@ -1,7 +1,7 @@
 // The page itself is network-first: every normal visit checks GitHub Pages for
 // the newest release. Assets stay cache-first so the app still opens offline.
 const CACHE_PREFIX='palavra-quest-shell-';
-const CACHE=CACHE_PREFIX+'v18';
+const CACHE=CACHE_PREFIX+'v19';
 const SHELL=['./','./index.html','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{

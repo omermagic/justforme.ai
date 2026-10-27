@@ -1515,7 +1515,7 @@ let bankFull=Array.isArray(bank)&&bank.length>=4900;if(!bankFull)bank=START_WORD
 let bankById=new Map(bank.map(w=>[w.id,w]));let importStatus=bankFull?'5,000-word pack installed':'Starter pack ready · full pack not installed';
 let clozeCatalogCache=null,clozeCatalogBank=null,clozeCardsByWordCache=null;
 let view='home',session=null,uiMessage='',loadingBank=false,feedbackTimeout=0,intervalHandle=null,audio=null;
-let speechGapTimer=0,speechGeneration=0,sentenceSpeechActive=false,queuedAutomaticSpeech='';
+let speechGapTimer=0,speechGeneration=0,sentenceSpeechActive=false,queuedAutomaticSpeech='',sentenceSpeechWaiters=[];
 function saveProgress(){if(!lsWrite(PROGRESS_KEY,learning))notify('Storage is full or blocked. Export your progress, and allow site storage.')}function savePrefs(){lsWrite(PREF_KEY,prefs)}
 function localProgress(){return learning}
 function dayKey(){let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
@@ -1698,7 +1698,7 @@ function makeQuestion(w,preferCloze=false){if(preferCloze){let cloze=makeClozeQu
 function startSession(mode){clearTimeout(feedbackTimeout);stopSessionClock();session={mode,remaining:180,accountedSeconds:0,masteredAtStart:metrics().known,questions:0,right:0,combo:0,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),retryQueue:[],retryCounts:new Map(),current:null,paused:false,levelAtStart:estimatedSkillRank()};view='game';nextQuestion();intervalHandle=setInterval(tick,140)}
 let lastFrame=0;function tick(){if(!session||view!=='game')return;let t=performance.now();if(!lastFrame){lastFrame=t;return}if(document.hidden||session.paused){lastFrame=t;return}let dt=Math.min(.5,(t-lastFrame)/1000);lastFrame=t;session.remaining-=dt;recordSessionTime();if(session.remaining<=0){session.remaining=0;finishSession();return}let el=document.querySelector('#clock'),bar=document.querySelector('#timeFill');if(el)el.textContent=timerText(session.remaining);if(bar)bar.style.width=(100*session.remaining/180).toFixed(2)+'%'}function timerText(s){return `${Math.floor(s/60)}:${String(Math.ceil(s)%60).padStart(2,'0')}`}
 function resetSpeech(){
- clearTimeout(speechGapTimer);speechGapTimer=0;sentenceSpeechActive=false;queuedAutomaticSpeech='';speechGeneration++;
+ clearTimeout(speechGapTimer);speechGapTimer=0;sentenceSpeechActive=false;queuedAutomaticSpeech='';sentenceSpeechWaiters=[];speechGeneration++;
  try{window.speechSynthesis?.cancel()}catch{}
 }
 function stopSessionClock(){clearInterval(intervalHandle);intervalHandle=null;lastFrame=0;resetSpeech()}
@@ -1734,12 +1734,15 @@ function speakPortuguese(word,automatic=false,pauseAfterSentence=false){
    sentenceSpeechActive=true;let finished=false;
    const finish=()=>{
     if(finished||generation!==speechGeneration)return;
-    finished=true;sentenceSpeechActive=false;
+   finished=true;sentenceSpeechActive=false;
     speechGapTimer=setTimeout(()=>{
      if(generation!==speechGeneration)return;
      speechGapTimer=0;const nextWord=queuedAutomaticSpeech;queuedAutomaticSpeech='';
      if(nextWord)speakPortuguese(nextWord,true);
     },1000);
+    // Keep the answered question visible until the sentence is completely
+    // spoken. Starting the gap first also queues the next prompt correctly.
+    const waiters=sentenceSpeechWaiters.splice(0);waiters.forEach(callback=>callback());
    };
    u.onend=finish;u.onerror=finish;
   }
@@ -1791,7 +1794,11 @@ function answer(given,clicked,skipped=false){
  const listenBtn=document.querySelector('#listenBtn');if(listenBtn)listenBtn.textContent='🔊 Hear again';
  if(q.kind==='choice'){document.querySelector('#dontKnowChoice')?.setAttribute('disabled','');document.querySelectorAll('[data-choice]').forEach((el)=>{el.disabled=true;let t=q.options[Number(el.dataset.choice)];if(norm(t)===norm(q.answer))el.classList.add('correct');else if(el===clicked)el.classList.add('wrong');else el.classList.add('muted')})}else{document.querySelector('#typedAnswer')?.setAttribute('disabled','');document.querySelector('#submitTyped')?.setAttribute('disabled','');document.querySelector('#dontKnow')?.setAttribute('disabled','')}
  let f=document.querySelector('#feedback');let display=`<div><strong>${right?(newlyMastered?'✨ Word mastered!':'✨ Nailed it!'):`💡 ${safe(q.w.pt)} = ${safe(primaryMeaning(q.w.en))}`}</strong>${right?`${safe(q.w.pt)} = ${safe(primaryMeaning(q.w.en))}`:`Remember: ${safe(q.w.pt)} means ${safe(primaryMeaning(q.w.en))}.`}<br><small>${safe(reviewNote)}</small></div><div class="ficon">${right?'✅':'🧩'}</div>`;f.innerHTML=display;f.classList.remove('hidden');f.classList.add(right?'good':'bad');document.querySelector('#combo').textContent=s.combo+' combo';document.querySelector('#mastered').textContent=metrics(p).known+' mastered';
- feedbackTimeout=setTimeout(()=>{if(session===s&&view==='game')nextQuestion()},right?920:1800)}
+ const showNextQuestion=()=>{if(session===s&&view==='game')nextQuestion()};
+ feedbackTimeout=setTimeout(()=>{
+  if(q.direction==='cloze'&&prefs.sound&&sentenceSpeechActive)sentenceSpeechWaiters.push(showNextQuestion);
+  else showNextQuestion();
+ },right?920:1800)}
 function finishSession(){if(!session)return;clearTimeout(feedbackTimeout);recordSessionTime(true);stopSessionClock();view='result';render()}
 function result(){let s=session,m=metrics(),accuracy=s.questions?Math.round(100*s.right/s.questions):0,elapsed=Math.min(180,Math.max(0,180-s.remaining)),masteredThisRun=Math.max(0,m.known-s.masteredAtStart);let heading=s.questions===0?'Adventure paused':accuracy>=85?'Brilliant run!':accuracy>=60?"You're building momentum!":'Every word is progress!';shell(`<main class="center-panel"><div class="big-emoji">${accuracy>=85&&s.questions?'🏆':accuracy>=60?'🚀':'🧭'}</div><div class="eyebrow">THREE-MINUTE QUEST COMPLETE</div><h1>${heading}</h1><p>Your vocabulary map just got smarter. Missed words will return sooner; known words will wait until you need them again.</p><div class="result-grid"><div class="result-stat"><b>${formatSessionTime(elapsed)}</b><span>PRACTISED</span></div><div class="result-stat"><b>${s.right}/${s.questions}</b><span>CORRECT</span></div><div class="result-stat"><b>${masteredThisRun}</b><span>MASTERED</span></div></div><div class="info" style="text-align:left"><b>🧠 Learning progress</b><br>${s.wrongIds.size} tricky word${s.wrongIds.size===1?'':'s'} queued for extra practice · ${m.known} words mastered overall · ${formatStudyTime(m.totalSeconds)} total active practice</div><div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:25px"><button id="playAgain" class="btn btn-primary">⚡ One more mission</button><button id="backHome" class="btn btn-ghost">Dashboard</button></div></main>`);document.querySelector('#playAgain').onclick=()=>startSession(s.mode);document.querySelector('#backHome').onclick=()=>{session=null;view='home';render()}}
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
