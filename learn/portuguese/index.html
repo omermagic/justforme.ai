@@ -1024,7 +1024,7 @@ function parseStarter(){let s=new Map(),idx=1;for(let line of STARTER.split('\n'
 const START_WORDS=parseStarter();
 // Curated sentence cards keep every four-choice question natural and
 // unambiguous. The key is the vocabulary word whose memory is being trained.
-const CLOZE_QUESTIONS={
+const CURATED_CLOZE_QUESTIONS={
  agora:{sentence:'Preciso de falar contigo ___.',hint:'I need to speak with you now.',options:['agora','ontem','amanhã','nunca']},
  ontem:{sentence:'___ fui ao mercado; hoje fico em casa.',hint:'Yesterday I went to the market; today I am staying home.',options:['ontem','amanhã','sempre','dentro']},
  amanhã:{sentence:'Hoje é segunda-feira e ___ será terça-feira.',hint:'Today is Monday and tomorrow will be Tuesday.',options:['amanhã','ontem','agora','nunca']},
@@ -1082,12 +1082,374 @@ const CLOZE_QUESTIONS={
  perigoso:{sentence:'É ___ nadar durante uma tempestade.',hint:'It is dangerous to swim during a storm.',options:['perigoso','adequado','seguro','voluntário']},
  permanente:{sentence:'A mudança não é temporária; é ___.',hint:'The change is not temporary; it is permanent.',options:['permanente','provisório','ocasional','parcial']}
 };
+const CLOZE_TARGET_COUNT=300;
+// Extra hand-written contexts bring the bank to exactly 300 natural sentence
+// questions. Each pair is [Portuguese sentence, English meaning].
+const CLOZE_VARIANTS={
+ agora:[
+  ['A reunião começa ___; não te atrases.','The meeting starts now; do not be late.'],
+  ['Não deixes para depois o que podes fazer ___.','Do not leave until later what you can do now.'],
+  ['O autocarro está a chegar ___.','The bus is arriving now.'],
+  ['___ é a melhor altura para telefonar.','Now is the best time to call.'],
+  ['Temos de tomar uma decisão ___.','We have to make a decision now.'],
+ ],
+ ontem:[
+  ['Recebi a tua mensagem ___.','I received your message yesterday.'],
+  ['O museu esteve fechado ___.','The museum was closed yesterday.'],
+  ['Ela chegou de Lisboa ___.','She arrived from Lisbon yesterday.'],
+  ['___ choveu durante todo o dia.','Yesterday it rained all day.'],
+  ['Fomos jantar fora ___.','We went out for dinner yesterday.'],
+ ],
+ amanhã:[
+  ['___ tenho uma consulta às dez.','Tomorrow I have an appointment at ten.'],
+  ['Podemos terminar este trabalho ___.','We can finish this work tomorrow.'],
+  ['O novo café abre ___.','The new café opens tomorrow.'],
+  ['Vejo-te ___ de manhã.','I will see you tomorrow morning.'],
+  ['Se chover hoje, vamos à praia ___.','If it rains today, we will go to the beach tomorrow.'],
+ ],
+ nunca:[
+  ['Ela ___ se esquece do aniversário da mãe.','She never forgets her mother’s birthday.'],
+  ['Eu ___ provei polvo.','I have never tried octopus.'],
+  ['Este elevador ___ funciona à noite.','This lift never works at night.'],
+  ['Nós ___ chegamos atrasados às aulas.','We never arrive late for classes.'],
+  ['Ele disse que ___ voltaria ali.','He said that he would never return there.'],
+ ],
+ aqui:[
+  ['Podes sentar-te ___ ao meu lado.','You can sit here beside me.'],
+  ['Foi ___ que deixei o telemóvel.','It was here that I left the phone.'],
+  ['A vista é muito bonita ___.','The view is very beautiful here.'],
+  ['Espera por mim ___ à entrada.','Wait for me here at the entrance.'],
+  ['___ tens tudo o que precisas.','Here you have everything you need.'],
+ ],
+ longe:[
+  ['Não vamos a pé porque fica muito ___.','We are not walking because it is very far away.'],
+  ['Daqui, o mar parece ___.','From here, the sea seems far away.'],
+  ['Os meus avós vivem ___ de nós.','My grandparents live far from us.'],
+  ['A escola não é ___; são só cinco minutos.','The school is not far; it is only five minutes away.'],
+  ['Conseguimos ver a torre ao ___.','We can see the tower in the distance.'],
+ ],
+ dentro:[
+  ['Está frio; vamos esperar ___.','It is cold; let us wait inside.'],
+  ['Há uma carta ___ do envelope.','There is a letter inside the envelope.'],
+  ['O gato escondeu-se ___ do armário.','The cat hid inside the cupboard.'],
+  ['Guarda o leite ___ do frigorífico.','Keep the milk inside the fridge.'],
+  ['Ouvi um barulho ___ de casa.','I heard a noise inside the house.'],
+ ],
+ fora:[
+  ['Deixa os sapatos ___ da porta.','Leave the shoes outside the door.'],
+  ['Hoje vamos almoçar ___.','Today we are going to have lunch out.'],
+  ['O cão ficou ___ enquanto limpávamos a casa.','The dog stayed outside while we cleaned the house.'],
+  ['Está muito vento lá ___.','It is very windy outside.'],
+  ['Ela está ___ do escritório esta semana.','She is out of the office this week.'],
+ ],
+ antes:[
+  ['Cheguei dez minutos ___ da hora marcada.','I arrived ten minutes before the agreed time.'],
+  ['Pensa bem ___ de responder.','Think carefully before answering.'],
+  ['Já tinha visto o filme ___.','I had seen the film before.'],
+  ['Precisamos de reservar ___ da viagem.','We need to book before the trip.'],
+  ['Liga-me ___ de saíres de casa.','Call me before you leave home.'],
+ ],
+ depois:[
+  ['Falamos sobre isso ___.','We will talk about that later.'],
+  ['Toma este medicamento ___ do almoço.','Take this medicine after lunch.'],
+  ['Ela chegou pouco ___ de mim.','She arrived shortly after me.'],
+  ['Arrumamos a cozinha e ___ descansamos.','We tidy the kitchen and then we rest.'],
+  ['Só soube da notícia dois dias ___.','I only learned the news two days later.'],
+ ],
+ ainda:[
+  ['A Ana ___ vive no Porto.','Ana still lives in Porto.'],
+  ['Já são oito horas e ele ___ dorme.','It is already eight and he is still asleep.'],
+  ['___ tens dúvidas sobre o exercício?','Do you still have questions about the exercise?'],
+  ['O restaurante ___ está aberto.','The restaurant is still open.'],
+  ['Não recebi a encomenda ___.','I have not received the order yet.'],
+ ],
+ talvez:[
+  ['___ ele não tenha ouvido a campainha.','Maybe he did not hear the doorbell.'],
+  ['Podemos ___ encontrar uma mesa livre.','Perhaps we can find a free table.'],
+  ['___ seja melhor irmos de metro.','Maybe it would be better to take the metro.'],
+  ['Ela vem connosco, ___.','She may come with us.'],
+  ['___ amanhã esteja menos frio.','Maybe tomorrow will be less cold.'],
+ ],
+ sem:[
+  ['Saí de casa ___ tomar o pequeno-almoço.','I left home without having breakfast.'],
+  ['O café fica estranho ___ açúcar.','Coffee tastes strange without sugar.'],
+  ['Ele respondeu ___ pensar.','He answered without thinking.'],
+  ['Não podemos viajar ___ os passaportes.','We cannot travel without the passports.'],
+  ['A rua estava ___ trânsito.','The street was without traffic.'],
+ ],
+ entre:[
+  ['O segredo fica ___ nós.','The secret stays between us.'],
+  ['Há uma pequena rua ___ os dois prédios.','There is a small street between the two buildings.'],
+  ['Escolhe ___ chá e café.','Choose between tea and coffee.'],
+  ['A reunião decorre ___ as nove e as dez.','The meeting takes place between nine and ten.'],
+  ['Sentei-me ___ a Marta e o Rui.','I sat between Marta and Rui.'],
+ ],
+ porque:[
+  ['Fiquei em casa ___ estava doente.','I stayed home because I was ill.'],
+  ['Ela sorriu ___ recebeu boas notícias.','She smiled because she received good news.'],
+  ['Vamos de táxi ___ está a chover.','We are taking a taxi because it is raining.'],
+  ['Comprei este livro ___ o professor o recomendou.','I bought this book because the teacher recommended it.'],
+  ['Não fui à festa ___ tinha de trabalhar.','I did not go to the party because I had to work.'],
+ ],
+ embora:[
+  ['___ esteja frio, vou dar um passeio.','Although it is cold, I am going for a walk.'],
+  ['Ela aceitou o convite, ___ estivesse cansada.','She accepted the invitation, although she was tired.'],
+  ['___ seja caro, o casaco é de boa qualidade.','Although it is expensive, the coat is good quality.'],
+  ['Continuámos a jogar, ___ estivesse a chover.','We kept playing, although it was raining.'],
+  ['___ não concorde, respeito a tua opinião.','Although I disagree, I respect your opinion.'],
+ ],
+ ser:[
+  ['Ele espera ___ professor um dia.','He hopes to be a teacher one day.'],
+  ['É importante ___ gentil com os outros.','It is important to be kind to others.'],
+  ['Gostava de ___ mais organizado.','I would like to be more organised.'],
+  ['Este pode ___ o último comboio.','This may be the last train.'],
+  ['Quero ___ eu a dar a notícia.','I want to be the one to give the news.'],
+ ],
+ estar:[
+  ['Prefiro ___ perto da janela.','I prefer to be near the window.'],
+  ['Ele deve ___ no trabalho a esta hora.','He must be at work at this time.'],
+  ['É bom ___ contigo outra vez.','It is good to be with you again.'],
+  ['Vou ___ disponível depois das seis.','I will be available after six.'],
+  ['Precisamos de ___ prontos às oito.','We need to be ready at eight.'],
+ ],
+ ter:[
+  ['É bom ___ amigos em quem confiar.','It is good to have friends you can trust.'],
+  ['Ela parece ___ muita experiência.','She seems to have a lot of experience.'],
+  ['Quero ___ uma casa com jardim.','I want to have a house with a garden.'],
+  ['Podemos ___ problemas com o trânsito.','We may have problems with traffic.'],
+  ['Deves ___ cuidado nesta estrada.','You must be careful on this road.'],
+ ],
+ fazer:[
+  ['Preciso de ___ uma chamada urgente.','I need to make an urgent call.'],
+  ['Podemos ___ uma pausa agora.','We can take a break now.'],
+  ['Ela gosta de ___ exercício de manhã.','She likes to exercise in the morning.'],
+  ['Vou ___ o jantar esta noite.','I am going to make dinner tonight.'],
+  ['Tens de ___ os trabalhos de casa.','You have to do your homework.'],
+ ],
+ ir:[
+  ['Vamos ___ ao mercado depois do almoço.','We are going to go to the market after lunch.'],
+  ['Ela decidiu ___ a pé para casa.','She decided to go home on foot.'],
+  ['Queres ___ comigo ao concerto?','Do you want to go to the concert with me?'],
+  ['Tenho de ___ ao banco esta manhã.','I have to go to the bank this morning.'],
+ ],
+ vir:[
+  ['Os meus pais vão ___ visitar-nos no domingo.','My parents are coming to visit us on Sunday.'],
+  ['Ela prometeu ___ mais cedo.','She promised to come earlier.'],
+  ['Queres ___ jantar connosco?','Do you want to come and have dinner with us?'],
+  ['O técnico deve ___ amanhã de manhã.','The technician should come tomorrow morning.'],
+ ],
+ ver:[
+  ['Fomos à janela para ___ o fogo de artifício.','We went to the window to see the fireworks.'],
+  ['Consegues ___ a serra daqui?','Can you see the mountains from here?'],
+  ['Gostava de ___ essa exposição.','I would like to see that exhibition.'],
+  ['Vou ___ se há pão na cozinha.','I am going to see whether there is bread in the kitchen.'],
+ ],
+ saber:[
+  ['Gostava de ___ a tua opinião.','I would like to know your opinion.'],
+  ['É importante ___ onde fica a saída.','It is important to know where the exit is.'],
+  ['Ela quer ___ quem telefonou.','She wants to know who called.'],
+  ['Precisas de ___ mais alguma coisa?','Do you need to know anything else?'],
+ ],
+ querer:[
+  ['Não basta ___; é preciso tentar.','It is not enough to want; you have to try.'],
+  ['Ela parece ___ ficar sozinha.','She seems to want to stay alone.'],
+  ['Podes ___ mudar de ideias mais tarde.','You may want to change your mind later.'],
+  ['É natural ___ proteger a família.','It is natural to want to protect the family.'],
+ ],
+ poder:[
+  ['Espero ___ ajudar-te amanhã.','I hope to be able to help you tomorrow.'],
+  ['Para ___ entrar, mostra o bilhete.','To be able to enter, show the ticket.'],
+  ['Ela gostaria de ___ trabalhar em casa.','She would like to be able to work from home.'],
+  ['Sem a chave, não vais ___ abrir a porta.','Without the key, you will not be able to open the door.'],
+ ],
+ precisar:[
+  ['Podes ___ de um casaco à noite.','You may need a coat at night.'],
+  ['Ela vai ___ de mais tempo.','She will need more time.'],
+  ['Se ___ de alguma coisa, telefona-me.','If you need anything, call me.'],
+  ['Não quero ___ de pedir dinheiro.','I do not want to need to ask for money.'],
+ ],
+ gostar:[
+  ['Acho que vais ___ deste restaurante.','I think you are going to like this restaurant.'],
+  ['É fácil ___ desta cidade.','It is easy to like this city.'],
+  ['Ela começou a ___ de música clássica.','She began to like classical music.'],
+  ['Quero aprender a ___ mais de legumes.','I want to learn to like vegetables more.'],
+ ],
+ falar:[
+  ['Precisamos de ___ sobre o orçamento.','We need to talk about the budget.'],
+  ['Podes ___ mais devagar, por favor?','Can you speak more slowly, please?'],
+  ['Ela foi lá ___ com o diretor.','She went there to speak with the director.'],
+  ['Não gosto de ___ ao telefone no autocarro.','I do not like talking on the phone on the bus.'],
+ ],
+ comer:[
+  ['As crianças foram ___ uma maçã.','The children went to eat an apple.'],
+  ['Devemos ___ mais legumes.','We should eat more vegetables.'],
+  ['Queres ___ alguma coisa antes de sair?','Do you want to eat something before leaving?'],
+  ['Ela não pode ___ alimentos com glúten.','She cannot eat food containing gluten.'],
+ ],
+ beber:[
+  ['É importante ___ bastante água.','It is important to drink plenty of water.'],
+  ['Fomos ao café ___ um chá.','We went to the café to drink some tea.'],
+  ['Não deves ___ isso tão depressa.','You should not drink that so quickly.'],
+  ['Queres ___ café depois do almoço?','Do you want to drink coffee after lunch?'],
+ ],
+ dormir:[
+  ['O bebé conseguiu ___ a noite inteira.','The baby managed to sleep all night.'],
+  ['Preciso de ___ um pouco mais.','I need to sleep a little longer.'],
+  ['É difícil ___ com tanto barulho.','It is difficult to sleep with so much noise.'],
+  ['Ele foi ___ cedo porque estava cansado.','He went to sleep early because he was tired.'],
+ ],
+ trabalhar:[
+  ['Ela prefere ___ em equipa.','She prefers to work in a team.'],
+  ['Tenho de ___ até mais tarde hoje.','I have to work late today.'],
+  ['Gostava de ___ no estrangeiro.','I would like to work abroad.'],
+  ['Vamos ___ juntos neste projeto.','We are going to work together on this project.'],
+ ],
+ estudar:[
+  ['Ele foi para a biblioteca ___.','He went to the library to study.'],
+  ['Preciso de ___ para o exame.','I need to study for the exam.'],
+  ['Ela quer ___ engenharia na universidade.','She wants to study engineering at university.'],
+  ['É mais fácil ___ num lugar silencioso.','It is easier to study in a quiet place.'],
+ ],
+ aprender:[
+  ['As crianças estão a ___ a nadar.','The children are learning to swim.'],
+  ['Nunca é tarde para ___ algo novo.','It is never too late to learn something new.'],
+  ['Ela quer ___ a tocar guitarra.','She wants to learn to play guitar.'],
+  ['Podemos ___ muito com os nossos erros.','We can learn a lot from our mistakes.'],
+ ],
+ comprar:[
+  ['Vamos ___ fruta no mercado.','We are going to buy fruit at the market.'],
+  ['Ela quer ___ um presente para a irmã.','She wants to buy a present for her sister.'],
+  ['Consegui ___ os bilhetes pela internet.','I managed to buy the tickets online.'],
+  ['Antes de ___, compara os preços.','Before buying, compare the prices.'],
+ ],
+ pagar:[
+  ['Esqueci-me de ___ a conta da luz.','I forgot to pay the electricity bill.'],
+  ['Quem vai ___ o jantar?','Who is going to pay for dinner?'],
+  ['Tens de ___ antes de sair.','You have to pay before leaving.'],
+  ['Posso ___ em dinheiro.','I can pay in cash.'],
+ ],
+ abrir:[
+  ['A loja vai ___ às nove.','The shop will open at nine.'],
+  ['Podes ___ esta garrafa?','Can you open this bottle?'],
+  ['Ele usou a chave para ___ a caixa.','He used the key to open the box.'],
+  ['Não consigo ___ o ficheiro.','I cannot open the file.'],
+ ],
+ fechar:[
+  ['A biblioteca vai ___ dentro de dez minutos.','The library will close in ten minutes.'],
+  ['Ajuda-me a ___ esta mala.','Help me close this suitcase.'],
+  ['Temos de ___ as janelas antes de sair.','We have to close the windows before leaving.'],
+  ['Ela decidiu ___ a loja mais cedo.','She decided to close the shop earlier.'],
+ ],
+ entrar:[
+  ['Esperámos na fila para ___ no estádio.','We waited in line to enter the stadium.'],
+  ['Não podes ___ sem autorização.','You cannot enter without permission.'],
+  ['A luz começou a ___ pela janela.','The light began to come in through the window.'],
+  ['Ela convidou-nos a ___ e a sentar-nos.','She invited us to come in and sit down.'],
+ ],
+ sair:[
+  ['Tenho de ___ de casa às sete.','I have to leave home at seven.'],
+  ['Eles decidiram ___ para jantar.','They decided to go out for dinner.'],
+  ['O próximo comboio vai ___ da plataforma três.','The next train will leave from platform three.'],
+  ['Podemos ___ por esta porta.','We can exit through this door.'],
+ ],
+ chegar:[
+  ['Espero ___ a tempo da reunião.','I hope to arrive in time for the meeting.'],
+  ['A encomenda deve ___ na sexta-feira.','The parcel should arrive on Friday.'],
+  ['Telefonou assim que conseguiu ___ ao hotel.','She called as soon as she managed to reach the hotel.'],
+  ['Quanto tempo demora a ___ ao centro?','How long does it take to get to the centre?'],
+ ],
+ levar:[
+  ['Vou ___ o cão a passear.','I am going to take the dog for a walk.'],
+  ['É melhor ___ um casaco quente.','It is better to take a warm coat.'],
+  ['Podes ___ estas caixas para cima?','Can you take these boxes upstairs?'],
+  ['Não é permitido ___ comida para a sala.','You are not allowed to take food into the room.'],
+ ],
+ trazer:[
+  ['Não te esqueças de ___ os documentos.','Do not forget to bring the documents.'],
+  ['Ela vai ___ os filhos à festa.','She is going to bring the children to the party.'],
+  ['Podes ___ a conta, por favor?','Can you bring the bill, please?'],
+  ['Cada pessoa deve ___ alguma coisa para comer.','Each person should bring something to eat.'],
+ ],
+ ajudar:[
+  ['Vou ___ a minha avó com as compras.','I am going to help my grandmother with the shopping.'],
+  ['Esta informação pode ___ muita gente.','This information can help many people.'],
+  ['Obrigado por ___ a organizar a festa.','Thank you for helping to organise the party.'],
+  ['Ela ofereceu-se para ___ os novos alunos.','She offered to help the new students.'],
+ ],
+ escolher:[
+  ['É difícil ___ só uma sobremesa.','It is difficult to choose only one dessert.'],
+  ['Podes ___ qualquer lugar livre.','You can choose any free seat.'],
+  ['Ela deixou o filho ___ a cor.','She let her son choose the colour.'],
+  ['Antes de decidir, tens de ___ com cuidado.','Before deciding, you have to choose carefully.'],
+ ],
+ obrigatório:[
+  ['O capacete é ___ nesta obra.','A helmet is mandatory on this building site.'],
+  ['Não é ___ participar na atividade.','It is not mandatory to take part in the activity.'],
+  ['O seguro automóvel é ___.','Car insurance is compulsory.'],
+  ['É ___ apresentar um documento de identificação.','It is mandatory to show identification.'],
+ ],
+ disponível:[
+  ['O médico só está ___ à tarde.','The doctor is only available in the afternoon.'],
+  ['Esta aplicação está ___ em português.','This app is available in Portuguese.'],
+  ['Ainda há uma mesa ___ junto à janela.','There is still a table available by the window.'],
+  ['O produto não está ___ nesta loja.','The product is not available in this shop.'],
+ ],
+ suficiente:[
+  ['Temos comida ___ para todos.','We have enough food for everyone.'],
+  ['Meia hora não é ___ para terminar.','Half an hour is not enough to finish.'],
+  ['Esta explicação foi ___ para perceber.','This explanation was sufficient to understand.'],
+  ['Um copo de água será ___.','One glass of water will be enough.'],
+ ],
+ inesperado:[
+  ['O resultado do jogo foi ___.','The result of the match was unexpected.'],
+  ['Um atraso ___ mudou os nossos planos.','An unexpected delay changed our plans.'],
+  ['O telefonema dele foi completamente ___.','His phone call was completely unexpected.'],
+  ['Encontrámos um problema ___.','We found an unexpected problem.'],
+ ],
+ inesquecível:[
+  ['O concerto foi uma noite ___.','The concert was an unforgettable night.'],
+  ['Tivemos uma experiência ___ na serra.','We had an unforgettable experience in the mountains.'],
+  ['Foi um aniversário verdadeiramente ___.','It was a truly unforgettable birthday.'],
+  ['Aquele golo tornou o jogo ___.','That goal made the match unforgettable.'],
+ ],
+ honesto:[
+  ['Quero uma resposta ___.','I want an honest answer.'],
+  ['Ele foi ___ sobre o erro que cometeu.','He was honest about the mistake he made.'],
+  ['Um vendedor ___ explica todos os custos.','An honest salesperson explains all the costs.'],
+  ['É melhor ser ___ do que inventar uma desculpa.','It is better to be honest than make up an excuse.'],
+ ],
+ paciente:[
+  ['Tens de ser ___ com as crianças.','You have to be patient with children.'],
+  ['Ela foi muito ___ enquanto esperava.','She was very patient while waiting.'],
+  ['Um bom professor é calmo e ___.','A good teacher is calm and patient.'],
+  ['Se fores ___, aprenderás aos poucos.','If you are patient, you will learn gradually.'],
+ ],
+ criativo:[
+  ['Precisamos de um plano mais ___.','We need a more creative plan.'],
+  ['Ele é um designer muito ___.','He is a very creative designer.'],
+  ['O projeto ganhou um prémio por ser ___.','The project won a prize for being creative.'],
+  ['Encontraram um modo ___ de reutilizar as caixas.','They found a creative way to reuse the boxes.'],
+ ],
+ perigoso:[
+  ['É ___ atravessar a estrada aqui.','It is dangerous to cross the road here.'],
+  ['Este caminho fica ___ quando chove.','This path becomes dangerous when it rains.'],
+  ['O animal parece calmo, mas pode ser ___.','The animal looks calm but can be dangerous.'],
+  ['Conduzir com sono é muito ___.','Driving while sleepy is very dangerous.'],
+ ],
+ permanente:[
+  ['Ela procura um emprego ___.','She is looking for a permanent job.'],
+  ['A exposição vai tornar-se ___.','The exhibition will become permanent.'],
+  ['O dano não é ___ e pode ser reparado.','The damage is not permanent and can be repaired.'],
+  ['Precisamos de uma solução ___.','We need a permanent solution.'],
+ ],
+};
 function lsRead(key,fallback){try{let x=localStorage.getItem(key);return x?JSON.parse(x):fallback}catch{return fallback}}
 function lsWrite(key,data){try{localStorage.setItem(key,JSON.stringify(data));return true}catch{return false}}
 let users=lsRead(USERS_KEY,null);if(!users||!Array.isArray(users.list)){users={list:[{id:'player-omer',name:'Omer',icon:'🧭',start:1,words:{},totalSeconds:0,hist:{},created:Date.now()},{id:'player-ron',name:'Ron',icon:'🚀',start:1,words:{},totalSeconds:0,hist:{},created:Date.now()}],active:'player-omer'}}
 let prefs=lsRead(PREF_KEY,{sound:true});let bank=Array.isArray(EMBEDDED_BANK)&&EMBEDDED_BANK.length>=4900?EMBEDDED_BANK:lsRead(BANK_CACHE_KEY,null);
 let bankFull=Array.isArray(bank)&&bank.length>=4900;if(!bankFull)bank=START_WORDS;
 let bankById=new Map(bank.map(w=>[w.id,w]));let importStatus=bankFull?'5,000-word pack installed':'Starter pack ready · full pack not installed';
+let clozeCatalogCache=null,clozeCatalogBank=null,clozeCardsByWordCache=null;
 let view='home',session=null,uiMessage='',loadingBank=false,feedbackTimeout=0,intervalHandle=null, audio=null;
 function saveUsers(){if(!lsWrite(USERS_KEY,users))notify('Storage is full or blocked. Export your progress, and allow site storage.')}function savePrefs(){lsWrite(PREF_KEY,prefs)}
 function player(){return users.list.find(p=>p.id===users.active)||users.list[0]}
@@ -1157,7 +1519,7 @@ function shell(content){app.innerHTML=header()+content+`<div id="toast" role="st
 function render(){if(view==='home')home();else if(view==='profiles')profiles();else if(view==='settings')settings();else if(view==='game')game();else if(view==='result')result()}
 function home(){let p=player(),m=metrics(p),fluency=fluencyProgress(m.known),fluencyLabel=formatFluencyPercent(fluency),week=lastDays(7),vals=week.map(d=>p.hist?.[d.key]?.questions||0),max=Math.max(8,...vals);shell(`<main><section class="hero"><div><div class="eyebrow">YOUR 3-MINUTE PORTUGUESE ADVENTURE</div><h1>Small missions.<br><span>Big vocabulary.</span></h1><p>Explore real European Portuguese, win quick word battles, and let the game remember what you know. It brings back the words you need to practise — not the ones you've already mastered.</p><div class="hero-cta"><button class="btn btn-primary" id="quickPlay">⚡ Start 3-minute quest</button><span class="fine">Just <strong>180 seconds</strong> per mission</span></div></div><div class="world" aria-hidden="true"><div class="world-glow"></div><div class="orbit"></div><div class="planet"><i class="tile a"></i><i class="tile b"></i><i class="tile c"></i><span class="tower">🏰</span></div><div class="orbital">⭐</div><div class="flight">🛩️</div><div class="flagmark"><b>🇵🇹 PORTUGAL</b><small>Unlock 5,000 words</small></div></div></section>
 <section class="stats"><div class="stat"><div class="label">Words discovered</div><div class="value">${m.seen.toLocaleString()} <span>/ ${bank.length.toLocaleString()}</span></div></div><div class="stat"><div class="label">Solid vocabulary</div><div class="value" style="color:var(--mint)">${m.known.toLocaleString()} <span>mastered</span></div></div><div class="stat"><div class="label">Ready to review</div><div class="value" style="color:var(--gold)">${m.due} <span>words</span></div></div><div class="stat"><div class="label">Estimated level</div><div class="value" style="color:var(--blue)">${safe(m.skillLabel)} <span>range ${m.skillRank}</span></div></div><div class="stat"><div class="label">Total practice</div><div class="value">${formatStudyTime(m.totalSeconds)} <span>active time</span></div></div></section>
-<section class="section-title"><h2>Choose your mission</h2><small>Same smart memory · different challenges</small></section><section class="missions"><button class="mission" data-mode="mixed"><span class="m-icon">🧭</span><span class="corner">↗</span><h3>Explorer Run</h3><p>Recognition, sentence completion and spelling. Best for daily progress.</p></button><button class="mission" data-mode="recall"><span class="m-icon">🧠</span><span class="corner">↗</span><h3>Memory Duel</h3><p>Harder recall, spelling and sentence clues. Make your words stick.</p></button><button class="mission" data-mode="sprint"><span class="m-icon">⚡</span><span class="corner">↗</span><h3>Lightning Sprint</h3><p>Fast choices, sentence gaps and combos. Beat your best streak.</p></button></section>
+<section class="section-title"><h2>Choose your mission</h2><small>Same smart memory · different challenges</small></section><section class="missions"><button class="mission" data-mode="mixed"><span class="m-icon">🧭</span><span class="corner">↗</span><h3>Explorer Run</h3><p>Recognition, 300 sentence challenges and spelling. Best for daily progress.</p></button><button class="mission" data-mode="recall"><span class="m-icon">🧠</span><span class="corner">↗</span><h3>Memory Duel</h3><p>Harder recall, spelling and sentence clues. Make your words stick.</p></button><button class="mission" data-mode="sprint"><span class="m-icon">⚡</span><span class="corner">↗</span><h3>Lightning Sprint</h3><p>Fast choices, sentence gaps and combos. Beat your best streak.</p></button></section>
 <div class="lower"><div class="pane fluency-card"><div class="fluency-head"><div><div class="eyebrow">ROAD TO PORTUGUESE FLUENCY</div><h3>Build your 5,000-word vocabulary</h3></div><div class="fluency-percent">${fluencyLabel}<small>%</small></div></div><p>Every mastered word moves the bar. Two consecutive correct answers master a word; obvious basics can graduate after one.</p><div class="fluency-bar" role="progressbar" aria-label="Vocabulary progress toward Portuguese fluency" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${fluency.toFixed(1)}"><span style="width:${fluency}%;min-width:${m.known?'7px':'0'}"></span></div><div class="fluency-milestones"><span><b>${m.known.toLocaleString()}</b> mastered</span><span>${Math.max(0,FLUENCY_WORD_GOAL-m.known).toLocaleString()} to go</span><span>${FLUENCY_WORD_GOAL.toLocaleString()} goal</span></div><div class="notice" style="margin-top:22px"><div><strong>📚 Vocabulary pack</strong><div>${safe(importStatus)} ${bankFull?'✓':''}</div></div>${bankFull?'':'<button class="btn btn-small btn-outline" id="loadPack">Get 5K</button>'}</div></div><div class="pane"><h3>🔥 Last 7 days</h3><p>Your answer count, by day. A few minutes is all it takes.</p><div class="bars">${week.map((d,i)=>`<div class="barcol" title="${vals[i]} answers"><span class="b" style="height:${Math.max(4,Math.round(vals[i]/max*57))}px"></span><small>${d.name}</small></div>`).join('')}</div></div></div><div class="footer">Your answers and profiles stay in this browser. No logins or ads. Export a backup to move progress to another device.<br>🇵🇹 European Portuguese · <a href="https://github.com/professorcdp/EPspokenfrequency" target="_blank" rel="noopener">Word frequency source</a> (CC BY-SA 4.0)</div></main>`);
  document.querySelector('#quickPlay').onclick=()=>startSession('mixed');document.querySelectorAll('[data-mode]').forEach(e=>e.onclick=()=>startSession(e.dataset.mode));document.querySelector('#loadPack')?.addEventListener('click',fetchBank)}
 function profiles(){shell(`<main class="center-panel" style="max-width:680px"><div class="eyebrow">SAVED PLAYER PROFILES</div><h1>Who's exploring today?</h1><p>Everybody gets their own vocabulary memory, practice time and review schedule. Saved locally and kept separate.</p><div class="profiles">${users.list.map(p=>`<button class="profile ${p.id===users.active?'active':''}" data-p="${safe(p.id)}"><span class="avatar">${safe(p.icon)}</span>${safe(p.name)}<small>${metrics(p).known} mastered · ${formatStudyTime(metrics(p).totalSeconds)}</small></button>`).join('')}</div><div style="display:flex;gap:8px"><input maxlength="24" class="field" id="newName" placeholder="New explorer's name" style="margin:0"><button class="btn btn-primary" id="addPlayer">＋ Add</button></div><p class="little">Choose a player and continue where they left off.</p><button class="btn btn-ghost" id="profileBack">← Dashboard</button></main>`);document.querySelectorAll('[data-p]').forEach(e=>e.onclick=()=>{users.active=e.dataset.p;saveUsers();view='home';render()});document.querySelector('#addPlayer').onclick=()=>{let name=document.querySelector('#newName').value.trim();if(!name)return notify('Enter a name first.');if(users.list.length>=12)return notify('Up to 12 profiles.');let id='p'+Date.now()+Math.random().toString(36).slice(2,7),icons=['🐙','🦊','🐬','🦜','🌻','🪁','🐢'];users.list.push({id,name,icon:icons[(users.list.length-2)%icons.length],start:1,words:{},totalSeconds:0,hist:{},created:Date.now()});users.active=id;saveUsers();view='settings';render()};document.querySelector('#profileBack').onclick=()=>{view='home';render()}}
@@ -1170,10 +1532,27 @@ function downloadJSON(data,file){let blob=new Blob([JSON.stringify(data,null,2)]
 function exportBackup(){downloadJSON({type:'palavra-quest-backup',version:3,savedAt:new Date().toISOString(),players:users},`palavra-quest-progress-${dayKey()}.json`)}
 function parseGlossTSV(raw){let lines=raw.replace(/^\uFEFF/,'').split(/\r?\n/),h=lines.shift().split('\t');let field=s=>h.indexOf(s);let needed=['lemma','gloss','rank','pos','flags'];if(needed.some(x=>field(x)<0))throw Error('Expected EPspokenfrequency glosses.tsv columns');let result=[],seen=new Set(),blocked=/\b(vulgar|bp-leaning|archaic|name-like|uncertain)\b/i;for(let l of lines){if(!l)continue;let cells=l.split('\t'),pt=(cells[field('lemma')]||'').trim(),en=(cells[field('gloss')]||'').trim(),pos=(cells[field('pos')]||'noun').trim(),flags=cells[field('flags')]||'',isMwe=field('is_mwe')>=0?cells[field('is_mwe')]:0,rank=Number(cells[field('rank')]);let id=pt.toLocaleLowerCase('pt-PT');if(!pt||!en||seen.has(id)||!Number.isFinite(rank)||blocked.test(flags)||String(isMwe)==='1'||/\d/.test(pt)||pt.length>35||!/[a-zà-ÿ]/i.test(pt)||pt.includes(' '))continue;if(/^(untranslatable|unknown|no translation|n\/a|\?|—)$/i.test(en))continue;seen.add(id);result.push({id,pt,en,pos,rank});if(result.length===5000)break}return result}
 function normalizeImportedJSON(raw){if(!Array.isArray(raw))return[];return raw.map((w,i)=>({id:String(w.id||w.pt||'').toLocaleLowerCase('pt-PT'),pt:String(w.pt||''),en:String(w.en||''),pos:String(w.pos||'noun'),rank:Number(w.rank)||i+1})).filter(w=>w.id&&w.pt&&w.en).slice(0,5000)}
-function installBank(arr){bank=arr;bankFull=arr.length>=4900;bankById=new Map(bank.map(w=>[w.id,w]));retirePreviouslyKnownBasics();importStatus=bankFull?'5,000-word pack installed':`${arr.length} words imported`;let ok=lsWrite(BANK_CACHE_KEY,bank);if(!ok)notify('Vocabulary pack loaded for this tab, but browser storage is unavailable.');else uiMessage='Vocabulary saved offline — '+bank.length.toLocaleString()+' words ready.'}
+function installBank(arr){bank=arr;bankFull=arr.length>=4900;bankById=new Map(bank.map(w=>[w.id,w]));clozeCatalogCache=null;clozeCatalogBank=null;clozeCardsByWordCache=null;retirePreviouslyKnownBasics();importStatus=bankFull?'5,000-word pack installed':`${arr.length} words imported`;let ok=lsWrite(BANK_CACHE_KEY,bank);if(!ok)notify('Vocabulary pack loaded for this tab, but browser storage is unavailable.');else uiMessage='Vocabulary saved offline — '+bank.length.toLocaleString()+' words ready.'}
 async function fetchBank(){if(loadingBank)return;loadingBank=true;importStatus='Downloading European Portuguese words…';if(view==='home')home();let ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),18000);try{let resp=await fetch(SOURCE_URL,{signal:ctrl.signal,mode:'cors',cache:'no-store'});if(!resp.ok)throw Error('Download unavailable (HTTP '+resp.status+')');let result=parseGlossTSV(await resp.text());if(result.length<4900)throw Error('Only '+result.length+' words returned');installBank(result);if(view==='home'||view==='settings')render()}catch(e){importStatus='Full pack not loaded · '+(bankFull?'saved pack available':'starter available');notify('Could not download full pack. You can import glosses.tsv manually. '+e.message);if(view==='home')home()}finally{loadingBank=false;clearTimeout(timer)}}
 function norm(s){return String(s||'').toLocaleLowerCase('pt-PT').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'')}
 function primaryMeaning(en){let s=(en||'').split(';')[0].trim();return s.length>72?s.slice(0,69)+'…':s}
+function getClozeCatalog(){
+ if(clozeCatalogCache&&clozeCatalogBank===bank)return clozeCatalogCache;
+ const cards=[];
+ for(const [id,card] of Object.entries(CURATED_CLOZE_QUESTIONS)){
+  if(!bankById.has(id))continue;
+  cards.push({id,...card,curated:true});
+  for(const [sentence,hint] of CLOZE_VARIANTS[id]||[]){cards.push({id,sentence,hint,options:card.options,curated:true})}
+ }
+ clozeCatalogBank=bank;clozeCatalogCache=cards.slice(0,CLOZE_TARGET_COUNT);clozeCardsByWordCache=null;
+ return clozeCatalogCache;
+}
+function getClozeCardsByWord(){
+ if(clozeCardsByWordCache)return clozeCardsByWordCache;
+ const map=new Map();
+ for(const card of getClozeCatalog()){if(!map.has(card.id))map.set(card.id,[]);map.get(card.id).push(card)}
+ clozeCardsByWordCache=map;return map;
+}
 // Correct words appear at most once per mission. A failed word is deliberately
 // queued again after several different questions, while it is still memorable.
 function queueFailedWord(activeSession,wordId){
@@ -1214,7 +1593,7 @@ function chooseWord(){
 }
 function chooseClozeWord(){
  const p=player(),now=Date.now(),history=p.words||{},skill=estimatedSkillRank(p),due=[],fresh=[];
- for(const id of Object.keys(CLOZE_QUESTIONS)){
+ for(const id of getClozeCardsByWord().keys()){
   const word=bankById.get(id);
   if(!word||session.seenIds.has(id))continue;
   const state=history[id];
@@ -1230,9 +1609,15 @@ function chooseClozeWord(){
 }
 function shuffled(items){let result=[...items];for(let i=result.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]]}return result}
 function makeClozeQuestion(w){
- const card=CLOZE_QUESTIONS[w.id];
+ const cards=getClozeCardsByWord().get(w.id),card=cards?.[Math.floor(Math.random()*cards.length)];
  if(!card)return null;
- const distractors=card.options.filter(option=>norm(option)!==norm(w.pt)),options=shuffled([w.pt,...distractors.slice(0,3)]);
+ let distractors=(card.options||[]).filter(option=>norm(option)!==norm(w.pt));
+ if(distractors.length<3){
+  const nearby=bank.filter(other=>other.id!==w.id&&other.pos===w.pos&&norm(other.pt)!==norm(w.pt)).sort((a,b)=>Math.abs(a.rank-w.rank)-Math.abs(b.rank-w.rank));
+  const seen=new Set([norm(w.pt),...distractors.map(norm)]);
+  for(const other of nearby){if(distractors.length>=3)break;if(!seen.has(norm(other.pt))){distractors.push(other.pt);seen.add(norm(other.pt))}}
+ }
+ const options=shuffled([w.pt,...distractors.slice(0,3)]);
  if(options.length!==4)return null;
  return{w,direction:'cloze',kind:'choice',answer:w.pt,prompt:card.sentence,hint:card.hint,completeSentence:card.sentence.replace('___',w.pt),options,locked:false,started:Date.now()};
 }
