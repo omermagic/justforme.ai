@@ -1508,6 +1508,8 @@ function normalizeProgress(raw={}){
  const progress={start,words,totalSeconds:Math.max(0,Number(raw.totalSeconds)||0),hist,created:Number(raw.created)||Date.now()};
  if(Number.isFinite(raw.skillRank))progress.skillRank=raw.skillRank;
  if(Number.isFinite(raw.skillAnswers))progress.skillAnswers=raw.skillAnswers;
+ if(Number.isFinite(raw.readingAnswers))progress.readingAnswers=Math.max(0,Math.floor(raw.readingAnswers));
+ if(Number.isFinite(raw.readingRight))progress.readingRight=Math.min(progress.readingAnswers||0,Math.max(0,Math.floor(raw.readingRight)));
  return progress;
 }
 function loadDeviceProgress(){
@@ -1712,8 +1714,13 @@ const READING_CARDS=[
  {band:3,focus:'entretanto',passage:'A investigadora apresentou os primeiros resultados. Entretanto, os colegas analisaram os dados mais recentes e prepararam novas perguntas.',question:'O que fizeram os colegas entretanto?',answer:'Analisaram dados e prepararam perguntas',wrong:['Cancelaram a investigação','Saíram para almoçar','Publicaram o relatório final'],explanation:'Enquanto decorria a apresentação, os colegas analisaram dados e prepararam perguntas.'}
 ];
 function readingLevelBand(p=localProgress()){
- const rank=estimatedSkillRank(p);
- return rank>=1500?3:rank>=700?2:1;
+ const rank=estimatedSkillRank(p),answered=Number(p.readingAnswers)||0,right=Number(p.readingRight)||0;
+ const accuracy=answered?right/answered:0;
+ // Vocabulary knowledge alone must not promote reading comprehension. The
+ // learner earns a higher story rate by understanding stories consistently.
+ if(answered>=12&&accuracy>=.8&&rank>=1500)return 3;
+ if(answered>=4&&accuracy>=.65&&rank>=700)return 2;
+ return 1;
 }
 function readingQuestionQuota(p=localProgress()){return readingLevelBand(p)}
 function shouldUseReadingQuestion(){
@@ -1971,6 +1978,10 @@ function answer(given,clicked,skipped=false){
   reviewNote=q.hintUsed?'Hint used — counted as not known and coming back soon.':'Coming back after a few other words.';
  }
  const newSkill=updateSkillEstimate(p,q.w,right);
+ if(q.direction==='reading'){
+  p.readingAnswers=(Number(p.readingAnswers)||0)+1;
+  if(right)p.readingRight=(Number(p.readingRight)||0)+1;
+ }
  reviewNote+=` Level: ${skillBand(newSkill,p.skillAnswers)} · range ${newSkill}.`;
  const newlyMastered=!wasMastered&&isMastered(prior);
  prior.last=now;p.words[q.w.id]=prior;let dk=dayKey();p.hist=p.hist||{};p.hist[dk]=p.hist[dk]||{questions:0,right:0};p.hist[dk].questions++;if(right)p.hist[dk].right++;saveProgress();
@@ -2009,7 +2020,7 @@ function finishSession(){if(!session)return;clearTimeout(feedbackTimeout);record
 function result(){let s=session,m=metrics(),accuracy=s.questions?Math.round(100*s.right/s.questions):0,elapsed=Math.min(180,Math.max(0,180-s.remaining)),masteredThisRun=Math.max(0,m.known-s.masteredAtStart);let heading=s.questions===0?'Adventure paused':accuracy>=85?'Brilliant run!':accuracy>=60?"You're building momentum!":'Every word is progress!';shell(`<main class="center-panel"><div class="big-emoji">${accuracy>=85&&s.questions?'🏆':accuracy>=60?'🚀':'🧭'}</div><div class="eyebrow">THREE-MINUTE QUEST COMPLETE</div><h1>${heading}</h1><p>Your vocabulary map just got smarter. Missed words will return sooner; known words will wait until you need them again.</p><div class="result-grid"><div class="result-stat"><b>${formatSessionTime(elapsed)}</b><span>PRACTISED</span></div><div class="result-stat"><b>${s.right}/${s.questions}</b><span>CORRECT</span></div><div class="result-stat"><b>${masteredThisRun}</b><span>MASTERED</span></div></div><div class="info" style="text-align:left"><b>🧠 Learning progress</b><br>${s.wrongIds.size} tricky word${s.wrongIds.size===1?'':'s'} queued for extra practice · ${m.known} words mastered overall · ${formatStudyTime(m.totalSeconds)} total active practice</div><div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:25px"><button id="playAgain" class="btn btn-primary">⚡ One more mission</button><button id="backHome" class="btn btn-ghost">Dashboard</button></div></main>`);document.querySelector('#playAgain').onclick=()=>startSession(s.mode);document.querySelector('#backHome').onclick=()=>{session=null;view='home';render()}}
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view==='game'&&session?.current?.kind==='choice'&&!session.current.locked&&['1','2','3','4'].includes(e.key)){let el=document.querySelectorAll('[data-choice]')[Number(e.key)-1];if(el)el.click()}});
-render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=28',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=29',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
