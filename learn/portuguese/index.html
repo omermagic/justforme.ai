@@ -44,9 +44,10 @@ gtag('js',new Date());gtag('config','G-E3JJGMR427');
 .feedback small{color:rgba(244,247,255,.78);font-size:11px;font-weight:650}
 .word.cloze-sentence{font-size:clamp(25px,3.7vw,40px);line-height:1.28;letter-spacing:-.035em;max-width:720px;margin-left:auto;margin-right:auto}.sentence-blank{display:inline-block;min-width:112px;color:var(--gold);letter-spacing:.08em;border-bottom:3px solid #ffc96b99;line-height:1}
 .word.listening-word{margin-top:19px}.listening-prompt{display:flex;flex-direction:column;align-items:center;gap:5px}.listening-prompt span{width:82px;height:82px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 28%,#c7fff1,#54ddc6 55%,#25889a);font-size:39px;box-shadow:0 0 0 10px #54e6c41a,0 14px 42px #0007}.listening-prompt small{font-size:15px;letter-spacing:.04em;color:#d6fff5}
+.word.reading-passage{max-width:680px;margin:20px auto 13px;padding:18px 20px;border:1px solid #75ddc94d;border-radius:18px;background:#0d263c99;font-size:clamp(18px,2.7vw,24px);font-weight:650;letter-spacing:-.018em;line-height:1.55;text-align:left}.reading-kicker{display:block;margin-bottom:8px;color:var(--teal);font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
 .fluency-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}.fluency-head h3{font-size:22px;margin:7px 0 0}.fluency-percent{font-size:52px;line-height:.9;font-weight:950;letter-spacing:-.07em;color:var(--gold);white-space:nowrap}.fluency-percent small{font-size:22px;letter-spacing:-.02em}.fluency-bar{height:18px;border-radius:999px;padding:3px;background:#071a2f;border:1px solid #80d7c34d;overflow:hidden;box-shadow:inset 0 2px 8px #0008}.fluency-bar span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#36d5b1,#92f6cf 60%,#ffd477);box-shadow:0 0 20px #54ebbd88;transition:width .6s ease}.fluency-milestones{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#91abc2;font-size:11px;margin-top:11px}.fluency-milestones b{color:var(--mint)}
 @media(max-width:800px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:520px){.fluency-percent{font-size:42px}.fluency-head h3{font-size:18px}.fluency-milestones span:nth-child(2){display:none}.word.cloze-sentence{font-size:25px}.sentence-blank{min-width:82px}}
+@media(max-width:520px){.fluency-percent{font-size:42px}.fluency-head h3{font-size:18px}.fluency-milestones span:nth-child(2){display:none}.word.cloze-sentence{font-size:25px}.sentence-blank{min-width:82px}.word.reading-passage{padding:14px 15px;font-size:17px;line-height:1.48}}
 .listen-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:9px;margin:6px auto 22px}.listen-row .listen{margin:0}.listen-row .translation-hint{color:var(--gold);border-color:#ffc96b70;background:#5a452a55}
 </style>
 <style>
@@ -1693,6 +1694,42 @@ function chooseClozeWord(){
 }
 function shuffled(items){let result=[...items];for(let i=result.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]]}return result}
 const LISTENING_CHANCE=.28;
+const READING_CARDS=[
+ {band:1,focus:'casa',passage:'A Ana estuda perto de casa. Depois das aulas, volta para casa e almoça com a família.',question:'Where does Ana go after school?',answer:'Home',wrong:['To the market','To the station','To the park'],explanation:'Ana volta para casa depois das aulas.'},
+ {band:1,focus:'mercado',passage:'Ao sábado, o Rui vai ao mercado. Compra fruta, pão e leite para a semana.',question:'Where does Rui go on Saturday?',answer:'To the market',wrong:['To the hospital','To the beach','To the office'],explanation:'Ao sábado, o Rui vai ao mercado.'},
+ {band:1,focus:'chuva',passage:'Hoje há muita chuva. A Sofia leva um guarda-chuva azul quando sai de manhã.',question:'What is the weather like?',answer:'It is raining',wrong:['It is snowing','It is sunny','It is very windy'],explanation:'Há muita chuva, por isso a Sofia leva um guarda-chuva.'},
+ {band:1,focus:'comboio',passage:'O Miguel vai para o Porto de comboio. A viagem começa às oito da manhã.',question:'How does Miguel travel to Porto?',answer:'By train',wrong:['By car','By bicycle','By plane'],explanation:'O Miguel viaja de comboio.'},
+ {band:1,focus:'jardim',passage:'As crianças brincam no jardim depois do almoço. Há árvores, flores e um banco verde.',question:'Where are the children playing?',answer:'In the garden',wrong:['In the kitchen','At school','In a shop'],explanation:'As crianças brincam no jardim.'},
+ {band:2,focus:'trânsito',passage:'O Pedro saiu cedo para o trabalho, mas havia muito trânsito na ponte. Chegou vinte minutos atrasado.',question:'Porque é que o Pedro chegou atrasado?',answer:'Havia muito trânsito',wrong:['Perdeu o telemóvel','Acordou tarde','O carro ficou sem gasolina'],explanation:'O trânsito intenso na ponte causou o atraso.'},
+ {band:2,focus:'fatura',passage:'A Leonor recebeu a fatura da eletricidade por correio eletrónico. O valor era mais alto porque usou o aquecimento todos os dias.',question:'O que recebeu a Leonor?',answer:'A fatura da eletricidade',wrong:['Uma carta da escola','Um bilhete de comboio','Uma receita médica'],explanation:'A Leonor recebeu a fatura da eletricidade.'},
+ {band:2,focus:'viagem',passage:'A Marta planeou uma viagem para Coimbra. Como o comboio foi cancelado, acabou por ir de autocarro.',question:'Como viajou a Marta?',answer:'De autocarro',wrong:['De comboio','De avião','A pé'],explanation:'O comboio foi cancelado, por isso a Marta viajou de autocarro.'},
+ {band:2,focus:'segurança',passage:'Antes de começar o passeio de bicicleta, o Tiago colocou o capacete. Para ele, a segurança é mais importante do que a velocidade.',question:'Porque colocou o Tiago o capacete?',answer:'Para sua segurança',wrong:['Porque estava frio','Para andar mais depressa','Porque começou a chover'],explanation:'O Tiago usa o capacete por segurança.'},
+ {band:2,focus:'licença',passage:'A Joana quer abrir uma pequena esplanada. Primeiro, precisa de pedir uma licença à câmara municipal.',question:'Do que precisa a Joana antes de abrir a esplanada?',answer:'De uma licença',wrong:['De um passaporte','De uma fatura','De um bilhete'],explanation:'Antes de abrir a esplanada, a Joana precisa de uma licença.'},
+ {band:3,focus:'orçamento',passage:'A associação aprovou um orçamento para renovar a biblioteca do bairro. As obras só começarão depois do verão, quando o espaço estiver vazio.',question:'O que aprovou a associação?',answer:'Um orçamento para renovar a biblioteca',wrong:['O encerramento definitivo da biblioteca','Uma viagem para os moradores','A venda do edifício'],explanation:'A associação aprovou um orçamento destinado à renovação da biblioteca.'},
+ {band:3,focus:'investimento',passage:'A empresa anunciou um investimento em painéis solares. Pretende reduzir os custos de energia e, ao mesmo tempo, diminuir as emissões.',question:'Qual é o objetivo do investimento?',answer:'Reduzir custos e emissões',wrong:['Aumentar o consumo de energia','Contratar mais motoristas','Mudar a empresa de cidade'],explanation:'O investimento procura reduzir tanto os custos como as emissões.'},
+ {band:3,focus:'responsabilidade',passage:'Os moradores criaram uma horta partilhada. Cada família assume a responsabilidade de regar as plantas num dia diferente da semana.',question:'Que responsabilidade tem cada família?',answer:'Regar as plantas num dia definido',wrong:['Comprar todas as ferramentas','Vender os legumes no mercado','Construir uma nova casa'],explanation:'Cada família fica responsável pela rega num determinado dia.'},
+ {band:3,focus:'conclusão',passage:'Depois de comparar vários percursos, a equipa chegou à conclusão de que a bicicleta era o meio mais rápido no centro durante a hora de ponta.',question:'A que conclusão chegou a equipa?',answer:'A bicicleta era o meio mais rápido',wrong:['O carro era sempre mais económico','Não havia trânsito no centro','Todos os percursos demoravam o mesmo'],explanation:'A comparação mostrou que a bicicleta era mais rápida durante a hora de ponta.'},
+ {band:3,focus:'entretanto',passage:'A investigadora apresentou os primeiros resultados. Entretanto, os colegas analisaram os dados mais recentes e prepararam novas perguntas.',question:'O que fizeram os colegas entretanto?',answer:'Analisaram dados e prepararam perguntas',wrong:['Cancelaram a investigação','Saíram para almoçar','Publicaram o relatório final'],explanation:'Enquanto decorria a apresentação, os colegas analisaram dados e prepararam perguntas.'}
+];
+function readingLevelBand(p=localProgress()){
+ const rank=estimatedSkillRank(p);
+ return rank>=1500?3:rank>=700?2:1;
+}
+function readingQuestionQuota(p=localProgress()){return readingLevelBand(p)}
+function shouldUseReadingQuestion(){
+ const quota=readingQuestionQuota(),capacity=(Math.floor(session.questions/25)+1)*quota;
+ if(session.readingCount>=capacity||session.questions-session.lastReadingAt<5)return false;
+ return Math.random()<quota/25;
+}
+function makeReadingQuestion(){
+ const band=readingLevelBand();
+ let cards=READING_CARDS.filter(card=>card.band===band&&bankById.has(card.focus)&&!session.seenIds.has(card.focus));
+ if(!cards.length)cards=READING_CARDS.filter(card=>card.band<band&&bankById.has(card.focus)&&!session.seenIds.has(card.focus));
+ if(!cards.length)return null;
+ const card=cards[Math.floor(Math.random()*cards.length)],w=bankById.get(card.focus);
+ session.seenIds.add(w.id);
+ return{w,direction:'reading',kind:'choice',answer:card.answer,prompt:card.passage,passage:card.passage,question:card.question,explanation:card.explanation,readingBand:card.band,options:shuffled([card.answer,...card.wrong]),locked:false,hintUsed:false,started:Date.now()};
+}
 const MEANING_FAMILIES=[
  /\b(mother|father|parent|brother|sister|son|daughter|husband|wife|family|grandmother|grandfather)\b/i,
  /\b(man|woman|person|people|child|children|boy|girl|friend|neighbour|student|teacher|doctor|worker)\b/i,
@@ -1758,7 +1795,7 @@ function makeQuestion(w,preferCloze=false){
  if(options.length<4){kind='type';direction='reverse';prompt=primaryMeaning(w.en);answer=w.pt}
  return{w,direction,kind,answer,prompt,options:shuffled(options),locked:false,hintUsed:false,started:Date.now()};
 }
-function startSession(mode){clearTimeout(feedbackTimeout);stopSessionClock();session={mode,remaining:180,timeExpired:false,accountedSeconds:0,masteredAtStart:metrics().known,questions:0,right:0,combo:0,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),retryQueue:[],retryCounts:new Map(),current:null,paused:false,levelAtStart:estimatedSkillRank()};view='game';nextQuestion();intervalHandle=setInterval(tick,140)}
+function startSession(mode){clearTimeout(feedbackTimeout);stopSessionClock();session={mode,remaining:180,timeExpired:false,accountedSeconds:0,masteredAtStart:metrics().known,questions:0,right:0,combo:0,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),retryQueue:[],retryCounts:new Map(),readingCount:0,lastReadingAt:-10,current:null,paused:false,levelAtStart:estimatedSkillRank()};view='game';nextQuestion();intervalHandle=setInterval(tick,140)}
 let lastFrame=0;
 function expireSessionTimer(){
  if(!session)return;
@@ -1792,7 +1829,20 @@ function recordSessionTime(force=false){
  if(delta<=0||(!force&&delta<5))return;
  const p=localProgress();p.totalSeconds=(Number(p.totalSeconds)||0)+delta;session.accountedSeconds=elapsed;saveProgress();
 }
-function nextQuestion(){if(!session)return;if(session.remaining<=0)return finishSession();const retryReady=session.retryQueue.some(item=>item.readyAt<=session.questions),clozeChance=session.mode==='recall'?0.22:session.mode==='sprint'?0.3:0.34,wantsCloze=!retryReady&&Math.random()<clozeChance;let w=wantsCloze?chooseClozeWord():null;if(!w)w=chooseWord();if(!w)return finishSession();session.current=makeQuestion(w,wantsCloze);game()}
+function nextQuestion(){
+ if(!session)return;
+ if(session.remaining<=0)return finishSession();
+ const retryReady=session.retryQueue.some(item=>item.readyAt<=session.questions);
+ if(!retryReady&&shouldUseReadingQuestion()){
+  const readingQuestion=makeReadingQuestion();
+  if(readingQuestion){session.current=readingQuestion;session.readingCount++;session.lastReadingAt=session.questions;game();return}
+ }
+ const clozeChance=session.mode==='recall'?0.22:session.mode==='sprint'?0.3:0.34,wantsCloze=!retryReady&&Math.random()<clozeChance;
+ let w=wantsCloze?chooseClozeWord():null;
+ if(!w)w=chooseWord();
+ if(!w)return finishSession();
+ session.current=makeQuestion(w,wantsCloze);game();
+}
 function continueAfterAnsweredQuestion(answeredSession){
  if(session!==answeredSession||view!=='game')return;
  if(answeredSession.timeExpired||answeredSession.remaining<=0)finishSession();
@@ -1800,9 +1850,11 @@ function continueAfterAnsweredQuestion(answeredSession){
 }
 function questionPromptHTML(q){
  if(q.direction==='listen')return '<span class="listening-prompt"><span>🎧</span><small>Listen carefully</small></span>';
+ if(q.direction==='reading')return `<span class="reading-kicker">📖 Portuguese mini-story</span>${safe(q.passage)}`;
  return q.direction==='cloze'?safe(q.prompt).replace('___','<span class="sentence-blank">_____</span>'):safe(q.prompt);
 }
 function sentenceHelpText(q,hideTranslation){
+ if(q.direction==='reading')return q.question;
  if(q.direction!=='cloze')return q.direction==='listen'?'Which English meaning matches the word you hear?':q.kind==='type'?'Type the Portuguese word or phrase':q.direction==='reverse'?'Which Portuguese word matches?':'What does this mean in English?';
  return hideTranslation&&!q.translationRevealed?'Use the Portuguese sentence context. Ask for a hint if you need the English translation.':`🇬🇧 ${q.hint}`;
 }
@@ -1821,14 +1873,19 @@ function game(){
  if(!session)return view='home',render();
  const s=session,q=s.current,w=q?.w;
  if(!q)return;
- const label=q.direction==='cloze'?'COMPLETE THE SENTENCE':q.direction==='listen'?'LISTEN → MEANING':q.kind==='type'?'SPELL IT IN PORTUGUESE':q.direction==='reverse'?'ENGLISH → PORTUGUESE':'PORTUGUESE → ENGLISH';
+ const label=q.direction==='reading'?'READ · LISTEN · UNDERSTAND':q.direction==='cloze'?'COMPLETE THE SENTENCE':q.direction==='listen'?'LISTEN → MEANING':q.kind==='type'?'SPELL IT IN PORTUGUESE':q.direction==='reverse'?'ENGLISH → PORTUGUESE':'PORTUGUESE → ENGLISH';
  const hideTranslation=q.direction==='cloze'&&hidesSentenceTranslations();
  const translationHint=hideTranslation&&!q.translationRevealed?'<button class="listen translation-hint" id="translationHintBtn">🇬🇧 Show English hint</button>':'';
- shell(`<main class="game-shell"><div class="game-head"><button class="btn btn-ghost btn-small" id="exitSession">← End run</button><div class="game-metrics"><div class="metric clock"><small>⏱</small><span id="clock">${timerText(s.remaining)}</span></div><div class="metric combo"><small>🔥</small><span id="combo">${s.combo} combo</span></div><div class="metric"><small>🧠</small><span id="mastered">${metrics().known} mastered</span></div></div></div><div class="track"><div class="fill" id="timeFill" style="width:${100*s.remaining/180}%"></div></div><div class="question"><div class="question-top"><span class="qtype">${label}</span><span class="rank">WORD ${w.rank.toLocaleString()} · ${safe(w.pos)}</span></div><div class="word${q.direction==='cloze'?' cloze-sentence':q.direction==='listen'?' listening-word':''}">${questionPromptHTML(q)}</div><div class="word-sub" id="questionHelp">${safe(sentenceHelpText(q,hideTranslation))}</div><div class="listen-row"><button class="listen" id="listenBtn" title="Play European Portuguese pronunciation">${q.direction==='listen'?'🔊 Play word again':q.direction==='forward'?'🔊 Hear again':q.direction==='cloze'?'🔊 Hear the missing word':'🔊 Hear Portuguese (hint)'}</button>${translationHint}</div>${q.kind==='choice'?`<div class="choices">${q.options.map((o,i)=>`<button class="choice" data-choice="${i}"><span class="letter">${'ABCD'[i]}</span><span>${safe(o)}</span></button>`).join('')}</div><div style="text-align:center;margin-top:14px"><button class="btn btn-outline btn-small" id="dontKnowChoice">🤷 I don't know yet</button></div>`:`<div class="type-wrap"><input autocomplete="off" autocapitalize="off" spellcheck="false" class="type-input" id="typedAnswer" placeholder="Write the Portuguese answer" aria-label="Answer"><div class="type-actions"><button class="btn btn-primary" id="submitTyped">Check answer ↗</button><button class="btn btn-ghost" id="dontKnow">Not sure</button></div></div>`}<div class="feedback hidden" id="feedback" role="status"></div><div class="tip" id="tipLine">${q.direction==='listen'?'Audio replays are part of this listening challenge.':session.mode==='sprint'?'Choose quickly to build a combo!':'Wrong answers are not failures: they teach the scheduler what to bring back.'}</div></div><div class="backline"><span>${s.questions} answers this run · ${s.newIds.size} new words</span><span>🇵🇹 Offline-friendly</span></div></main>`);
+ const rankLabel=q.direction==='reading'?`COMPREHENSION · LEVEL ${q.readingBand}`:`WORD ${w.rank.toLocaleString()} · ${safe(w.pos)}`;
+ const wordClass=q.direction==='reading'?' reading-passage':q.direction==='cloze'?' cloze-sentence':q.direction==='listen'?' listening-word':'';
+ const listenLabel=q.direction==='reading'?'🔊 Hear paragraph again':q.direction==='listen'?'🔊 Play word again':q.direction==='forward'?'🔊 Hear again':q.direction==='cloze'?'🔊 Hear the missing word':'🔊 Hear Portuguese (hint)';
+ const tipText=q.direction==='reading'?'The paragraph is read aloud automatically. Replay it whenever you need.':q.direction==='listen'?'Audio replays are part of this listening challenge.':session.mode==='sprint'?'Choose quickly to build a combo!':'Wrong answers are not failures: they teach the scheduler what to bring back.';
+ shell(`<main class="game-shell"><div class="game-head"><button class="btn btn-ghost btn-small" id="exitSession">← End run</button><div class="game-metrics"><div class="metric clock"><small>⏱</small><span id="clock">${timerText(s.remaining)}</span></div><div class="metric combo"><small>🔥</small><span id="combo">${s.combo} combo</span></div><div class="metric"><small>🧠</small><span id="mastered">${metrics().known} mastered</span></div></div></div><div class="track"><div class="fill" id="timeFill" style="width:${100*s.remaining/180}%"></div></div><div class="question"><div class="question-top"><span class="qtype">${label}</span><span class="rank">${rankLabel}</span></div><div class="word${wordClass}">${questionPromptHTML(q)}</div><div class="word-sub" id="questionHelp">${safe(sentenceHelpText(q,hideTranslation))}</div><div class="listen-row"><button class="listen" id="listenBtn" title="Play European Portuguese pronunciation">${listenLabel}</button>${translationHint}</div>${q.kind==='choice'?`<div class="choices">${q.options.map((o,i)=>`<button class="choice" data-choice="${i}"><span class="letter">${'ABCD'[i]}</span><span>${safe(o)}</span></button>`).join('')}</div><div style="text-align:center;margin-top:14px"><button class="btn btn-outline btn-small" id="dontKnowChoice">🤷 I don't know yet</button></div>`:`<div class="type-wrap"><input autocomplete="off" autocapitalize="off" spellcheck="false" class="type-input" id="typedAnswer" placeholder="Write the Portuguese answer" aria-label="Answer"><div class="type-actions"><button class="btn btn-primary" id="submitTyped">Check answer ↗</button><button class="btn btn-ghost" id="dontKnow">Not sure</button></div></div>`}<div class="feedback hidden" id="feedback" role="status"></div><div class="tip" id="tipLine">${tipText}</div></div><div class="backline"><span>${s.questions} answers this run · ${s.newIds.size} new words</span><span>🇵🇹 Offline-friendly</span></div></main>`);
  document.querySelector('#exitSession').onclick=()=>{if(confirm('End your run early? Your answered words are already saved.'))finishSession()};document.querySelector('#listenBtn').onclick=()=>{
-  const replayingAnswer=Boolean(q.locked&&(q.direction==='cloze'||q.direction==='reverse'));
+  const replayingAnswer=Boolean(q.locked&&(q.direction==='cloze'||q.direction==='reverse'||q.direction==='reading'));
   const isHint=!q.locked&&(q.direction==='cloze'||q.direction==='reverse');
-  const played=speakPortuguese(q.locked&&q.completeSentence?q.completeSentence:w.pt,false,replayingAnswer);
+  const spokenText=q.direction==='reading'?q.passage:q.locked&&q.completeSentence?q.completeSentence:w.pt;
+  const played=speakPortuguese(spokenText,false,q.direction==='reading'||replayingAnswer);
   if(isHint&&played){
    markHintUsed(q);
    if(hideTranslation)revealSentenceTranslation(q);
@@ -1841,9 +1898,10 @@ function game(){
   revealSentenceTranslation(q);
  };
  if(q.kind==='choice'){document.querySelectorAll('[data-choice]').forEach(btn=>btn.onclick=()=>answer(q.options[Number(btn.dataset.choice)],btn));document.querySelector('#dontKnowChoice').onclick=()=>answer('',null,true)}else{let input=document.querySelector('#typedAnswer');document.querySelector('#submitTyped').onclick=()=>answer(input.value.trim(),null);document.querySelector('#dontKnow').onclick=()=>answer('',null,true);input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();answer(input.value.trim(),null)}};setTimeout(()=>{if(view==='game'&&!q.locked)input.focus({preventScroll:true})},70)}
- // Portuguese-to-English and listening challenges pronounce the prompt on
- // arrival. Recall questions wait until grading so speech gives nothing away.
- if(prefs.sound&&(q.direction==='forward'||q.direction==='listen'))speakPortuguese(w.pt,true);
+ // Reading challenges play the complete paragraph and keep it on screen until
+ // the audio finishes. Recall questions wait until grading to avoid clues.
+ if(prefs.sound&&q.direction==='reading')speakPortuguese(q.passage,true,true);
+ else if(prefs.sound&&(q.direction==='forward'||q.direction==='listen'))speakPortuguese(w.pt,true);
 }
 function speakPortuguese(word,automatic=false,pauseAfterAnswer=false){
  if(!('speechSynthesis'in window)){if(!automatic)notify('Speech is unavailable on this browser.');return false}
@@ -1898,7 +1956,7 @@ function answer(given,clicked,skipped=false){
  let reviewNote='';
  if(right){
   s.right++;s.combo++;prior.right++;
-  const clearlyEasy=(prior.wrong||0)===0&&isClearlyKnown(q.w,skillBefore,responseMs,q.kind);
+  const clearlyEasy=q.direction!=='reading'&&(prior.wrong||0)===0&&isClearlyKnown(q.w,skillBefore,responseMs,q.kind);
   if(clearlyEasy){
    prior.retiredEasy=true;prior.streak=Math.max(MASTERY_STREAK,prior.streak+1);prior.verifiedDays=Math.max(MASTERY_STREAK,prior.verifiedDays||0);prior.interval=3650;prior.due=now+3650*DAY;
    reviewNote='Easy for you — retired from future missions.';
@@ -1929,7 +1987,19 @@ function answer(given,clicked,skipped=false){
  const listenBtn=document.querySelector('#listenBtn');if(listenBtn)listenBtn.textContent='🔊 Hear again';
  document.querySelector('#translationHintBtn')?.setAttribute('disabled','');
  if(q.kind==='choice'){document.querySelector('#dontKnowChoice')?.setAttribute('disabled','');document.querySelectorAll('[data-choice]').forEach((el)=>{el.disabled=true;let t=q.options[Number(el.dataset.choice)];if(norm(t)===norm(q.answer))el.classList.add('correct');else if(el===clicked)el.classList.add('wrong');else el.classList.add('muted')})}else{document.querySelector('#typedAnswer')?.setAttribute('disabled','');document.querySelector('#submitTyped')?.setAttribute('disabled','');document.querySelector('#dontKnow')?.setAttribute('disabled','')}
- let f=document.querySelector('#feedback');let feedbackTitle=right?(newlyMastered?'✨ Word mastered!':'✨ Nailed it!'):hintedCorrect?'🎧 Correct with a hint — not counted as known':`💡 ${safe(q.w.pt)} = ${safe(primaryMeaning(q.w.en))}`;let feedbackBody=right?`${safe(q.w.pt)} = ${safe(primaryMeaning(q.w.en))}`:hintedCorrect?`You found ${safe(q.w.pt)}, but the hint revealed it.`:`Remember: ${safe(q.w.pt)} means ${safe(primaryMeaning(q.w.en))}.`;let display=`<div><strong>${feedbackTitle}</strong>${feedbackBody}<br><small>${safe(reviewNote)}</small></div><div class="ficon">${right?'✅':hintedCorrect?'🎧':'🧩'}</div>`;f.innerHTML=display;f.classList.remove('hidden');f.classList.add(right?'good':hintedCorrect?'assisted':'bad');document.querySelector('#combo').textContent=s.combo+' combo';document.querySelector('#mastered').textContent=metrics(p).known+' mastered';
+ const f=document.querySelector('#feedback');
+ let feedbackTitle,feedbackBody,feedbackIcon;
+ if(q.direction==='reading'){
+  feedbackTitle=right?'📖 You understood the story!':'📖 Read and listen once more';
+  feedbackBody=safe(q.explanation);
+  feedbackIcon=right?'✅':'📚';
+ }else{
+  feedbackTitle=right?(newlyMastered?'✨ Word mastered!':'✨ Nailed it!'):hintedCorrect?'🎧 Correct with a hint — not counted as known':`💡 ${safe(q.w.pt)} = ${safe(primaryMeaning(q.w.en))}`;
+  feedbackBody=right?`${safe(q.w.pt)} = ${safe(primaryMeaning(q.w.en))}`:hintedCorrect?`You found ${safe(q.w.pt)}, but the hint revealed it.`:`Remember: ${safe(q.w.pt)} means ${safe(primaryMeaning(q.w.en))}.`;
+  feedbackIcon=right?'✅':hintedCorrect?'🎧':'🧩';
+ }
+ const display=`<div><strong>${feedbackTitle}</strong>${feedbackBody}<br><small>${safe(reviewNote)}</small></div><div class="ficon">${feedbackIcon}</div>`;
+ f.innerHTML=display;f.classList.remove('hidden');f.classList.add(right?'good':hintedCorrect?'assisted':'bad');document.querySelector('#combo').textContent=s.combo+' combo';document.querySelector('#mastered').textContent=metrics(p).known+' mastered';
  const showNextQuestion=()=>continueAfterAnsweredQuestion(s);
  feedbackTimeout=setTimeout(()=>{
   if(prefs.sound&&answerSpeechActive)answerSpeechWaiters.push(showNextQuestion);
@@ -1939,7 +2009,7 @@ function finishSession(){if(!session)return;clearTimeout(feedbackTimeout);record
 function result(){let s=session,m=metrics(),accuracy=s.questions?Math.round(100*s.right/s.questions):0,elapsed=Math.min(180,Math.max(0,180-s.remaining)),masteredThisRun=Math.max(0,m.known-s.masteredAtStart);let heading=s.questions===0?'Adventure paused':accuracy>=85?'Brilliant run!':accuracy>=60?"You're building momentum!":'Every word is progress!';shell(`<main class="center-panel"><div class="big-emoji">${accuracy>=85&&s.questions?'🏆':accuracy>=60?'🚀':'🧭'}</div><div class="eyebrow">THREE-MINUTE QUEST COMPLETE</div><h1>${heading}</h1><p>Your vocabulary map just got smarter. Missed words will return sooner; known words will wait until you need them again.</p><div class="result-grid"><div class="result-stat"><b>${formatSessionTime(elapsed)}</b><span>PRACTISED</span></div><div class="result-stat"><b>${s.right}/${s.questions}</b><span>CORRECT</span></div><div class="result-stat"><b>${masteredThisRun}</b><span>MASTERED</span></div></div><div class="info" style="text-align:left"><b>🧠 Learning progress</b><br>${s.wrongIds.size} tricky word${s.wrongIds.size===1?'':'s'} queued for extra practice · ${m.known} words mastered overall · ${formatStudyTime(m.totalSeconds)} total active practice</div><div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:25px"><button id="playAgain" class="btn btn-primary">⚡ One more mission</button><button id="backHome" class="btn btn-ghost">Dashboard</button></div></main>`);document.querySelector('#playAgain').onclick=()=>startSession(s.mode);document.querySelector('#backHome').onclick=()=>{session=null;view='home';render()}}
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view==='game'&&session?.current?.kind==='choice'&&!session.current.locked&&['1','2','3','4'].includes(e.key)){let el=document.querySelectorAll('[data-choice]')[Number(e.key)-1];if(el)el.click()}});
-render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=27',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=28',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
