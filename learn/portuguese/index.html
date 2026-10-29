@@ -45,10 +45,10 @@ gtag('js',new Date());gtag('config','G-E3JJGMR427');
 .word.cloze-sentence{font-size:clamp(25px,3.7vw,40px);line-height:1.28;letter-spacing:-.035em;max-width:720px;margin-left:auto;margin-right:auto}.sentence-blank{display:inline-block;min-width:112px;color:var(--gold);letter-spacing:.08em;border-bottom:3px solid #ffc96b99;line-height:1}
 .word.listening-word{margin-top:19px}.listening-prompt{display:flex;flex-direction:column;align-items:center;gap:5px}.listening-prompt span{width:82px;height:82px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 28%,#c7fff1,#54ddc6 55%,#25889a);font-size:39px;box-shadow:0 0 0 10px #54e6c41a,0 14px 42px #0007}.listening-prompt small{font-size:15px;letter-spacing:.04em;color:#d6fff5}
 .word.reading-passage{max-width:680px;margin:20px auto 13px;padding:18px 20px;border:1px solid #75ddc94d;border-radius:18px;background:#0d263c99;font-size:clamp(18px,2.7vw,24px);font-weight:650;letter-spacing:-.018em;line-height:1.55;text-align:left}.reading-kicker{display:block;margin-bottom:8px;color:var(--teal);font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
-.skill-trainers{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.skill-trainer{min-height:128px;padding:16px 14px;border:1px solid var(--line);border-radius:17px;background:linear-gradient(145deg,#18324cbd,#10233bba);color:var(--ink);text-align:left;transition:transform .18s,border-color .18s,background .18s}.skill-trainer:hover{transform:translateY(-3px);border-color:#61d7c98c;background:#1a3853}.skill-trainer .skill-icon{display:block;font-size:25px;margin-bottom:12px}.skill-trainer strong{display:block;font-size:14px;margin-bottom:5px}.skill-trainer small{display:block;color:#9fb5ca;font-size:11px;line-height:1.4}.skill-trainer b{display:block;margin-top:9px;color:var(--mint);font-size:9px;letter-spacing:.12em;text-transform:uppercase}
+.skill-trainers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.skill-trainer{min-height:128px;padding:16px 14px;border:1px solid var(--line);border-radius:17px;background:linear-gradient(145deg,#18324cbd,#10233bba);color:var(--ink);text-align:left;transition:transform .18s,border-color .18s,background .18s}.skill-trainer:hover{transform:translateY(-3px);border-color:#61d7c98c;background:#1a3853}.skill-trainer.locked{opacity:.62;border-style:dashed}.skill-trainer.locked:hover{transform:none;border-color:var(--line);background:linear-gradient(145deg,#18324cbd,#10233bba)}.skill-trainer .skill-icon{display:block;font-size:25px;margin-bottom:12px}.skill-trainer strong{display:block;font-size:14px;margin-bottom:5px}.skill-trainer small{display:block;color:#9fb5ca;font-size:11px;line-height:1.4}.skill-trainer b{display:block;margin-top:9px;color:var(--mint);font-size:9px;letter-spacing:.12em;text-transform:uppercase}.skill-trainer.locked b{color:var(--gold)}
 .fluency-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}.fluency-head h3{font-size:22px;margin:7px 0 0}.fluency-percent{font-size:52px;line-height:.9;font-weight:950;letter-spacing:-.07em;color:var(--gold);white-space:nowrap}.fluency-percent small{font-size:22px;letter-spacing:-.02em}.fluency-bar{height:18px;border-radius:999px;padding:3px;background:#071a2f;border:1px solid #80d7c34d;overflow:hidden;box-shadow:inset 0 2px 8px #0008}.fluency-bar span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#36d5b1,#92f6cf 60%,#ffd477);box-shadow:0 0 20px #54ebbd88;transition:width .6s ease}.fluency-milestones{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#91abc2;font-size:11px;margin-top:11px}.fluency-milestones b{color:var(--mint)}
 @media(max-width:800px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.skill-trainers{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:520px){.fluency-percent{font-size:42px}.fluency-head h3{font-size:18px}.fluency-milestones span:nth-child(2){display:none}.word.cloze-sentence{font-size:25px}.sentence-blank{min-width:82px}.word.reading-passage{padding:14px 15px;font-size:17px;line-height:1.48}.skill-trainer{min-height:118px;padding:14px 12px}.skill-trainer:last-child{grid-column:1/-1;min-height:104px}}
+@media(max-width:520px){.fluency-percent{font-size:42px}.fluency-head h3{font-size:18px}.fluency-milestones span:nth-child(2){display:none}.word.cloze-sentence{font-size:25px}.sentence-blank{min-width:82px}.word.reading-passage{padding:14px 15px;font-size:17px;line-height:1.48}.skill-trainer{min-height:118px;padding:14px 12px}}
 .listen-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:9px;margin:6px auto 22px}.listen-row .listen{margin:0}.listen-row .translation-hint{color:var(--gold);border-color:#ffc96b70;background:#5a452a55}
 </style>
 <style>
@@ -1598,16 +1598,17 @@ const TRAINING_TYPES={
  listening:{name:'Listening',icon:'🎧'},
  spelling:{name:'Portuguese spelling',icon:'✍️'},
  sentences:{name:'Sentence gaps',icon:'🧩'},
- reading:{name:'Mini-story comprehension',icon:'📖'}
+ reading:{name:'Mini-story comprehension',icon:'📖'},
+ audioStory:{name:'Hidden audio stories',icon:'🎙️'}
 };
 function header(){return `<header class="top"><div class="brand"><span class="brand-mark">✦</span><span>palavra<em>quest</em></span></div><div class="top-actions"><span class="chip">🇵🇹 EUROPEAN PT</span><a class="btn-icon" href="/" title="Back to AI by Gazit" aria-label="Back to AI by Gazit">⌂</a><button class="btn-icon" id="settingsBtn" title="Settings / backup" aria-label="Settings / backup">⚙</button></div></header>`}
 function bindHeader(){document.querySelector('#settingsBtn')?.addEventListener('click',()=>{recordSessionTime(true);stopSessionClock();view='settings';render()})}
 function shell(content){app.innerHTML=header()+content+`<div id="toast" role="status" class="notice ${uiMessage?'':'hidden'}">${safe(uiMessage)}</div>`;bindHeader()}
 function render(){if(view==='home')home();else if(view==='settings')settings();else if(view==='game')game();else if(view==='result')result()}
-function home(){let p=localProgress(),m=metrics(p),fluency=fluencyProgress(m.known),fluencyLabel=formatFluencyPercent(fluency),week=lastDays(7),vals=week.map(d=>p.hist?.[d.key]?.questions||0),max=Math.max(8,...vals);shell(`<main><section class="hero"><div><div class="eyebrow">YOUR 3-MINUTE PORTUGUESE ADVENTURE</div><h1>Small missions.<br><span>Big vocabulary.</span></h1><p>Explore real European Portuguese, win quick word battles, and let the game remember what you know. It brings back the words you need to practise — not the ones you've already mastered.</p><div class="hero-cta"><button class="btn btn-primary" id="quickPlay">⚡ Start 3-minute quest</button><span class="fine">Just <strong>180 seconds</strong> per mission</span></div></div><div class="world" aria-hidden="true"><div class="world-glow"></div><div class="orbit"></div><div class="planet"><i class="tile a"></i><i class="tile b"></i><i class="tile c"></i><span class="tower">🏰</span></div><div class="orbital">⭐</div><div class="flight">🛩️</div><div class="flagmark"><b>🇵🇹 PORTUGAL</b><small>Unlock 5,000 words</small></div></div></section>
+function home(){let p=localProgress(),m=metrics(p),audioUnlocked=advancedAudioUnlocked(p),fluency=fluencyProgress(m.known),fluencyLabel=formatFluencyPercent(fluency),week=lastDays(7),vals=week.map(d=>p.hist?.[d.key]?.questions||0),max=Math.max(8,...vals);shell(`<main><section class="hero"><div><div class="eyebrow">YOUR 3-MINUTE PORTUGUESE ADVENTURE</div><h1>Small missions.<br><span>Big vocabulary.</span></h1><p>Explore real European Portuguese, win quick word battles, and let the game remember what you know. It brings back the words you need to practise — not the ones you've already mastered.</p><div class="hero-cta"><button class="btn btn-primary" id="quickPlay">⚡ Start 3-minute quest</button><span class="fine">Just <strong>180 seconds</strong> per mission</span></div></div><div class="world" aria-hidden="true"><div class="world-glow"></div><div class="orbit"></div><div class="planet"><i class="tile a"></i><i class="tile b"></i><i class="tile c"></i><span class="tower">🏰</span></div><div class="orbital">⭐</div><div class="flight">🛩️</div><div class="flagmark"><b>🇵🇹 PORTUGAL</b><small>Unlock 5,000 words</small></div></div></section>
 <section class="stats"><div class="stat"><div class="label">Words discovered</div><div class="value">${m.seen.toLocaleString()} <span>/ ${bank.length.toLocaleString()}</span></div></div><div class="stat"><div class="label">Solid vocabulary</div><div class="value" style="color:var(--mint)">${m.known.toLocaleString()} <span>mastered</span></div></div><div class="stat"><div class="label">Ready to review</div><div class="value" style="color:var(--gold)">${m.due} <span>words</span></div></div><div class="stat"><div class="label">Estimated level</div><div class="value" style="color:var(--blue)">${safe(m.skillLabel)} <span>range ${m.skillRank}</span></div></div><div class="stat"><div class="label">Total practice</div><div class="value">${formatStudyTime(m.totalSeconds)} <span>active time</span></div></div></section>
 <section class="section-title"><h2>Choose your mission</h2><small>Same smart memory · different challenges</small></section><section class="missions"><button class="mission" data-mode="mixed"><span class="m-icon">🧭</span><span class="corner">↗</span><h3>Explorer Run</h3><p>Recognition, 300 sentence challenges and spelling. Best for daily progress.</p></button><button class="mission" data-mode="recall"><span class="m-icon">🧠</span><span class="corner">↗</span><h3>Memory Duel</h3><p>Harder recall, spelling and sentence clues. Make your words stick.</p></button><button class="mission" data-mode="sprint"><span class="m-icon">⚡</span><span class="corner">↗</span><h3>Lightning Sprint</h3><p>Fast choices, sentence gaps and combos. Beat your best streak.</p></button></section>
-<section class="section-title"><h2>Train one skill</h2><small>Choose one question type · 3 minutes</small></section><section class="skill-trainers"><button class="skill-trainer" data-focus="meaning"><span class="skill-icon">🧠</span><strong>Word meanings</strong><small>Portuguese words with four English choices.</small><b>Start 3 min ↗</b></button><button class="skill-trainer" data-focus="listening"><span class="skill-icon">🎧</span><strong>Listening</strong><small>Hear Portuguese and choose what it means.</small><b>Start 3 min ↗</b></button><button class="skill-trainer" data-focus="spelling"><span class="skill-icon">✍️</span><strong>Spelling</strong><small>See the meaning and type it in Portuguese.</small><b>Start 3 min ↗</b></button><button class="skill-trainer" data-focus="sentences"><span class="skill-icon">🧩</span><strong>Sentence gaps</strong><small>Complete Portuguese sentences in context.</small><b>Start 3 min ↗</b></button><button class="skill-trainer" data-focus="reading"><span class="skill-icon">📖</span><strong>Mini stories</strong><small>Listen, read and answer comprehension questions.</small><b>Start 3 min ↗</b></button></section>
+<section class="section-title"><h2>Train one skill</h2><small>Choose one question type · 3 minutes</small></section><section class="skill-trainers"><button class="skill-trainer" data-focus="meaning"><span class="skill-icon">🧠</span><strong>Word meanings</strong><small>Portuguese words with four English choices.</small><b>Start 3 min ↗</b></button><button class="skill-trainer" data-focus="listening"><span class="skill-icon">🎧</span><strong>Listening</strong><small>Hear Portuguese and choose what it means.</small><b>Start 3 min ↗</b></button><button class="skill-trainer" data-focus="spelling"><span class="skill-icon">✍️</span><strong>Spelling</strong><small>See the meaning and type it in Portuguese.</small><b>Start 3 min ↗</b></button><button class="skill-trainer" data-focus="sentences"><span class="skill-icon">🧩</span><strong>Sentence gaps</strong><small>Complete Portuguese sentences in context.</small><b>Start 3 min ↗</b></button><button class="skill-trainer" data-focus="reading"><span class="skill-icon">📖</span><strong>Mini stories</strong><small>Listen, read and answer comprehension questions.</small><b>Start 3 min ↗</b></button><button class="skill-trainer ${audioUnlocked?'':'locked'}" data-focus="audioStory"><span class="skill-icon">🎙️</span><strong>Hidden audio stories</strong><small>${audioUnlocked?'Hear a paragraph with no text, then answer from memory.':'Unlock with Pathfinder vocabulary and strong mini-story results.'}</small><b>${audioUnlocked?'Start 3 min ↗':'Advanced · locked'}</b></button></section>
 <div class="lower"><div class="pane fluency-card"><div class="fluency-head"><div><div class="eyebrow">ROAD TO PORTUGUESE FLUENCY</div><h3>Build your 5,000-word vocabulary</h3></div><div class="fluency-percent">${fluencyLabel}<small>%</small></div></div><p>Every mastered word moves the bar. Two consecutive correct answers master a word; obvious basics can graduate after one.</p><div class="fluency-bar" role="progressbar" aria-label="Vocabulary progress toward Portuguese fluency" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${fluency.toFixed(1)}"><span style="width:${fluency}%;min-width:${m.known?'7px':'0'}"></span></div><div class="fluency-milestones"><span><b>${m.known.toLocaleString()}</b> mastered</span><span>${Math.max(0,FLUENCY_WORD_GOAL-m.known).toLocaleString()} to go</span><span>${FLUENCY_WORD_GOAL.toLocaleString()} goal</span></div><div class="notice" style="margin-top:22px"><div><strong>📚 Vocabulary pack</strong><div>${safe(importStatus)} ${bankFull?'✓':''}</div></div>${bankFull?'':'<button class="btn btn-small btn-outline" id="loadPack">Get 5K</button>'}</div></div><div class="pane"><h3>🔥 Last 7 days</h3><p>Your answer count, by day. A few minutes is all it takes.</p><div class="bars">${week.map((d,i)=>`<div class="barcol" title="${vals[i]} answers"><span class="b" style="height:${Math.max(4,Math.round(vals[i]/max*57))}px"></span><small>${d.name}</small></div>`).join('')}</div></div></div><div class="footer">Your progress stays on this device. No login, name or account needed. Export a backup if you want to move it to another device.<br>🇵🇹 European Portuguese · <a href="https://github.com/professorcdp/EPspokenfrequency" target="_blank" rel="noopener">Word frequency source</a> (CC BY-SA 4.0)</div></main>`);
  document.querySelector('#quickPlay').onclick=()=>startSession('mixed');document.querySelectorAll('[data-mode]').forEach(e=>e.onclick=()=>startSession(e.dataset.mode));document.querySelectorAll('[data-focus]').forEach(e=>e.onclick=()=>startFocusedTraining(e.dataset.focus));document.querySelector('#loadPack')?.addEventListener('click',fetchBank)}
 function settings(){
@@ -1731,13 +1732,18 @@ function readingLevelBand(p=localProgress()){
  if(answered>=4&&accuracy>=.65&&rank>=700)return 2;
  return 1;
 }
+function advancedAudioUnlocked(p=localProgress()){
+ const vocabularyAnswers=Number(p.skillAnswers)||0,readingAnswers=Number(p.readingAnswers)||0,readingRight=Number(p.readingRight)||0;
+ const readingAccuracy=readingAnswers?readingRight/readingAnswers:0;
+ return estimatedSkillRank(p)>=2800&&vocabularyAnswers>=100&&readingAnswers>=20&&readingAccuracy>=.85;
+}
 function readingQuestionQuota(p=localProgress()){return readingLevelBand(p)}
 function shouldUseReadingQuestion(){
  const quota=readingQuestionQuota(),capacity=(Math.floor(session.questions/25)+1)*quota;
  if(session.readingCount>=capacity||session.questions-session.lastReadingAt<5)return false;
  return Math.random()<quota/25;
 }
-function makeReadingQuestion(focused=false){
+function makeReadingQuestion(focused=false,audioOnly=false){
  const band=readingLevelBand();
  let cards;
  if(focused){
@@ -1751,7 +1757,7 @@ function makeReadingQuestion(focused=false){
  const card=cards[Math.floor(Math.random()*cards.length)],w=bankById.get(card.focus);
  if(focused)session.readingCardsSeen.add(card.passage);
  session.seenIds.add(w.id);
- return{w,direction:'reading',kind:'choice',answer:card.answer,prompt:card.passage,passage:card.passage,question:card.question,explanation:card.explanation,readingBand:card.band,options:shuffled([card.answer,...card.wrong]),locked:false,hintUsed:false,started:Date.now()};
+ return{w,direction:audioOnly?'audioReading':'reading',kind:'choice',answer:card.answer,prompt:audioOnly?'':card.passage,passage:card.passage,question:card.question,explanation:card.explanation,readingBand:card.band,options:shuffled([card.answer,...card.wrong]),locked:false,hintUsed:false,started:Date.now()};
 }
 const MEANING_FAMILIES=[
  /\b(mother|father|parent|brother|sister|son|daughter|husband|wife|family|grandmother|grandfather)\b/i,
@@ -1825,8 +1831,10 @@ function makeQuestion(w,preferCloze=false,focus=''){
  return{w,direction,kind,answer,prompt,options:shuffled(options),locked:false,hintUsed:false,started:Date.now()};
 }
 function startFocusedTraining(focus){
- if(focus==='listening'&&!('speechSynthesis'in window)){notify('Listening training needs speech playback in this browser.');return}
- if(focus==='listening'&&!prefs.sound){prefs.sound=true;savePrefs()}
+ const needsAudio=focus==='listening'||focus==='audioStory';
+ if(focus==='audioStory'&&!advancedAudioUnlocked()){notify('Hidden audio stories unlock at a true advanced level: Pathfinder vocabulary and strong mini-story results.');return}
+ if(needsAudio&&!('speechSynthesis'in window)){notify('This training needs Portuguese speech playback in this browser.');return}
+ if(needsAudio&&!prefs.sound){prefs.sound=true;savePrefs()}
  startSession('focus',focus);
 }
 function startSession(mode,focus=''){clearTimeout(feedbackTimeout);stopSessionClock();session={mode,focus,remaining:180,timeExpired:false,accountedSeconds:0,masteredAtStart:metrics().known,questions:0,right:0,combo:0,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),readingCardsSeen:new Set(),retryQueue:[],retryCounts:new Map(),readingCount:0,lastReadingAt:-10,current:null,paused:false,levelAtStart:estimatedSkillRank()};view='game';nextQuestion();intervalHandle=setInterval(tick,140)}
@@ -1867,8 +1875,8 @@ function nextQuestion(){
  if(!session)return;
  if(session.remaining<=0)return finishSession();
  const retryReady=session.retryQueue.some(item=>item.readyAt<=session.questions);
- if(session.focus==='reading'){
-  const readingQuestion=makeReadingQuestion(true);
+ if(session.focus==='reading'||session.focus==='audioStory'){
+  const readingQuestion=makeReadingQuestion(true,session.focus==='audioStory');
   if(!readingQuestion)return finishSession();
   session.current=readingQuestion;session.readingCount++;session.lastReadingAt=session.questions;game();return;
  }
@@ -1879,7 +1887,10 @@ function nextQuestion(){
   session.current=question;game();return;
  }
  if(!session.focus&&!retryReady&&shouldUseReadingQuestion()){
-  const readingQuestion=makeReadingQuestion();
+  // At a verified advanced level, approximately one of the three paragraph
+  // challenges becomes audio-only without increasing their total frequency.
+  const audioOnly=prefs.sound&&'speechSynthesis'in window&&advancedAudioUnlocked()&&Math.random()<1/3;
+  const readingQuestion=makeReadingQuestion(false,audioOnly);
   if(readingQuestion){session.current=readingQuestion;session.readingCount++;session.lastReadingAt=session.questions;game();return}
  }
  const clozeChance=session.mode==='recall'?0.22:session.mode==='sprint'?0.3:0.34,wantsCloze=!session.focus&&!retryReady&&Math.random()<clozeChance;
@@ -1893,13 +1904,15 @@ function continueAfterAnsweredQuestion(answeredSession){
  if(answeredSession.timeExpired||answeredSession.remaining<=0)finishSession();
  else nextQuestion();
 }
+function isParagraphQuestion(q){return q.direction==='reading'||q.direction==='audioReading'}
 function questionPromptHTML(q){
  if(q.direction==='listen')return '<span class="listening-prompt"><span>🎧</span><small>Listen carefully</small></span>';
+ if(q.direction==='audioReading')return '<span class="listening-prompt"><span>🎙️</span><small>Paragraph hidden · listen carefully</small></span>';
  if(q.direction==='reading')return `<span class="reading-kicker">📖 Portuguese mini-story</span>${safe(q.passage)}`;
  return q.direction==='cloze'?safe(q.prompt).replace('___','<span class="sentence-blank">_____</span>'):safe(q.prompt);
 }
 function sentenceHelpText(q,hideTranslation){
- if(q.direction==='reading')return q.question;
+ if(isParagraphQuestion(q))return q.question;
  if(q.direction!=='cloze')return q.direction==='listen'?'Which English meaning matches the word you hear?':q.kind==='type'?'Type the Portuguese word or phrase':q.direction==='reverse'?'Which Portuguese word matches?':'What does this mean in English?';
  return hideTranslation&&!q.translationRevealed?'Use the Portuguese sentence context. Ask for a hint if you need the English translation.':`🇬🇧 ${q.hint}`;
 }
@@ -1918,20 +1931,20 @@ function game(){
  if(!session)return view='home',render();
  const s=session,q=s.current,w=q?.w;
  if(!q)return;
- const label=q.direction==='reading'?'READ · LISTEN · UNDERSTAND':q.direction==='cloze'?'COMPLETE THE SENTENCE':q.direction==='listen'?'LISTEN → MEANING':q.kind==='type'?'SPELL IT IN PORTUGUESE':q.direction==='reverse'?'ENGLISH → PORTUGUESE':'PORTUGUESE → ENGLISH';
+ const label=q.direction==='audioReading'?'ADVANCED · LISTEN · UNDERSTAND':q.direction==='reading'?'READ · LISTEN · UNDERSTAND':q.direction==='cloze'?'COMPLETE THE SENTENCE':q.direction==='listen'?'LISTEN → MEANING':q.kind==='type'?'SPELL IT IN PORTUGUESE':q.direction==='reverse'?'ENGLISH → PORTUGUESE':'PORTUGUESE → ENGLISH';
  const hideTranslation=q.direction==='cloze'&&hidesSentenceTranslations();
  const translationHint=hideTranslation&&!q.translationRevealed?'<button class="listen translation-hint" id="translationHintBtn">🇬🇧 Show English hint</button>':'';
- const rankLabel=q.direction==='reading'?`COMPREHENSION · LEVEL ${q.readingBand}`:`WORD ${w.rank.toLocaleString()} · ${safe(w.pos)}`;
- const wordClass=q.direction==='reading'?' reading-passage':q.direction==='cloze'?' cloze-sentence':q.direction==='listen'?' listening-word':'';
- const listenLabel=q.direction==='reading'?'🔊 Hear paragraph again':q.direction==='listen'?'🔊 Play word again':q.direction==='forward'?'🔊 Hear again':q.direction==='cloze'?'🔊 Hear the missing word':'🔊 Hear Portuguese (hint)';
- const tipText=q.direction==='reading'?'The paragraph is read aloud automatically. Replay it whenever you need.':q.direction==='listen'?'Audio replays are part of this listening challenge.':session.mode==='sprint'?'Choose quickly to build a combo!':'Wrong answers are not failures: they teach the scheduler what to bring back.';
+ const rankLabel=q.direction==='audioReading'?'HIDDEN STORY · ADVANCED':q.direction==='reading'?`COMPREHENSION · LEVEL ${q.readingBand}`:`WORD ${w.rank.toLocaleString()} · ${safe(w.pos)}`;
+ const wordClass=q.direction==='reading'?' reading-passage':q.direction==='audioReading'||q.direction==='listen'?' listening-word':q.direction==='cloze'?' cloze-sentence':'';
+ const listenLabel=isParagraphQuestion(q)?'🔊 Hear paragraph again':q.direction==='listen'?'🔊 Play word again':q.direction==='forward'?'🔊 Hear again':q.direction==='cloze'?'🔊 Hear the missing word':'🔊 Hear Portuguese (hint)';
+ const tipText=q.direction==='audioReading'?'Advanced listening: the paragraph stays hidden. Replay it and answer from what you hear.':q.direction==='reading'?'The paragraph is read aloud automatically. Replay it whenever you need.':q.direction==='listen'?'Audio replays are part of this listening challenge.':session.mode==='sprint'?'Choose quickly to build a combo!':'Wrong answers are not failures: they teach the scheduler what to bring back.';
  const runLabel=s.focus?`${TRAINING_TYPES[s.focus].icon} ${TRAINING_TYPES[s.focus].name} training`:`${s.newIds.size} new words`;
  shell(`<main class="game-shell"><div class="game-head"><button class="btn btn-ghost btn-small" id="exitSession">← End run</button><div class="game-metrics"><div class="metric clock"><small>⏱</small><span id="clock">${timerText(s.remaining)}</span></div><div class="metric combo"><small>🔥</small><span id="combo">${s.combo} combo</span></div><div class="metric"><small>🧠</small><span id="mastered">${metrics().known} mastered</span></div></div></div><div class="track"><div class="fill" id="timeFill" style="width:${100*s.remaining/180}%"></div></div><div class="question"><div class="question-top"><span class="qtype">${label}</span><span class="rank">${rankLabel}</span></div><div class="word${wordClass}">${questionPromptHTML(q)}</div><div class="word-sub" id="questionHelp">${safe(sentenceHelpText(q,hideTranslation))}</div><div class="listen-row"><button class="listen" id="listenBtn" title="Play European Portuguese pronunciation">${listenLabel}</button>${translationHint}</div>${q.kind==='choice'?`<div class="choices">${q.options.map((o,i)=>`<button class="choice" data-choice="${i}"><span class="letter">${'ABCD'[i]}</span><span>${safe(o)}</span></button>`).join('')}</div><div style="text-align:center;margin-top:14px"><button class="btn btn-outline btn-small" id="dontKnowChoice">🤷 I don't know yet</button></div>`:`<div class="type-wrap"><input autocomplete="off" autocapitalize="off" spellcheck="false" class="type-input" id="typedAnswer" placeholder="Write the Portuguese answer" aria-label="Answer"><div class="type-actions"><button class="btn btn-primary" id="submitTyped">Check answer ↗</button><button class="btn btn-ghost" id="dontKnow">Not sure</button></div></div>`}<div class="feedback hidden" id="feedback" role="status"></div><div class="tip" id="tipLine">${tipText}</div></div><div class="backline"><span>${s.questions} answers · ${safe(runLabel)}</span><span>🇵🇹 Offline-friendly</span></div></main>`);
  document.querySelector('#exitSession').onclick=()=>{if(confirm('End your run early? Your answered words are already saved.'))finishSession()};document.querySelector('#listenBtn').onclick=()=>{
-  const replayingAnswer=Boolean(q.locked&&(q.direction==='cloze'||q.direction==='reverse'||q.direction==='reading'));
+  const replayingAnswer=Boolean(q.locked&&(q.direction==='cloze'||q.direction==='reverse'||isParagraphQuestion(q)));
   const isHint=!q.locked&&(q.direction==='cloze'||q.direction==='reverse');
-  const spokenText=q.direction==='reading'?q.passage:q.locked&&q.completeSentence?q.completeSentence:w.pt;
-  const played=speakPortuguese(spokenText,false,q.direction==='reading'||replayingAnswer);
+  const spokenText=isParagraphQuestion(q)?q.passage:q.locked&&q.completeSentence?q.completeSentence:w.pt;
+  const played=speakPortuguese(spokenText,false,isParagraphQuestion(q)||replayingAnswer);
   if(isHint&&played){
    markHintUsed(q);
    if(hideTranslation)revealSentenceTranslation(q);
@@ -1946,7 +1959,7 @@ function game(){
  if(q.kind==='choice'){document.querySelectorAll('[data-choice]').forEach(btn=>btn.onclick=()=>answer(q.options[Number(btn.dataset.choice)],btn));document.querySelector('#dontKnowChoice').onclick=()=>answer('',null,true)}else{let input=document.querySelector('#typedAnswer');document.querySelector('#submitTyped').onclick=()=>answer(input.value.trim(),null);document.querySelector('#dontKnow').onclick=()=>answer('',null,true);input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();answer(input.value.trim(),null)}};setTimeout(()=>{if(view==='game'&&!q.locked)input.focus({preventScroll:true})},70)}
  // Reading challenges play the complete paragraph and keep it on screen until
  // the audio finishes. Recall questions wait until grading to avoid clues.
- if(prefs.sound&&q.direction==='reading')speakPortuguese(q.passage,true,true);
+ if(prefs.sound&&isParagraphQuestion(q))speakPortuguese(q.passage,true,true);
  else if(prefs.sound&&(q.direction==='forward'||q.direction==='listen'))speakPortuguese(w.pt,true);
 }
 function speakPortuguese(word,automatic=false,pauseAfterAnswer=false){
@@ -2002,7 +2015,7 @@ function answer(given,clicked,skipped=false){
  let reviewNote='';
  if(right){
   s.right++;s.combo++;prior.right++;
-  const clearlyEasy=q.direction!=='reading'&&(prior.wrong||0)===0&&isClearlyKnown(q.w,skillBefore,responseMs,q.kind);
+  const clearlyEasy=!isParagraphQuestion(q)&&(prior.wrong||0)===0&&isClearlyKnown(q.w,skillBefore,responseMs,q.kind);
   if(clearlyEasy){
    prior.retiredEasy=true;prior.streak=Math.max(MASTERY_STREAK,prior.streak+1);prior.verifiedDays=Math.max(MASTERY_STREAK,prior.verifiedDays||0);prior.interval=3650;prior.due=now+3650*DAY;
    reviewNote='Easy for you — retired from future missions.';
@@ -2017,7 +2030,7 @@ function answer(given,clicked,skipped=false){
   reviewNote=q.hintUsed?'Hint used — counted as not known and coming back soon.':'Coming back after a few other words.';
  }
  const newSkill=updateSkillEstimate(p,q.w,right);
- if(q.direction==='reading'){
+ if(isParagraphQuestion(q)){
   p.readingAnswers=(Number(p.readingAnswers)||0)+1;
   if(right)p.readingRight=(Number(p.readingRight)||0)+1;
  }
@@ -2039,8 +2052,9 @@ function answer(given,clicked,skipped=false){
  if(q.kind==='choice'){document.querySelector('#dontKnowChoice')?.setAttribute('disabled','');document.querySelectorAll('[data-choice]').forEach((el)=>{el.disabled=true;let t=q.options[Number(el.dataset.choice)];if(norm(t)===norm(q.answer))el.classList.add('correct');else if(el===clicked)el.classList.add('wrong');else el.classList.add('muted')})}else{document.querySelector('#typedAnswer')?.setAttribute('disabled','');document.querySelector('#submitTyped')?.setAttribute('disabled','');document.querySelector('#dontKnow')?.setAttribute('disabled','')}
  const f=document.querySelector('#feedback');
  let feedbackTitle,feedbackBody,feedbackIcon;
- if(q.direction==='reading'){
-  feedbackTitle=right?'📖 You understood the story!':'📖 Read and listen once more';
+ if(isParagraphQuestion(q)){
+  const storyIcon=q.direction==='audioReading'?'🎙️':'📖';
+  feedbackTitle=right?`${storyIcon} You understood the story!`:`${storyIcon} Listen once more`;
   feedbackBody=safe(q.explanation);
   feedbackIcon=right?'✅':'📚';
  }else{
@@ -2059,7 +2073,7 @@ function finishSession(){if(!session)return;clearTimeout(feedbackTimeout);record
 function result(){let s=session,m=metrics(),accuracy=s.questions?Math.round(100*s.right/s.questions):0,elapsed=Math.min(180,Math.max(0,180-s.remaining)),masteredThisRun=Math.max(0,m.known-s.masteredAtStart),focus=TRAINING_TYPES[s.focus];let heading=s.questions===0?'Adventure paused':accuracy>=85?'Brilliant run!':accuracy>=60?"You're building momentum!":'Every word is progress!';shell(`<main class="center-panel"><div class="big-emoji">${accuracy>=85&&s.questions?'🏆':accuracy>=60?'🚀':'🧭'}</div><div class="eyebrow">${focus?`${focus.icon} ${safe(focus.name.toUpperCase())} TRAINING COMPLETE`:'THREE-MINUTE QUEST COMPLETE'}</div><h1>${heading}</h1><p>Your vocabulary map just got smarter. Missed words will return sooner; known words will wait until you need them again.</p><div class="result-grid"><div class="result-stat"><b>${formatSessionTime(elapsed)}</b><span>PRACTISED</span></div><div class="result-stat"><b>${s.right}/${s.questions}</b><span>CORRECT</span></div><div class="result-stat"><b>${masteredThisRun}</b><span>MASTERED</span></div></div><div class="info" style="text-align:left"><b>🧠 Learning progress</b><br>${s.wrongIds.size} tricky word${s.wrongIds.size===1?'':'s'} queued for extra practice · ${m.known} words mastered overall · ${formatStudyTime(m.totalSeconds)} total active practice</div><div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:25px"><button id="playAgain" class="btn btn-primary">⚡ ${focus?'Train again':'One more mission'}</button><button id="backHome" class="btn btn-ghost">Dashboard</button></div></main>`);document.querySelector('#playAgain').onclick=()=>startSession(s.mode,s.focus);document.querySelector('#backHome').onclick=()=>{session=null;view='home';render()}}
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view==='game'&&session?.current?.kind==='choice'&&!session.current.locked&&['1','2','3','4'].includes(e.key)){let el=document.querySelectorAll('[data-choice]')[Number(e.key)-1];if(el)el.click()}});
-render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=30',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=31',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
