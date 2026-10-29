@@ -1503,7 +1503,13 @@ function normalizeProgress(raw={}){
  const start=[1,301,1501].includes(Number(raw.start))?Number(raw.start):1;
  const words={};
  if(raw.words&&typeof raw.words==='object'&&!Array.isArray(raw.words)){
-  for(const [id,state] of Object.entries(raw.words))if(state&&typeof state==='object'&&!Array.isArray(state))words[id]=state;
+  for(const [id,state] of Object.entries(raw.words))if(state&&typeof state==='object'&&!Array.isArray(state)){
+   const wordState={...state};
+   // Release 32 ended the short learning loop with a one-day interval. Move
+   // those words into the new multi-day consolidation ladder.
+   if(!Number.isFinite(wordState.learningStep)&&!Number.isFinite(wordState.dailyStep)&&(wordState.wrong||0)>0&&wordState.streak===1&&wordState.interval===1){wordState.dailyStep=0;wordState.streak=0;wordState.verifiedDays=0}
+   words[id]=wordState;
+  }
  }
  const hist=raw.hist&&typeof raw.hist==='object'&&!Array.isArray(raw.hist)?raw.hist:{};
  const progress={start,words,totalSeconds:Math.max(0,Number(raw.totalSeconds)||0),hist,created:Number(raw.created)||Date.now()};
@@ -1567,10 +1573,11 @@ function updateSkillEstimate(p,word,correct){
 }
 const MASTERY_STREAK=2;
 const LEARNING_RECALLS_REQUIRED=3;
+const DAILY_RECALLS_REQUIRED=3;
 const FLUENCY_WORD_GOAL=5000;
 const INSTANT_BASIC_MAX_RANK=100;
 const FAST_KNOWN_MAX_RANK=350;
-function isMastered(wordState){return Boolean(wordState?.retiredEasy||wordState?.streak>=MASTERY_STREAK)}
+function isMastered(wordState){return Boolean(!Number.isFinite(wordState?.learningStep)&&!Number.isFinite(wordState?.dailyStep)&&(wordState?.retiredEasy||wordState?.streak>=MASTERY_STREAK))}
 function isClearlyKnown(word,skillRank,responseMs,questionKind){
  const quickLimit=questionKind==='type'?12000:9000;
  const comfortablyBelowLevel=word.rank<=Math.max(FAST_KNOWN_MAX_RANK,skillRank*.65);
@@ -2019,7 +2026,7 @@ function answer(given,clicked,skipped=false){
  if(q.direction==='forward')queuedAutomaticSpeech='';
  const answerMatches=norm(given)===norm(q.answer),hintedCorrect=Boolean(q.hintUsed&&answerMatches),right=answerMatches&&!q.hintUsed,now=Date.now(),p=localProgress(),skillBefore=estimatedSkillRank(p),responseMs=now-q.started;
  const prior=p.words[q.w.id]||{seen:0,right:0,wrong:0,streak:0,interval:0,ease:2.2,due:0};
- const newWord=prior.seen===0,wasMastered=isMastered(prior),paragraphQuestion=isParagraphQuestion(q),learningStep=Number.isFinite(prior.learningStep)?prior.learningStep:null;
+ const newWord=prior.seen===0,wasMastered=isMastered(prior),paragraphQuestion=isParagraphQuestion(q),learningStep=Number.isFinite(prior.learningStep)?prior.learningStep:null,dailyStep=Number.isFinite(prior.dailyStep)?prior.dailyStep:null;
  q.locked=true;clearTimeout(feedbackTimeout);beep(right);s.questions++;prior.seen++;
  if(newWord)s.newIds.add(q.w.id);
  let reviewNote='';
@@ -2033,14 +2040,25 @@ function answer(given,clicked,skipped=false){
     queueLearningRecall(s,q.w.id,completedStep);
     reviewNote=`Learning recall ${completedStep}/${LEARNING_RECALLS_REQUIRED} — this word will return again.`;
    }else{
-    delete prior.learningStep;prior.streak=1;prior.verifiedDays=1;prior.lastCorrectDay=dayKey();prior.interval=1;prior.due=now+DAY;
-    reviewNote='Three spaced recalls complete — next check tomorrow.';
+    delete prior.learningStep;prior.dailyStep=0;prior.streak=0;prior.verifiedDays=0;prior.lastCorrectDay='';prior.interval=1;prior.due=now+DAY;
+    reviewNote=`Short recalls complete — daily check 1/${DAILY_RECALLS_REQUIRED} tomorrow.`;
    }
-  }else if(learningStep!==null){
+  }else if(dailyStep!==null&&!paragraphQuestion){
+   const completedDay=dailyStep+1;
+   prior.retiredEasy=false;prior.ease=Math.min(3,Math.max(1.45,(Number(prior.ease)||2.2)+.03));prior.lastCorrectDay=dayKey();
+   if(completedDay<DAILY_RECALLS_REQUIRED){
+    prior.dailyStep=completedDay;prior.streak=0;prior.verifiedDays=completedDay;prior.interval=1;prior.due=now+DAY;
+    reviewNote=`Daily recall ${completedDay}/${DAILY_RECALLS_REQUIRED} complete — back again tomorrow.`;
+   }else{
+    delete prior.dailyStep;prior.streak=1;prior.verifiedDays=DAILY_RECALLS_REQUIRED;prior.interval=4;prior.due=now+4*DAY;
+    reviewNote='Daily consolidation complete — next check in 4 days.';
+   }
+  }else if(learningStep!==null||dailyStep!==null){
    // Understanding a story is valuable, but it does not prove that the focus
-   // word can be recalled. Keep its vocabulary learning loop active.
-   prior.retiredEasy=false;prior.streak=0;prior.interval=0;prior.due=now;
-   reviewNote=`Story understood — vocabulary recall remains ${learningStep}/${LEARNING_RECALLS_REQUIRED}.`;
+   // word can be recalled. Keep its word-learning schedule active.
+   prior.retiredEasy=false;prior.streak=0;
+   if(learningStep!==null){prior.interval=0;prior.due=now}
+   reviewNote=learningStep!==null?`Story understood — vocabulary recall remains ${learningStep}/${LEARNING_RECALLS_REQUIRED}.`:`Story understood — daily word check remains ${dailyStep}/${DAILY_RECALLS_REQUIRED}.`;
   }else if((prior.wrong||0)===0&&!paragraphQuestion&&isClearlyKnown(q.w,skillBefore,responseMs,q.kind)){
    prior.retiredEasy=true;prior.streak=Math.max(MASTERY_STREAK,prior.streak+1);prior.verifiedDays=Math.max(MASTERY_STREAK,prior.verifiedDays||0);prior.interval=3650;prior.due=now+3650*DAY;
    reviewNote='Easy for you — retired from future missions.';
@@ -2052,7 +2070,7 @@ function answer(given,clicked,skipped=false){
   }
  }else{
   s.combo=0;prior.wrong++;prior.retiredEasy=false;prior.streak=0;prior.verifiedDays=0;prior.lastCorrectDay='';prior.ease=Math.max(1.3,(Number(prior.ease)||2.2)-.18);prior.interval=0;prior.due=now;s.wrongIds.add(q.w.id);
-  if(!paragraphQuestion){prior.learningStep=0;queueFailedWord(s,q.w.id)}
+  if(!paragraphQuestion){delete prior.dailyStep;prior.learningStep=0;queueFailedWord(s,q.w.id)}
   reviewNote=paragraphQuestion?'This story remains part of your comprehension practice.':q.hintUsed?'Hint used — learning restarted; this word will return repeatedly.':'Learning started — this word will return repeatedly.';
  }
  const newSkill=updateSkillEstimate(p,q.w,right);
@@ -2099,7 +2117,7 @@ function finishSession(){if(!session)return;clearTimeout(feedbackTimeout);record
 function result(){let s=session,m=metrics(),accuracy=s.questions?Math.round(100*s.right/s.questions):0,elapsed=Math.min(180,Math.max(0,180-s.remaining)),masteredThisRun=Math.max(0,m.known-s.masteredAtStart),focus=TRAINING_TYPES[s.focus];let heading=s.questions===0?'Adventure paused':accuracy>=85?'Brilliant run!':accuracy>=60?"You're building momentum!":'Every word is progress!';shell(`<main class="center-panel"><div class="big-emoji">${accuracy>=85&&s.questions?'🏆':accuracy>=60?'🚀':'🧭'}</div><div class="eyebrow">${focus?`${focus.icon} ${safe(focus.name.toUpperCase())} TRAINING COMPLETE`:'THREE-MINUTE QUEST COMPLETE'}</div><h1>${heading}</h1><p>Your vocabulary map just got smarter. Missed words will return sooner; known words will wait until you need them again.</p><div class="result-grid"><div class="result-stat"><b>${formatSessionTime(elapsed)}</b><span>PRACTISED</span></div><div class="result-stat"><b>${s.right}/${s.questions}</b><span>CORRECT</span></div><div class="result-stat"><b>${masteredThisRun}</b><span>MASTERED</span></div></div><div class="info" style="text-align:left"><b>🧠 Learning progress</b><br>${s.wrongIds.size} tricky word${s.wrongIds.size===1?'':'s'} queued for extra practice · ${m.known} words mastered overall · ${formatStudyTime(m.totalSeconds)} total active practice</div><div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:25px"><button id="playAgain" class="btn btn-primary">⚡ ${focus?'Train again':'One more mission'}</button><button id="backHome" class="btn btn-ghost">Dashboard</button></div></main>`);document.querySelector('#playAgain').onclick=()=>startSession(s.mode,s.focus);document.querySelector('#backHome').onclick=()=>{session=null;view='home';render()}}
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view==='game'&&session?.current?.kind==='choice'&&!session.current.locked&&['1','2','3','4'].includes(e.key)){let el=document.querySelectorAll('[data-choice]')[Number(e.key)-1];if(el)el.click()}});
-render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=32',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=33',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
