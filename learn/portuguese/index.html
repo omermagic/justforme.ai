@@ -1566,6 +1566,7 @@ function updateSkillEstimate(p,word,correct){
  return p.skillRank;
 }
 const MASTERY_STREAK=2;
+const LEARNING_RECALLS_REQUIRED=3;
 const FLUENCY_WORD_GOAL=5000;
 const INSTANT_BASIC_MAX_RANK=100;
 const FAST_KNOWN_MAX_RANK=350;
@@ -1650,13 +1651,21 @@ function getClozeCardsByWord(){
  for(const card of getClozeCatalog()){if(!map.has(card.id))map.set(card.id,[]);map.get(card.id).push(card)}
  clozeCardsByWordCache=map;return map;
 }
-// Correct words appear at most once per mission. A failed word is deliberately
-// queued again after several different questions, while it is still memorable.
+// Failed words use expanding in-session learning steps. The step is also saved
+// on the word, so an unfinished learning loop continues in the next mission.
+function enqueueWordRetry(activeSession,wordId,questionsBeforeRetry){
+ activeSession.retryQueue=activeSession.retryQueue.filter(item=>item.id!==wordId);
+ activeSession.retryQueue.push({id:wordId,readyAt:activeSession.questions+questionsBeforeRetry});
+}
 function queueFailedWord(activeSession,wordId){
  const retryNumber=(activeSession.retryCounts.get(wordId)||0)+1;
  activeSession.retryCounts.set(wordId,retryNumber);
  const questionsBeforeRetry=Math.min(7,4+retryNumber-1);
- activeSession.retryQueue.push({id:wordId,readyAt:activeSession.questions+questionsBeforeRetry});
+ enqueueWordRetry(activeSession,wordId,questionsBeforeRetry);
+}
+function queueLearningRecall(activeSession,wordId,completedStep){
+ const questionsBeforeRetry=completedStep===1?6:8;
+ enqueueWordRetry(activeSession,wordId,questionsBeforeRetry);
 }
 function chooseWord(){
  const retryIndex=session.retryQueue.findIndex(item=>item.readyAt<=session.questions);
@@ -1666,11 +1675,11 @@ function chooseWord(){
  }
  const p=localProgress(),now=Date.now(),history=p.words||{},skill=estimatedSkillRank(p),seenThisRun=session.seenIds;
  const lower=Math.max(1,Math.round(skill-Math.max(120,skill*.22))),upper=Math.min(bank.length,Math.round(skill+Math.max(240,skill*.28)));
- const due=[],fresh=[],unseen=[];
+ const due=[],learningDue=[],fresh=[],unseen=[];
  for(const word of bank){
   if(seenThisRun.has(word.id))continue;
   const state=history[word.id];
-  if(state){if(!state.retiredEasy&&Number.isFinite(state.due)&&state.due<=now)due.push(word);continue}
+  if(state){if(!state.retiredEasy&&Number.isFinite(state.due)&&state.due<=now){due.push(word);if(Number.isFinite(state.learningStep))learningDue.push(word)}continue}
   unseen.push(word);if(word.rank>=lower&&word.rank<=upper)fresh.push(word);
  }
  const randomFrom=items=>items[Math.floor(Math.random()*items.length)];
@@ -1679,7 +1688,8 @@ function chooseWord(){
  unseen.sort((a,b)=>Math.abs(a.rank-skill)-Math.abs(b.rank-skill));
  const stretch=fresh.filter(item=>item.rank>skill+Math.max(90,skill*.12));
  let word=null;
- if(due.length&&Math.random()<.32)word=randomFrom(due.slice(0,Math.min(40,due.length)));
+ if(learningDue.length&&Math.random()<.6)word=randomFrom(learningDue.slice(0,Math.min(30,learningDue.length)));
+ if(!word&&due.length&&Math.random()<.32)word=randomFrom(due.slice(0,Math.min(40,due.length)));
  if(!word&&stretch.length&&Math.random()<.28)word=randomFrom(stretch.slice(0,Math.min(50,stretch.length)));
  if(!word&&fresh.length)word=randomFrom(fresh.slice(0,Math.min(90,fresh.length)));
  if(!word&&due.length)word=randomFrom(due.slice(0,Math.min(40,due.length)));
@@ -2009,14 +2019,29 @@ function answer(given,clicked,skipped=false){
  if(q.direction==='forward')queuedAutomaticSpeech='';
  const answerMatches=norm(given)===norm(q.answer),hintedCorrect=Boolean(q.hintUsed&&answerMatches),right=answerMatches&&!q.hintUsed,now=Date.now(),p=localProgress(),skillBefore=estimatedSkillRank(p),responseMs=now-q.started;
  const prior=p.words[q.w.id]||{seen:0,right:0,wrong:0,streak:0,interval:0,ease:2.2,due:0};
- const newWord=prior.seen===0,wasMastered=isMastered(prior);
+ const newWord=prior.seen===0,wasMastered=isMastered(prior),paragraphQuestion=isParagraphQuestion(q),learningStep=Number.isFinite(prior.learningStep)?prior.learningStep:null;
  q.locked=true;clearTimeout(feedbackTimeout);beep(right);s.questions++;prior.seen++;
  if(newWord)s.newIds.add(q.w.id);
  let reviewNote='';
  if(right){
   s.right++;s.combo++;prior.right++;
-  const clearlyEasy=!isParagraphQuestion(q)&&(prior.wrong||0)===0&&isClearlyKnown(q.w,skillBefore,responseMs,q.kind);
-  if(clearlyEasy){
+  if(learningStep!==null&&!paragraphQuestion){
+   const completedStep=learningStep+1;
+   prior.retiredEasy=false;prior.ease=Math.min(3,Math.max(1.45,(Number(prior.ease)||2.2)+.02));
+   if(completedStep<LEARNING_RECALLS_REQUIRED){
+    prior.learningStep=completedStep;prior.streak=0;prior.interval=0;prior.due=now;
+    queueLearningRecall(s,q.w.id,completedStep);
+    reviewNote=`Learning recall ${completedStep}/${LEARNING_RECALLS_REQUIRED} — this word will return again.`;
+   }else{
+    delete prior.learningStep;prior.streak=1;prior.verifiedDays=1;prior.lastCorrectDay=dayKey();prior.interval=1;prior.due=now+DAY;
+    reviewNote='Three spaced recalls complete — next check tomorrow.';
+   }
+  }else if(learningStep!==null){
+   // Understanding a story is valuable, but it does not prove that the focus
+   // word can be recalled. Keep its vocabulary learning loop active.
+   prior.retiredEasy=false;prior.streak=0;prior.interval=0;prior.due=now;
+   reviewNote=`Story understood — vocabulary recall remains ${learningStep}/${LEARNING_RECALLS_REQUIRED}.`;
+  }else if((prior.wrong||0)===0&&!paragraphQuestion&&isClearlyKnown(q.w,skillBefore,responseMs,q.kind)){
    prior.retiredEasy=true;prior.streak=Math.max(MASTERY_STREAK,prior.streak+1);prior.verifiedDays=Math.max(MASTERY_STREAK,prior.verifiedDays||0);prior.interval=3650;prior.due=now+3650*DAY;
    reviewNote='Easy for you — retired from future missions.';
   }else{
@@ -2026,8 +2051,9 @@ function answer(given,clicked,skipped=false){
    prior.interval=days;prior.due=now+days*DAY;reviewNote=`Next review in ${Math.round(days)} days.`;
   }
  }else{
-  s.combo=0;prior.wrong++;prior.retiredEasy=false;prior.streak=0;prior.verifiedDays=0;prior.lastCorrectDay='';prior.ease=Math.max(1.3,prior.ease-.18);prior.interval=0;prior.due=now;s.wrongIds.add(q.w.id);queueFailedWord(s,q.w.id);
-  reviewNote=q.hintUsed?'Hint used — counted as not known and coming back soon.':'Coming back after a few other words.';
+  s.combo=0;prior.wrong++;prior.retiredEasy=false;prior.streak=0;prior.verifiedDays=0;prior.lastCorrectDay='';prior.ease=Math.max(1.3,(Number(prior.ease)||2.2)-.18);prior.interval=0;prior.due=now;s.wrongIds.add(q.w.id);
+  if(!paragraphQuestion){prior.learningStep=0;queueFailedWord(s,q.w.id)}
+  reviewNote=paragraphQuestion?'This story remains part of your comprehension practice.':q.hintUsed?'Hint used — learning restarted; this word will return repeatedly.':'Learning started — this word will return repeatedly.';
  }
  const newSkill=updateSkillEstimate(p,q.w,right);
  if(isParagraphQuestion(q)){
@@ -2073,7 +2099,7 @@ function finishSession(){if(!session)return;clearTimeout(feedbackTimeout);record
 function result(){let s=session,m=metrics(),accuracy=s.questions?Math.round(100*s.right/s.questions):0,elapsed=Math.min(180,Math.max(0,180-s.remaining)),masteredThisRun=Math.max(0,m.known-s.masteredAtStart),focus=TRAINING_TYPES[s.focus];let heading=s.questions===0?'Adventure paused':accuracy>=85?'Brilliant run!':accuracy>=60?"You're building momentum!":'Every word is progress!';shell(`<main class="center-panel"><div class="big-emoji">${accuracy>=85&&s.questions?'🏆':accuracy>=60?'🚀':'🧭'}</div><div class="eyebrow">${focus?`${focus.icon} ${safe(focus.name.toUpperCase())} TRAINING COMPLETE`:'THREE-MINUTE QUEST COMPLETE'}</div><h1>${heading}</h1><p>Your vocabulary map just got smarter. Missed words will return sooner; known words will wait until you need them again.</p><div class="result-grid"><div class="result-stat"><b>${formatSessionTime(elapsed)}</b><span>PRACTISED</span></div><div class="result-stat"><b>${s.right}/${s.questions}</b><span>CORRECT</span></div><div class="result-stat"><b>${masteredThisRun}</b><span>MASTERED</span></div></div><div class="info" style="text-align:left"><b>🧠 Learning progress</b><br>${s.wrongIds.size} tricky word${s.wrongIds.size===1?'':'s'} queued for extra practice · ${m.known} words mastered overall · ${formatStudyTime(m.totalSeconds)} total active practice</div><div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:25px"><button id="playAgain" class="btn btn-primary">⚡ ${focus?'Train again':'One more mission'}</button><button id="backHome" class="btn btn-ghost">Dashboard</button></div></main>`);document.querySelector('#playAgain').onclick=()=>startSession(s.mode,s.focus);document.querySelector('#backHome').onclick=()=>{session=null;view='home';render()}}
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view==='game'&&session?.current?.kind==='choice'&&!session.current.locked&&['1','2','3','4'].includes(e.key)){let el=document.querySelectorAll('[data-choice]')[Number(e.key)-1];if(el)el.click()}});
-render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=31',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=32',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
