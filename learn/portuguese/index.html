@@ -86,7 +86,7 @@ gtag('js',new Date());gtag('config','G-E3JJGMR427');
     </section>
   </main>
 </div>
-<script src="./celebrations.js?v=36"></script>
+<script src="./celebrations.js?v=37"></script>
 <script>
 'use strict';
 /* Palavra Quest © 2026. Offline-capable with no accounts or advertising. */
@@ -1514,7 +1514,7 @@ function normalizeProgress(raw={}){
   }
  }
  const hist=raw.hist&&typeof raw.hist==='object'&&!Array.isArray(raw.hist)?raw.hist:{};
- const progress={start,words,totalSeconds:Math.max(0,Number(raw.totalSeconds)||0),hist,created:Number(raw.created)||Date.now()};
+ const progress={start,words,totalSeconds:Math.max(0,Number(raw.totalSeconds)||0),correctStreak:Math.max(0,Math.floor(Number(raw.correctStreak)||0)),hist,created:Number(raw.created)||Date.now()};
  if(Number.isFinite(raw.skillRank))progress.skillRank=raw.skillRank;
  if(Number.isFinite(raw.skillAnswers))progress.skillAnswers=raw.skillAnswers;
  if(Number.isFinite(raw.readingAnswers))progress.readingAnswers=Math.max(0,Math.floor(raw.readingAnswers));
@@ -1913,7 +1913,7 @@ function startFocusedTraining(focus){
  if(needsAudio&&!prefs.sound){prefs.sound=true;savePrefs()}
  startSession('focus',focus);
 }
-function startSession(mode,focus=''){clearTimeout(feedbackTimeout);stopSessionClock();session={mode,focus,remaining:180,timeExpired:false,accountedSeconds:0,masteredAtStart:metrics().known,questions:0,right:0,combo:0,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),readingCardsSeen:new Set(),retryQueue:[],retryCounts:new Map(),readingCount:0,lastReadingAt:-10,current:null,paused:false,levelAtStart:estimatedSkillRank()};view='game';nextQuestion();intervalHandle=setInterval(tick,140)}
+function startSession(mode,focus=''){clearTimeout(feedbackTimeout);stopSessionClock();session={mode,focus,remaining:180,timeExpired:false,accountedSeconds:0,masteredAtStart:metrics().known,questions:0,right:0,combo:localProgress().correctStreak,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),readingCardsSeen:new Set(),retryQueue:[],retryCounts:new Map(),readingCount:0,lastReadingAt:-10,current:null,paused:false,levelAtStart:estimatedSkillRank()};view='game';nextQuestion();intervalHandle=setInterval(tick,140)}
 let lastFrame=0;
 function expireSessionTimer(){
  if(!session)return;
@@ -2087,10 +2087,13 @@ function answer(given,clicked,skipped=false){
  const prior=p.words[q.w.id]||{seen:0,right:0,wrong:0,streak:0,interval:0,ease:2.2,due:0};
  const newWord=prior.seen===0,wasMastered=isMastered(prior),paragraphQuestion=isParagraphQuestion(q),learningStep=Number.isFinite(prior.learningStep)?prior.learningStep:null,dailyStep=Number.isFinite(prior.dailyStep)?prior.dailyStep:null;
  q.locked=true;clearTimeout(feedbackTimeout);beep(right);s.questions++;prior.seen++;
+ // The celebration streak belongs to the learner, not to one timed mission.
+ // Every miss—including a skip or a hint-assisted answer—resets it immediately.
+ p.correctStreak=window.PalavraCelebration.nextStreak(p.correctStreak,right);s.combo=p.correctStreak;
  if(newWord)s.newIds.add(q.w.id);
  let reviewNote='';
  if(right){
-  s.right++;s.combo++;prior.right++;
+  s.right++;prior.right++;
   if(window.PalavraCelebration.isMilestone(s.combo)){
    const celebration=window.PalavraCelebration.show(s.combo,prefs.celebrationIndex);
    prefs.celebrationIndex=celebration.index;savePrefs();
@@ -2132,7 +2135,7 @@ function answer(given,clicked,skipped=false){
    prior.interval=days;prior.due=now+days*DAY;reviewNote=`Next review in ${Math.round(days)} days.`;
   }
  }else{
-  s.combo=0;prior.wrong++;prior.retiredEasy=false;prior.streak=0;prior.verifiedDays=0;prior.lastCorrectDay='';prior.ease=Math.max(1.3,(Number(prior.ease)||2.2)-.18);prior.interval=0;prior.due=now;s.wrongIds.add(q.w.id);
+  prior.wrong++;prior.retiredEasy=false;prior.streak=0;prior.verifiedDays=0;prior.lastCorrectDay='';prior.ease=Math.max(1.3,(Number(prior.ease)||2.2)-.18);prior.interval=0;prior.due=now;s.wrongIds.add(q.w.id);
   if(!paragraphQuestion){delete prior.dailyStep;prior.learningStep=0;queueFailedWord(s,q.w.id)}
   reviewNote=paragraphQuestion?'This story remains part of your comprehension practice.':q.hintUsed?'Hint used — learning restarted; this word will return repeatedly.':'Learning started — this word will return repeatedly.';
  }
@@ -2184,7 +2187,7 @@ function result(){let s=session,m=metrics(),accuracy=s.questions?Math.round(100*
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view==='game'&&session?.current?.kind==='choice'&&!session.current.locked&&['1','2','3','4'].includes(e.key)){let el=document.querySelectorAll('[data-choice]')[Number(e.key)-1];if(el)el.click()}});
 window.addEventListener('message',event=>{if(event.source===window&&event.data?.source==='palavra-quest-reminder'&&event.data.type==='request-daily-practice')announceDailyPractice()});
-render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=36',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=37',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
