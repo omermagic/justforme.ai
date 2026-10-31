@@ -141,6 +141,18 @@ async function openReminderWindow() {
   }
 }
 
+async function openReminderPopup() {
+  if (typeof chrome.action.openPopup !== 'function') return openReminderWindow();
+  try {
+    await chrome.action.setPopup({ popup: 'reminder.html' });
+    await chrome.action.openPopup();
+    return true;
+  } catch {
+    await chrome.action.setPopup({ popup: 'popup.html' });
+    return openReminderWindow();
+  }
+}
+
 async function showDailyReminder(alarm) {
   const model = await storedModel();
   const completed = model.completedDate === model.todayDate || model.todaySeconds >= 180;
@@ -148,7 +160,7 @@ async function showDailyReminder(alarm) {
   const manuallyArmed = model.forceReminderAt > 0 && Math.abs(model.forceReminderAt - scheduledTime) < 60000;
   if (!model.settings.enabled || (!manuallyArmed && (completed || model.lastReminderDate === model.todayDate))) return false;
 
-  const windowOpened = await openReminderWindow();
+  const popupOpened = await openReminderPopup();
   let notificationShown = false;
   if (await notificationPermission() === 'granted') {
     try {
@@ -171,7 +183,7 @@ async function showDailyReminder(alarm) {
     lastAlarmFiredAt: Date.now(),
     forceReminderAt: 0
   });
-  return windowOpened || notificationShown;
+  return popupOpened || notificationShown;
 }
 
 async function handlePracticeStatus(message) {
@@ -216,6 +228,10 @@ async function handleMessage(message) {
   }
   if (message.type === 'open-quest') {
     await openQuest();
+    return { ok: true };
+  }
+  if (message.type === 'reminder-popup-opened') {
+    await chrome.action.setPopup({ popup: 'popup.html' });
     return { ok: true };
   }
   if (message.type === 'test-reminder') {

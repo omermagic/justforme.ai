@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Palavra Quest — Daily Portuguese",
   "short_name": "Palavra Quest",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A friendly daily reminder to complete a three-minute European Portuguese mission.",
   "permissions": [
     "alarms",
