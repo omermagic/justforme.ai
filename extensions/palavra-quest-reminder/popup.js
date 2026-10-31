@@ -1,0 +1,91 @@
+'use strict';
+
+const enabledInput = document.querySelector('#enabled');
+const timeInput = document.querySelector('#reminderTime');
+const statusCard = document.querySelector('#statusCard');
+const statusIcon = document.querySelector('#statusIcon');
+const statusTitle = document.querySelector('#statusTitle');
+const statusDetail = document.querySelector('#statusDetail');
+const progressBar = document.querySelector('#progressBar');
+const progressFill = document.querySelector('#progressFill');
+const quietNote = document.querySelector('#quietNote');
+const savedMessage = document.querySelector('#savedMessage');
+let saveMessageTimer = 0;
+
+function todayKey() {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function formatSeconds(seconds) {
+  const safeSeconds = Math.max(0, Math.min(180, Math.floor(Number(seconds) || 0)));
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainder = safeSeconds % 60;
+  if (!minutes) return `${remainder} sec`;
+  return remainder ? `${minutes} min ${remainder} sec` : `${minutes} min`;
+}
+
+function showSaved(message) {
+  clearTimeout(saveMessageTimer);
+  savedMessage.textContent = message;
+  saveMessageTimer = setTimeout(() => { savedMessage.textContent = ''; }, 1800);
+}
+
+function render(model) {
+  const settings = model.settings || { enabled: true, reminderTime: '19:00' };
+  const seconds = model.todayDate === todayKey() ? Math.max(0, Number(model.todaySeconds) || 0) : 0;
+  const complete = model.completedDate === todayKey() || seconds >= 180;
+  const percent = Math.min(100, seconds / 180 * 100);
+
+  enabledInput.checked = settings.enabled !== false;
+  timeInput.value = settings.reminderTime || '19:00';
+  timeInput.disabled = !enabledInput.checked;
+  statusCard.classList.toggle('complete', complete);
+  statusIcon.textContent = complete ? '✅' : '⏱️';
+  statusTitle.textContent = complete ? 'Today’s quest is complete!' : 'Three minutes today';
+  statusDetail.textContent = complete
+    ? 'Great work — your reminder will stay quiet.'
+    : `${formatSeconds(seconds)} practised · ${formatSeconds(180 - seconds)} to go`;
+  progressFill.style.width = `${complete ? 100 : percent}%`;
+  progressBar.setAttribute('aria-valuenow', String(Math.min(180, Math.floor(seconds))));
+  quietNote.textContent = enabledInput.checked
+    ? 'Once you finish three minutes, the reminder stays quiet for the rest of the day.'
+    : 'Daily reminders are currently paused.';
+}
+
+async function refresh() {
+  const response = await chrome.runtime.sendMessage({ type: 'get-status' });
+  if (response?.ok) render(response.model);
+}
+
+async function saveSettings() {
+  const response = await chrome.runtime.sendMessage({
+    type: 'update-settings',
+    settings: {
+      enabled: enabledInput.checked,
+      reminderTime: timeInput.value
+    }
+  });
+  if (response?.ok) {
+    render(response.model);
+    showSaved(enabledInput.checked ? `Reminder set for ${timeInput.value}` : 'Daily reminder paused');
+  }
+}
+
+enabledInput.addEventListener('change', saveSettings);
+timeInput.addEventListener('change', saveSettings);
+
+document.querySelector('#openQuest').addEventListener('click', async () => {
+  await chrome.runtime.sendMessage({ type: 'open-quest' });
+  window.close();
+});
+
+document.querySelector('#testReminder').addEventListener('click', async () => {
+  const response = await chrome.runtime.sendMessage({ type: 'test-reminder' });
+  if (response?.ok) showSaved('Preview notification sent');
+});
+
+refresh().catch(() => {
+  statusTitle.textContent = 'Could not load the reminder';
+  statusDetail.textContent = 'Close this window and try again.';
+});

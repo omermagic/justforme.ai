@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Palavra Quest reminder</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="card">
+    <header>
+      <img src="icons/icon128.png" alt="" width="48" height="48">
+      <div>
+        <p class="eyebrow">PALAVRA QUEST</p>
+        <h1>Daily Portuguese</h1>
+      </div>
+      <span class="flag" aria-hidden="true">🇵🇹</span>
+    </header>
+
+    <section class="status" id="statusCard" aria-live="polite">
+      <div class="status-copy">
+        <span class="status-icon" id="statusIcon">⏱️</span>
+        <div>
+          <strong id="statusTitle">Loading today’s progress…</strong>
+          <span id="statusDetail">Your goal is three active minutes.</span>
+        </div>
+      </div>
+      <div class="progress" role="progressbar" aria-label="Today’s Portuguese practice" aria-valuemin="0" aria-valuemax="180" aria-valuenow="0" id="progressBar">
+        <span id="progressFill"></span>
+      </div>
+    </section>
+
+    <button class="primary" id="openQuest">Start today’s 3-minute quest <span>↗</span></button>
+
+    <section class="settings">
+      <div class="setting-row">
+        <label for="enabled">Daily reminder</label>
+        <label class="switch">
+          <input type="checkbox" id="enabled">
+          <span aria-hidden="true"></span>
+        </label>
+      </div>
+      <div class="setting-row time-row">
+        <label for="reminderTime">Remind me at</label>
+        <input type="time" id="reminderTime" value="19:00">
+      </div>
+      <p class="quiet-note" id="quietNote">Once you finish three minutes, the reminder stays quiet for the rest of the day.</p>
+    </section>
+
+    <button class="test" id="testReminder">Preview notification</button>
+    <p class="saved" id="savedMessage" role="status"></p>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
