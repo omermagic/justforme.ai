@@ -32,4 +32,4 @@ render "1280,800" home "01-three-minutes-real-progress-1280x800.png"
 render "1280,800" quest "02-smart-adaptive-practice-1280x800.png"
 render "1280,800" reminder "03-friendly-daily-reminder-1280x800.png"
 render "440,280" promo "small-promo-tile-440x280.png"
-
+render "1400,560" marquee "marquee-promo-tile-1400x560.png"

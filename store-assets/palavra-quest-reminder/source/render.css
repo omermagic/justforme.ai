@@ -252,3 +252,98 @@ input { font: inherit; }
 .promo-meta { display: flex; gap: 8px; margin-top: 22px; }
 .promo-meta span { padding: 7px 9px; border: 1px solid rgba(130, 227, 210, .24); border-radius: 999px; color: #c3d9df; background: rgba(12, 38, 53, .55); font-size: 8px; font-weight: 900; letter-spacing: .08em; }
 .promo-star { position: absolute; z-index: 2; right: 53px; top: 79px; width: 87px; height: 87px; display: grid; place-items: center; border-radius: 25px; background: linear-gradient(145deg, #ffe39d, #ffc758); color: #fff5cb; font-size: 44px; transform: rotate(7deg); box-shadow: 0 22px 40px rgba(0,0,0,.28); text-shadow: 0 2px 6px rgba(125, 82, 0, .28); }
+
+.marquee {
+  display: flex;
+  align-items: center;
+  padding: 66px 86px;
+  background:
+    radial-gradient(circle at 76% 45%, rgba(75, 213, 188, .25), transparent 31%),
+    radial-gradient(circle at 100% 0, rgba(255, 205, 100, .15), transparent 27%),
+    linear-gradient(135deg, #071329, #0a2237 66%, #0a3437);
+}
+
+.marquee::after {
+  content: "";
+  position: absolute;
+  right: 78px;
+  top: -170px;
+  width: 700px;
+  height: 700px;
+  border: 1px solid rgba(119, 234, 209, .2);
+  border-radius: 50%;
+  box-shadow: 0 0 0 60px rgba(110, 232, 206, .025), 0 0 0 135px rgba(110, 232, 206, .018);
+}
+
+.marquee .promo-copy { width: 680px; }
+.marquee .promo-brand { gap: 17px; margin-bottom: 46px; font-size: 25px; }
+.marquee .promo-brand img { width: 66px; height: 66px; border-radius: 20px; }
+.marquee h1 { font-size: 80px; line-height: .94; }
+.marquee .promo-meta { gap: 11px; margin-top: 31px; }
+.marquee .promo-meta span { padding: 10px 14px; font-size: 11px; }
+
+.marquee-world {
+  position: absolute;
+  z-index: 2;
+  right: 115px;
+  top: 75px;
+  width: 480px;
+  height: 410px;
+}
+
+.marquee-planet {
+  position: absolute;
+  right: 58px;
+  top: 25px;
+  width: 320px;
+  height: 320px;
+  border: 1px solid rgba(145, 235, 217, .27);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(105, 229, 210, .28), rgba(18, 66, 83, .62) 46%, rgba(7, 29, 49, .9) 72%);
+  box-shadow: inset 0 0 70px rgba(119, 239, 217, .12), 0 35px 80px rgba(0, 0, 0, .3);
+}
+
+.marquee-planet::before,
+.marquee-planet::after {
+  content: "";
+  position: absolute;
+  border: 2px solid rgba(135, 228, 211, .16);
+  border-radius: 18px;
+  transform: rotate(-5deg);
+}
+
+.marquee-planet::before { width: 125px; height: 86px; left: 56px; top: 69px; }
+.marquee-planet::after { width: 104px; height: 72px; right: 42px; bottom: 60px; }
+
+.marquee-star {
+  position: absolute;
+  z-index: 3;
+  right: 23px;
+  top: 8px;
+  width: 108px;
+  height: 108px;
+  display: grid;
+  place-items: center;
+  border-radius: 31px;
+  background: linear-gradient(145deg, #ffe39d, #ffc758);
+  color: #fff6d2;
+  font-size: 55px;
+  transform: rotate(8deg);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, .32);
+}
+
+.marquee-card {
+  position: absolute;
+  z-index: 4;
+  left: 4px;
+  bottom: 4px;
+  padding: 18px 22px;
+  border: 1px solid rgba(180, 229, 228, .25);
+  border-radius: 18px;
+  background: rgba(9, 30, 51, .88);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, .32);
+  transform: rotate(4deg);
+}
+
+.marquee-card strong { display: block; font-size: 23px; letter-spacing: -.02em; }
+.marquee-card span { display: block; margin-top: 5px; color: #9fbabf; font-size: 12px; }

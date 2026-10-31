@@ -100,6 +100,22 @@ function renderPromo() {
   </section>`;
 }
 
+function renderMarquee() {
+  artboard.innerHTML = `<section class="asset marquee">
+    <div class="promo-copy">
+      <div class="promo-brand"><img src="${icon}" alt=""><span>palavra<b>quest</b></span></div>
+      <h1>Three minutes.<br><span>Real Portuguese.</span></h1>
+      <div class="promo-meta"><span>FREE</span><span>ADAPTIVE PRACTICE</span><span>EUROPEAN PT 🇵🇹</span></div>
+    </div>
+    <div class="marquee-world">
+      <div class="marquee-planet"></div>
+      <div class="marquee-star">★</div>
+      <div class="marquee-card"><strong>🇵🇹 PORTUGAL</strong><span>Your daily vocabulary adventure</span></div>
+    </div>
+  </section>`;
+}
+
 if (asset === 'promo') renderPromo();
+else if (asset === 'marquee') renderMarquee();
 else if (asset === 'reminder') void renderReminder();
 else renderScreenshot(asset);
