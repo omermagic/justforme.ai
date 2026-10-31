@@ -32,6 +32,10 @@ window.PalavraCelebration = (() => {
     return Math.max(0, Math.floor(Number(current) || 0)) + 1;
   }
 
+  function sessionStartStreak(current) {
+    return Math.min(Math.max(0, Math.floor(Number(current) || 0)), 10);
+  }
+
   function show(count, lastIndex = -1, random = Math.random, persistentPreview = false) {
     document.querySelector('#streakCelebration')?.remove();
     const index = pick(lastIndex, random);
@@ -62,5 +66,5 @@ window.PalavraCelebration = (() => {
     window.addEventListener('load', () => window.setTimeout(() => show(20, -1, Math.random, true), 300), { once: true });
   }
 
-  return Object.freeze({ messages, pick, isMilestone, nextStreak, show });
+  return Object.freeze({ messages, pick, isMilestone, nextStreak, sessionStartStreak, show });
 })();

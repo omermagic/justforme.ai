@@ -86,7 +86,7 @@ gtag('js',new Date());gtag('config','G-E3JJGMR427');
     </section>
   </main>
 </div>
-<script src="./celebrations.js?v=37"></script>
+<script src="./celebrations.js?v=38"></script>
 <script>
 'use strict';
 /* Palavra Quest © 2026. Offline-capable with no accounts or advertising. */
@@ -1913,7 +1913,14 @@ function startFocusedTraining(focus){
  if(needsAudio&&!prefs.sound){prefs.sound=true;savePrefs()}
  startSession('focus',focus);
 }
-function startSession(mode,focus=''){clearTimeout(feedbackTimeout);stopSessionClock();session={mode,focus,remaining:180,timeExpired:false,accountedSeconds:0,masteredAtStart:metrics().known,questions:0,right:0,combo:localProgress().correctStreak,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),readingCardsSeen:new Set(),retryQueue:[],retryCounts:new Map(),readingCount:0,lastReadingAt:-10,current:null,paused:false,levelAtStart:estimatedSkillRank()};view='game';nextQuestion();intervalHandle=setInterval(tick,140)}
+function startSession(mode,focus=''){
+ clearTimeout(feedbackTimeout);stopSessionClock();
+ const p=localProgress();
+ // A new mission keeps some momentum without carrying an oversized head start.
+ p.correctStreak=window.PalavraCelebration.sessionStartStreak(p.correctStreak);saveProgress();
+ session={mode,focus,remaining:180,timeExpired:false,accountedSeconds:0,masteredAtStart:metrics().known,questions:0,right:0,combo:p.correctStreak,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),readingCardsSeen:new Set(),retryQueue:[],retryCounts:new Map(),readingCount:0,lastReadingAt:-10,current:null,paused:false,levelAtStart:estimatedSkillRank()};
+ view='game';nextQuestion();intervalHandle=setInterval(tick,140);
+}
 let lastFrame=0;
 function expireSessionTimer(){
  if(!session)return;
@@ -2187,7 +2194,7 @@ function result(){let s=session,m=metrics(),accuracy=s.questions?Math.round(100*
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view==='game'&&session?.current?.kind==='choice'&&!session.current.locked&&['1','2','3','4'].includes(e.key)){let el=document.querySelectorAll('[data-choice]')[Number(e.key)-1];if(el)el.click()}});
 window.addEventListener('message',event=>{if(event.source===window&&event.data?.source==='palavra-quest-reminder'&&event.data.type==='request-daily-practice')announceDailyPractice()});
-render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=37',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=38',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
