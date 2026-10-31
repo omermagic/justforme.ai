@@ -36,7 +36,8 @@ function showSaved(message) {
 
 function scheduledReminderText(model, complete) {
   if (model.settings?.enabled === false) return 'No reminder scheduled.';
-  if (complete) return 'No more reminders today — goal completed.';
+  const manuallyArmed = model.forceReminderAt > Date.now() && model.forceReminderAt === model.nextReminderAt;
+  if (complete && !manuallyArmed) return 'No more reminders today — goal completed.';
   if (model.lastReminderDate === todayKey()) return 'Today’s reminder was sent.';
   const timestamp = Number(model.nextReminderAt) || 0;
   if (!timestamp) return 'Scheduling your next reminder…';
@@ -51,6 +52,7 @@ function render(model) {
   const settings = model.settings || { enabled: true, reminderTime: '19:00' };
   const seconds = model.todayDate === todayKey() ? Math.max(0, Number(model.todaySeconds) || 0) : 0;
   const complete = model.completedDate === todayKey() || seconds >= 180;
+  const manuallyArmed = model.forceReminderAt > Date.now() && model.forceReminderAt === model.nextReminderAt;
   const percent = Math.min(100, seconds / 180 * 100);
 
   enabledInput.checked = settings.enabled !== false;
@@ -64,9 +66,13 @@ function render(model) {
     : `${formatSeconds(seconds)} practised · ${formatSeconds(180 - seconds)} to go`;
   progressFill.style.width = `${complete ? 100 : percent}%`;
   progressBar.setAttribute('aria-valuenow', String(Math.min(180, Math.floor(seconds))));
-  quietNote.textContent = enabledInput.checked
-    ? 'Once you finish three minutes, the reminder stays quiet for the rest of the day.'
-    : 'Daily reminders are currently paused.';
+  if (!enabledInput.checked) {
+    quietNote.textContent = 'Daily reminders are currently paused.';
+  } else if (manuallyArmed) {
+    quietNote.textContent = 'This reminder was just set manually, so it will appear even if today’s goal is complete.';
+  } else {
+    quietNote.textContent = 'Once you finish three minutes, the reminder stays quiet for the rest of the day.';
+  }
   nextReminder.textContent = scheduledReminderText(model, complete);
   permissionWarning.hidden = model.notificationPermission !== 'denied';
 }

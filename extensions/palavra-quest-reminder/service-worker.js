@@ -26,7 +26,9 @@ async function storedModel() {
     'todayDate',
     'todaySeconds',
     'lastReminderDate',
-    'nextReminderAt'
+    'nextReminderAt',
+    'forceReminderAt',
+    'lastAlarmFiredAt'
   ]);
   const settings = {
     ...DEFAULT_SETTINGS,
@@ -43,7 +45,9 @@ async function storedModel() {
     todayDate: today,
     todaySeconds,
     lastReminderDate: saved.lastReminderDate || '',
-    nextReminderAt: Math.max(0, Number(saved.nextReminderAt) || 0)
+    nextReminderAt: Math.max(0, Number(saved.nextReminderAt) || 0),
+    forceReminderAt: Math.max(0, Number(saved.forceReminderAt) || 0),
+    lastAlarmFiredAt: Math.max(0, Number(saved.lastAlarmFiredAt) || 0)
   };
 }
 
@@ -122,25 +126,52 @@ async function openQuest() {
   await chrome.notifications.clear(NOTIFICATION_ID);
 }
 
-async function showDailyReminder() {
+async function openReminderWindow() {
+  try {
+    await chrome.windows.create({
+      url: chrome.runtime.getURL('reminder.html'),
+      type: 'popup',
+      width: 420,
+      height: 570,
+      focused: true
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function showDailyReminder(alarm) {
   const model = await storedModel();
   const completed = model.completedDate === model.todayDate || model.todaySeconds >= 180;
-  if (!model.settings.enabled || completed || model.lastReminderDate === model.todayDate) return;
-  if (await notificationPermission() !== 'granted') {
-    await updateBadge();
-    return;
-  }
+  const scheduledTime = Number(alarm?.scheduledTime) || Date.now();
+  const manuallyArmed = model.forceReminderAt > 0 && Math.abs(model.forceReminderAt - scheduledTime) < 60000;
+  if (!model.settings.enabled || (!manuallyArmed && (completed || model.lastReminderDate === model.todayDate))) return false;
 
-  await chrome.notifications.create(NOTIFICATION_ID, {
-    type: 'basic',
-    iconUrl: 'icons/icon128.png',
-    title: 'Three minutes of Portuguese? 🇵🇹',
-    message: 'Keep your streak alive with one quick Palavra Quest mission.',
-    buttons: [{ title: 'Start today’s quest' }],
-    priority: 2,
-    requireInteraction: true
+  const windowOpened = await openReminderWindow();
+  let notificationShown = false;
+  if (await notificationPermission() === 'granted') {
+    try {
+      await chrome.notifications.create(NOTIFICATION_ID, {
+        type: 'basic',
+        iconUrl: 'icons/icon128.png',
+        title: 'Three minutes of Portuguese? 🇵🇹',
+        message: 'Keep your streak alive with one quick Palavra Quest mission.',
+        buttons: [{ title: 'Start today’s quest' }],
+        priority: 2,
+        requireInteraction: true
+      });
+      notificationShown = true;
+    } catch {
+      notificationShown = false;
+    }
+  }
+  await chrome.storage.local.set({
+    lastReminderDate: model.todayDate,
+    lastAlarmFiredAt: Date.now(),
+    forceReminderAt: 0
   });
-  await chrome.storage.local.set({ lastReminderDate: model.todayDate });
+  return windowOpened || notificationShown;
 }
 
 async function handlePracticeStatus(message) {
@@ -177,7 +208,9 @@ async function handleMessage(message) {
         : current.settings.reminderTime
     };
     await chrome.storage.local.set({ settings });
-    await scheduleNextReminder();
+    const when = await scheduleNextReminder();
+    const isNearFuture = settings.enabled && when - Date.now() <= 10 * 60 * 1000;
+    await chrome.storage.local.set({ forceReminderAt: isNearFuture ? when : 0 });
     await updateBadge();
     return { ok: true, model: await modelWithPermission() };
   }
@@ -207,7 +240,7 @@ chrome.runtime.onStartup.addListener(() => void initialize());
 chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name !== ALARM_NAME) return;
   void (async () => {
-    await showDailyReminder();
+    await showDailyReminder(alarm);
     await scheduleNextReminder(false);
     await updateBadge();
   })();
