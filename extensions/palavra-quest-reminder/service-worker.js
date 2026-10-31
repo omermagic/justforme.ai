@@ -25,7 +25,8 @@ async function storedModel() {
     'completedDate',
     'todayDate',
     'todaySeconds',
-    'lastReminderDate'
+    'lastReminderDate',
+    'nextReminderAt'
   ]);
   const settings = {
     ...DEFAULT_SETTINGS,
@@ -41,7 +42,8 @@ async function storedModel() {
     completedDate: saved.completedDate || '',
     todayDate: today,
     todaySeconds,
-    lastReminderDate: saved.lastReminderDate || ''
+    lastReminderDate: saved.lastReminderDate || '',
+    nextReminderAt: Math.max(0, Number(saved.nextReminderAt) || 0)
   };
 }
 
@@ -60,22 +62,31 @@ async function modelWithPermission() {
   };
 }
 
-function nextReminderTimestamp(reminderTime) {
+function nextReminderTimestamp(reminderTime, now = new Date(), allowCurrentMinute = true) {
   const [hours, minutes] = reminderTime.split(':').map(Number);
-  const now = new Date();
   const next = new Date(now);
+  // Selecting the current minute is a common way to test the reminder. Since
+  // the time input has no seconds, fire shortly instead of waiting until
+  // tomorrow because HH:MM:00 has technically already passed.
+  if (allowCurrentMinute && hours === now.getHours() && minutes === now.getMinutes()) return now.getTime() + 5000;
   next.setHours(hours, minutes, 0, 0);
   if (next <= now) next.setDate(next.getDate() + 1);
   return next.getTime();
 }
 
-async function scheduleNextReminder() {
+async function scheduleNextReminder(allowCurrentMinute = true) {
   const { settings } = await storedModel();
   await chrome.alarms.clear(ALARM_NAME);
-  if (!settings.enabled) return;
+  if (!settings.enabled) {
+    await chrome.storage.local.set({ nextReminderAt: 0 });
+    return 0;
+  }
+  const when = nextReminderTimestamp(settings.reminderTime, new Date(), allowCurrentMinute);
   chrome.alarms.create(ALARM_NAME, {
-    when: nextReminderTimestamp(settings.reminderTime)
+    when
   });
+  await chrome.storage.local.set({ nextReminderAt: when });
+  return when;
 }
 
 async function updateBadge() {
@@ -90,8 +101,9 @@ async function updateBadge() {
     return;
   }
   const complete = model.completedDate === model.todayDate || model.todaySeconds >= 180;
-  await chrome.action.setBadgeBackgroundColor({ color: complete ? '#16866f' : '#d58b20' });
-  await chrome.action.setBadgeText({ text: complete ? '✓' : '3m' });
+  const reminderSent = model.lastReminderDate === model.todayDate;
+  await chrome.action.setBadgeBackgroundColor({ color: complete ? '#16866f' : reminderSent ? '#c95d39' : '#d58b20' });
+  await chrome.action.setBadgeText({ text: complete ? '✓' : reminderSent ? 'GO' : '3m' });
 }
 
 async function initialize() {
@@ -125,7 +137,8 @@ async function showDailyReminder() {
     title: 'Three minutes of Portuguese? 🇵🇹',
     message: 'Keep your streak alive with one quick Palavra Quest mission.',
     buttons: [{ title: 'Start today’s quest' }],
-    priority: 1
+    priority: 2,
+    requireInteraction: true
   });
   await chrome.storage.local.set({ lastReminderDate: model.todayDate });
 }
@@ -195,7 +208,7 @@ chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name !== ALARM_NAME) return;
   void (async () => {
     await showDailyReminder();
-    await scheduleNextReminder();
+    await scheduleNextReminder(false);
     await updateBadge();
   })();
 });
@@ -214,5 +227,3 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     .catch(error => sendResponse({ ok: false, error: error.message }));
   return true;
 });
-
-void initialize();

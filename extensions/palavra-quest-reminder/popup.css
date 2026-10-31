@@ -182,6 +182,14 @@ input[type="time"] {
   line-height: 1.45;
 }
 
+.next-reminder {
+  margin: 8px 0 0;
+  color: var(--mint);
+  font-size: 9px;
+  font-weight: 760;
+  line-height: 1.4;
+}
+
 .test {
   display: block;
   margin: 13px auto 0;

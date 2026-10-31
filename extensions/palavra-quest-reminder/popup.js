@@ -9,6 +9,7 @@ const statusDetail = document.querySelector('#statusDetail');
 const progressBar = document.querySelector('#progressBar');
 const progressFill = document.querySelector('#progressFill');
 const quietNote = document.querySelector('#quietNote');
+const nextReminder = document.querySelector('#nextReminder');
 const permissionWarning = document.querySelector('#permissionWarning');
 const notificationPreview = document.querySelector('#notificationPreview');
 const savedMessage = document.querySelector('#savedMessage');
@@ -33,6 +34,19 @@ function showSaved(message) {
   saveMessageTimer = setTimeout(() => { savedMessage.textContent = ''; }, 1800);
 }
 
+function scheduledReminderText(model, complete) {
+  if (model.settings?.enabled === false) return 'No reminder scheduled.';
+  if (complete) return 'No more reminders today — goal completed.';
+  if (model.lastReminderDate === todayKey()) return 'Today’s reminder was sent.';
+  const timestamp = Number(model.nextReminderAt) || 0;
+  if (!timestamp) return 'Scheduling your next reminder…';
+  const remaining = timestamp - Date.now();
+  if (remaining > 0 && remaining <= 60000) return 'Next reminder: in a few seconds.';
+  const date = new Date(timestamp);
+  const day = date.toDateString() === new Date().toDateString() ? 'today' : 'tomorrow';
+  return `Next reminder: ${day} at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
+}
+
 function render(model) {
   const settings = model.settings || { enabled: true, reminderTime: '19:00' };
   const seconds = model.todayDate === todayKey() ? Math.max(0, Number(model.todaySeconds) || 0) : 0;
@@ -53,6 +67,7 @@ function render(model) {
   quietNote.textContent = enabledInput.checked
     ? 'Once you finish three minutes, the reminder stays quiet for the rest of the day.'
     : 'Daily reminders are currently paused.';
+  nextReminder.textContent = scheduledReminderText(model, complete);
   permissionWarning.hidden = model.notificationPermission !== 'denied';
 }
 
@@ -71,7 +86,13 @@ async function saveSettings() {
   });
   if (response?.ok) {
     render(response.model);
-    showSaved(enabledInput.checked ? `Reminder set for ${timeInput.value}` : 'Daily reminder paused');
+    const firesSoon = response.model.nextReminderAt - Date.now() <= 60000;
+    const message = !enabledInput.checked
+      ? 'Daily reminder paused'
+      : firesSoon
+        ? 'Reminder will fire in a few seconds'
+        : `Reminder set for ${timeInput.value}`;
+    showSaved(message);
   }
 }
 

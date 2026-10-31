@@ -5,6 +5,7 @@ A small Manifest V3 Chrome extension that reminds the learner once per day to co
 ## What it does
 
 - Lets the learner choose a daily reminder time.
+- Fires within five seconds when the current minute is selected for testing.
 - Opens the existing Palavra Quest website, so vocabulary progress remains in the website’s local storage.
 - Receives today’s active-practice time from the website.
 - Suppresses the reminder after three active minutes have been completed that day.
