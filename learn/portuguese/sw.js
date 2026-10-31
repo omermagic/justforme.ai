@@ -1,9 +1,9 @@
 // Normal visits check GitHub Pages for a new release, but never leave the app
 // hanging on a weak connection. Assets remain available from the local shell.
 const CACHE_PREFIX='palavra-quest-shell-';
-const RELEASE='35';
+const RELEASE='36';
 const CACHE=CACHE_PREFIX+'v'+RELEASE;
-const SHELL=['./index.html','./manifest.webmanifest','./icon.svg'];
+const SHELL=['./index.html','./manifest.webmanifest','./icon.svg','./celebrations.js'];
 const NAVIGATION_TIMEOUT_MS=4500;
 
 self.addEventListener('install',event=>{
@@ -44,7 +44,9 @@ async function freshPage(request){
 }
 
 async function cachedAsset(request){
- const cached=await caches.match(request);
+ // Release query strings must still match the shell copy cached at install,
+ // especially when the learner opens the app without a connection.
+ const cached=await caches.match(request,{ignoreSearch:true});
  if(cached)return cached;
  try{
   const response=await fetch(request);

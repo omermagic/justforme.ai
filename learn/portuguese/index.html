@@ -42,6 +42,7 @@ gtag('js',new Date());gtag('config','G-E3JJGMR427');
 .btn-icon{text-decoration:none}
 .stats{grid-template-columns:repeat(5,minmax(0,1fr))}
 .feedback small{color:rgba(244,247,255,.78);font-size:11px;font-weight:650}
+.streak-celebration{position:fixed;z-index:9999;inset:0;display:grid;place-items:center;overflow:hidden;pointer-events:none;background:radial-gradient(circle,rgba(26,106,103,.38),rgba(5,15,35,.08) 48%,transparent 72%);animation:streak-fade 1.45s ease both}.streak-card{position:relative;z-index:2;width:min(470px,calc(100vw - 36px));padding:30px 28px 32px;border:1px solid #baffea80;border-radius:30px;background:linear-gradient(145deg,rgba(17,59,77,.98),rgba(9,31,54,.99));box-shadow:0 35px 100px #0009,0 0 55px #56ecc24d;text-align:center;animation:streak-pop 1.45s cubic-bezier(.2,.85,.2,1) both}.streak-card small{display:block;margin:10px 0 8px;color:var(--gold);font-size:11px;font-weight:950;letter-spacing:.18em}.streak-card strong{display:block;color:#f7fffc;font-size:clamp(24px,5vw,37px);line-height:1.08;letter-spacing:-.045em}.streak-emoji{display:block;font-size:58px;filter:drop-shadow(0 13px 16px #0008)}.streak-rays{position:absolute;width:min(700px,95vw);aspect-ratio:1;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(108,239,208,.18) 0 5deg,transparent 5deg 18deg);mask-image:radial-gradient(circle,transparent 0 28%,black 30% 63%,transparent 65%);animation:streak-spin 6s linear infinite}.streak-sparkles{position:absolute;z-index:3;width:min(610px,95vw);height:350px}.streak-sparkles i{position:absolute;width:11px;height:11px;border-radius:3px;background:var(--gold);box-shadow:0 0 16px currentColor;animation:streak-spark 1.2s ease-out both}.streak-sparkles i:nth-child(1){left:8%;top:24%;color:#ffc96b;transform:rotate(18deg)}.streak-sparkles i:nth-child(2){left:18%;bottom:18%;color:#5de5c8;animation-delay:.08s}.streak-sparkles i:nth-child(3){left:39%;top:3%;color:#8dabff;animation-delay:.14s}.streak-sparkles i:nth-child(4){right:35%;bottom:2%;color:#ff7999;animation-delay:.05s}.streak-sparkles i:nth-child(5){right:17%;top:17%;color:#ffc96b;animation-delay:.12s}.streak-sparkles i:nth-child(6){right:5%;bottom:25%;color:#5de5c8;animation-delay:.18s}.streak-celebration.leaving{opacity:0;transition:opacity .34s ease}.streak-celebration.preview,.streak-celebration.preview .streak-card,.streak-celebration.preview .streak-rays,.streak-celebration.preview .streak-sparkles i{opacity:1;transform:none;animation:none}@keyframes streak-pop{0%{opacity:0;transform:scale(.55) rotate(-3deg)}20%{opacity:1;transform:scale(1.05) rotate(1deg)}34%,76%{opacity:1;transform:scale(1) rotate(0)}100%{opacity:0;transform:scale(.96) translateY(-8px)}}@keyframes streak-fade{0%,8%,82%{opacity:1}100%{opacity:0}}@keyframes streak-spin{to{transform:rotate(1turn)}}@keyframes streak-spark{0%{opacity:0;transform:translateY(28px) scale(.2) rotate(0)}28%{opacity:1;transform:translateY(0) scale(1.2) rotate(90deg)}100%{opacity:0;transform:translateY(-48px) scale(.55) rotate(190deg)}}
 .word.cloze-sentence{font-size:clamp(25px,3.7vw,40px);line-height:1.28;letter-spacing:-.035em;max-width:720px;margin-left:auto;margin-right:auto}.sentence-blank{display:inline-block;min-width:112px;color:var(--gold);letter-spacing:.08em;border-bottom:3px solid #ffc96b99;line-height:1}
 .word.listening-word{margin-top:19px}.listening-prompt{display:flex;flex-direction:column;align-items:center;gap:5px}.listening-prompt span{width:82px;height:82px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 28%,#c7fff1,#54ddc6 55%,#25889a);font-size:39px;box-shadow:0 0 0 10px #54e6c41a,0 14px 42px #0007}.listening-prompt small{font-size:15px;letter-spacing:.04em;color:#d6fff5}
 .word.reading-passage{max-width:680px;margin:20px auto 13px;padding:18px 20px;border:1px solid #75ddc94d;border-radius:18px;background:#0d263c99;font-size:clamp(18px,2.7vw,24px);font-weight:650;letter-spacing:-.018em;line-height:1.55;text-align:left}.reading-kicker{display:block;margin-bottom:8px;color:var(--teal);font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
@@ -85,6 +86,7 @@ gtag('js',new Date());gtag('config','G-E3JJGMR427');
     </section>
   </main>
 </div>
+<script src="./celebrations.js?v=36"></script>
 <script>
 'use strict';
 /* Palavra Quest © 2026. Offline-capable with no accounts or advertising. */
@@ -2089,6 +2091,10 @@ function answer(given,clicked,skipped=false){
  let reviewNote='';
  if(right){
   s.right++;s.combo++;prior.right++;
+  if(window.PalavraCelebration.isMilestone(s.combo)){
+   const celebration=window.PalavraCelebration.show(s.combo,prefs.celebrationIndex);
+   prefs.celebrationIndex=celebration.index;savePrefs();
+  }
   if(learningStep!==null&&!paragraphQuestion){
    const completedStep=learningStep+1;
    prior.retiredEasy=false;prior.ease=Math.min(3,Math.max(1.45,(Number(prior.ease)||2.2)+.02));
@@ -2178,7 +2184,7 @@ function result(){let s=session,m=metrics(),accuracy=s.questions?Math.round(100*
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view==='game'&&session?.current?.kind==='choice'&&!session.current.locked&&['1','2','3','4'].includes(e.key)){let el=document.querySelectorAll('[data-choice]')[Number(e.key)-1];if(el)el.click()}});
 window.addEventListener('message',event=>{if(event.source===window&&event.data?.source==='palavra-quest-reminder'&&event.data.type==='request-daily-practice')announceDailyPractice()});
-render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=35',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=36',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
