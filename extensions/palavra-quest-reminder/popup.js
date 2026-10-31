@@ -9,6 +9,8 @@ const statusDetail = document.querySelector('#statusDetail');
 const progressBar = document.querySelector('#progressBar');
 const progressFill = document.querySelector('#progressFill');
 const quietNote = document.querySelector('#quietNote');
+const permissionWarning = document.querySelector('#permissionWarning');
+const notificationPreview = document.querySelector('#notificationPreview');
 const savedMessage = document.querySelector('#savedMessage');
 let saveMessageTimer = 0;
 
@@ -51,6 +53,7 @@ function render(model) {
   quietNote.textContent = enabledInput.checked
     ? 'Once you finish three minutes, the reminder stays quiet for the rest of the day.'
     : 'Daily reminders are currently paused.';
+  permissionWarning.hidden = model.notificationPermission !== 'denied';
 }
 
 async function refresh() {
@@ -81,8 +84,18 @@ document.querySelector('#openQuest').addEventListener('click', async () => {
 });
 
 document.querySelector('#testReminder').addEventListener('click', async () => {
+  notificationPreview.hidden = false;
   const response = await chrome.runtime.sendMessage({ type: 'test-reminder' });
-  if (response?.ok) showSaved('Preview notification sent');
+  if (!response?.ok) {
+    showSaved('Preview shown here · system notification failed');
+    return;
+  }
+  if (response.shown) {
+    showSaved('System notification sent · preview shown here');
+  } else {
+    permissionWarning.hidden = false;
+    showSaved('Preview shown here · system notifications are blocked');
+  }
 });
 
 refresh().catch(() => {

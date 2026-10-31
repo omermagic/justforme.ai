@@ -32,6 +32,15 @@
 
     <button class="primary" id="openQuest">Start today’s 3-minute quest <span>↗</span></button>
 
+    <section class="notification-preview" id="notificationPreview" aria-live="polite" hidden>
+      <img src="icons/icon128.png" alt="" width="40" height="40">
+      <div>
+        <span>PALAVRA QUEST</span>
+        <strong>Your Portuguese reminder is ready! 🇵🇹</strong>
+        <p>This is how your daily three-minute reminder will look.</p>
+      </div>
+    </section>
+
     <section class="settings">
       <div class="setting-row">
         <label for="enabled">Daily reminder</label>
@@ -45,6 +54,7 @@
         <input type="time" id="reminderTime" value="19:00">
       </div>
       <p class="quiet-note" id="quietNote">Once you finish three minutes, the reminder stays quiet for the rest of the day.</p>
+      <p class="permission-warning" id="permissionWarning" hidden>⚠ System notifications are blocked. Enable notifications for Google Chrome in your computer settings.</p>
     </section>
 
     <button class="test" id="testReminder">Preview notification</button>

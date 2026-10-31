@@ -8,6 +8,7 @@ A small Manifest V3 Chrome extension that reminds the learner once per day to co
 - Opens the existing Palavra Quest website, so vocabulary progress remains in the website’s local storage.
 - Receives today’s active-practice time from the website.
 - Suppresses the reminder after three active minutes have been completed that day.
+- Always shows an in-popup notification preview and reports when operating-system notifications are blocked.
 - Uses only `alarms`, `notifications`, `storage`, and access to the Palavra Quest page.
 
 ## Test locally

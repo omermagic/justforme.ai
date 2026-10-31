@@ -45,6 +45,21 @@ async function storedModel() {
   };
 }
 
+async function notificationPermission() {
+  try {
+    return await chrome.notifications.getPermissionLevel();
+  } catch {
+    return 'granted';
+  }
+}
+
+async function modelWithPermission() {
+  return {
+    ...await storedModel(),
+    notificationPermission: await notificationPermission()
+  };
+}
+
 function nextReminderTimestamp(reminderTime) {
   const [hours, minutes] = reminderTime.split(':').map(Number);
   const now = new Date();
@@ -67,6 +82,11 @@ async function updateBadge() {
   const model = await storedModel();
   if (!model.settings.enabled) {
     await chrome.action.setBadgeText({ text: '' });
+    return;
+  }
+  if (await notificationPermission() === 'denied') {
+    await chrome.action.setBadgeBackgroundColor({ color: '#c24756' });
+    await chrome.action.setBadgeText({ text: '!' });
     return;
   }
   const complete = model.completedDate === model.todayDate || model.todaySeconds >= 180;
@@ -94,6 +114,10 @@ async function showDailyReminder() {
   const model = await storedModel();
   const completed = model.completedDate === model.todayDate || model.todaySeconds >= 180;
   if (!model.settings.enabled || completed || model.lastReminderDate === model.todayDate) return;
+  if (await notificationPermission() !== 'granted') {
+    await updateBadge();
+    return;
+  }
 
   await chrome.notifications.create(NOTIFICATION_ID, {
     type: 'basic',
@@ -129,7 +153,7 @@ async function handleMessage(message) {
   }
   if (message.type === 'get-status') {
     await updateBadge();
-    return { ok: true, model: await storedModel() };
+    return { ok: true, model: await modelWithPermission() };
   }
   if (message.type === 'update-settings') {
     const current = await storedModel();
@@ -142,13 +166,15 @@ async function handleMessage(message) {
     await chrome.storage.local.set({ settings });
     await scheduleNextReminder();
     await updateBadge();
-    return { ok: true, model: await storedModel() };
+    return { ok: true, model: await modelWithPermission() };
   }
   if (message.type === 'open-quest') {
     await openQuest();
     return { ok: true };
   }
   if (message.type === 'test-reminder') {
+    const permission = await notificationPermission();
+    if (permission !== 'granted') return { ok: true, shown: false, permission };
     await chrome.notifications.create(NOTIFICATION_ID, {
       type: 'basic',
       iconUrl: 'icons/icon128.png',
@@ -157,7 +183,7 @@ async function handleMessage(message) {
       buttons: [{ title: 'Open Palavra Quest' }],
       priority: 1
     });
-    return { ok: true };
+    return { ok: true, shown: true, permission };
   }
   return { ok: false };
 }
