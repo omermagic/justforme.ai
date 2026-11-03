@@ -1,1 +1,27 @@
-{"name":"Palavra Quest — European Portuguese","short_name":"Palavra Quest","description":"Learn European Portuguese in 3-minute offline missions","start_url":"./index.html","scope":"./","display":"standalone","background_color":"#081328","theme_color":"#081328","lang":"en","icons":[{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
+{
+  "id": "/learn/portuguese/",
+  "name": "Palavra Quest",
+  "short_name": "Palavra Quest",
+  "description": "Three-minute adaptive missions for learning European Portuguese.",
+  "start_url": "/learn/portuguese/",
+  "scope": "/learn/portuguese/",
+  "display": "standalone",
+  "background_color": "#081328",
+  "theme_color": "#09152e",
+  "lang": "en",
+  "categories": ["education", "games"],
+  "icons": [
+    {
+      "src": "/learn/portuguese/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/learn/portuguese/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
