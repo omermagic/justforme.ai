@@ -3,6 +3,19 @@
 const ALARM_NAME = 'palavra-quest-daily-reminder';
 const NOTIFICATION_ID = 'palavra-quest-daily';
 const QUEST_URL = 'https://justforme.ai/learn/portuguese/?from=chrome-extension';
+const MAX_ON_TIME_DELAY_MS = 60 * 1000;
+const QUIET_ICONS = Object.freeze({
+  16: 'icons/icon16.png',
+  32: 'icons/icon32.png',
+  48: 'icons/icon48.png',
+  128: 'icons/icon128.png'
+});
+const GO_ICONS = Object.freeze({
+  16: 'icons/go16.png',
+  32: 'icons/go32.png',
+  48: 'icons/go48.png',
+  128: 'icons/go128.png'
+});
 const DEFAULT_SETTINGS = Object.freeze({
   enabled: true,
   reminderTime: '19:00'
@@ -28,7 +41,8 @@ async function storedModel() {
     'lastReminderDate',
     'nextReminderAt',
     'forceReminderAt',
-    'lastAlarmFiredAt'
+    'lastAlarmFiredAt',
+    'missedReminderAt'
   ]);
   const settings = {
     ...DEFAULT_SETTINGS,
@@ -47,8 +61,21 @@ async function storedModel() {
     lastReminderDate: saved.lastReminderDate || '',
     nextReminderAt: Math.max(0, Number(saved.nextReminderAt) || 0),
     forceReminderAt: Math.max(0, Number(saved.forceReminderAt) || 0),
-    lastAlarmFiredAt: Math.max(0, Number(saved.lastAlarmFiredAt) || 0)
+    lastAlarmFiredAt: Math.max(0, Number(saved.lastAlarmFiredAt) || 0),
+    missedReminderAt: Math.max(0, Number(saved.missedReminderAt) || 0)
   };
+}
+
+function alarmArrivedLate(alarm, now = Date.now()) {
+  const scheduledTime = Number(alarm?.scheduledTime) || 0;
+  return scheduledTime > 0 && now - scheduledTime > MAX_ON_TIME_DELAY_MS;
+}
+
+function missedStoredReminder(model, now = Date.now()) {
+  const scheduledTime = Number(model.nextReminderAt) || 0;
+  if (!model.settings.enabled || scheduledTime <= 0 || scheduledTime > now) return false;
+  if (model.lastAlarmFiredAt >= scheduledTime) return false;
+  return model.completedDate !== localDay(new Date(scheduledTime));
 }
 
 async function notificationPermission() {
@@ -95,6 +122,10 @@ async function scheduleNextReminder(allowCurrentMinute = true) {
 
 async function updateBadge() {
   const model = await storedModel();
+  const complete = model.completedDate === model.todayDate || model.todaySeconds >= 180;
+  const reminderSent = model.lastReminderDate === model.todayDate;
+  const needsAttention = model.settings.enabled && !complete && (model.missedReminderAt > 0 || reminderSent);
+  await chrome.action.setIcon({ path: needsAttention ? GO_ICONS : QUIET_ICONS });
   if (!model.settings.enabled) {
     await chrome.action.setBadgeText({ text: '' });
     return;
@@ -104,20 +135,22 @@ async function updateBadge() {
     await chrome.action.setBadgeText({ text: '!' });
     return;
   }
-  const complete = model.completedDate === model.todayDate || model.todaySeconds >= 180;
-  const reminderSent = model.lastReminderDate === model.todayDate;
-  await chrome.action.setBadgeBackgroundColor({ color: complete ? '#16866f' : reminderSent ? '#c95d39' : '#d58b20' });
-  await chrome.action.setBadgeText({ text: complete ? '✓' : reminderSent ? 'GO' : '3m' });
+  await chrome.action.setBadgeBackgroundColor({ color: complete ? '#16866f' : needsAttention ? '#c95d39' : '#d58b20' });
+  await chrome.action.setBadgeText({ text: complete ? '✓' : needsAttention ? 'GO' : '3m' });
 }
 
 async function initialize() {
   const model = await storedModel();
+  const missedReminderAt = missedStoredReminder(model) ? model.nextReminderAt : model.missedReminderAt;
   await chrome.storage.local.set({
     settings: model.settings,
     todayDate: model.todayDate,
-    todaySeconds: model.todaySeconds
+    todaySeconds: model.todaySeconds,
+    missedReminderAt
   });
-  await scheduleNextReminder();
+  // Startup must never turn a missed alarm into the five-second current-minute
+  // test reminder. That shortcut is reserved for an explicit settings change.
+  await scheduleNextReminder(false);
   await updateBadge();
 }
 
@@ -186,6 +219,20 @@ async function showDailyReminder(alarm) {
   return popupOpened || notificationShown;
 }
 
+async function recordMissedReminder(alarm) {
+  const model = await storedModel();
+  const scheduledTime = Number(alarm?.scheduledTime) || Date.now();
+  const scheduledDay = localDay(new Date(scheduledTime));
+  const completed = model.completedDate === scheduledDay;
+  if (!model.settings.enabled || completed || model.lastReminderDate === scheduledDay) return false;
+  await chrome.storage.local.set({
+    missedReminderAt: scheduledTime,
+    lastAlarmFiredAt: Date.now(),
+    forceReminderAt: 0
+  });
+  return true;
+}
+
 async function handlePracticeStatus(message) {
   if (message.date !== localDay()) return storedModel();
   const seconds = Math.max(0, Math.floor(Number(message.seconds) || 0));
@@ -195,6 +242,7 @@ async function handlePracticeStatus(message) {
   };
   if (message.complete || seconds >= 180) {
     update.completedDate = message.date;
+    update.missedReminderAt = 0;
     await chrome.notifications.clear(NOTIFICATION_ID);
   }
   await chrome.storage.local.set(update);
@@ -256,7 +304,8 @@ chrome.runtime.onStartup.addListener(() => void initialize());
 chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name !== ALARM_NAME) return;
   void (async () => {
-    await showDailyReminder(alarm);
+    if (alarmArrivedLate(alarm)) await recordMissedReminder(alarm);
+    else await showDailyReminder(alarm);
     await scheduleNextReminder(false);
     await updateBadge();
   })();

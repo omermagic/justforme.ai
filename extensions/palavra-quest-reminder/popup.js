@@ -38,6 +38,7 @@ function scheduledReminderText(model, complete) {
   if (model.settings?.enabled === false) return 'No reminder scheduled.';
   const manuallyArmed = model.forceReminderAt > Date.now() && model.forceReminderAt === model.nextReminderAt;
   if (complete && !manuallyArmed) return 'No more reminders today — goal completed.';
+  if (model.missedReminderAt > 0) return 'A reminder was missed — no late alert was shown.';
   if (model.lastReminderDate === todayKey()) return 'Today’s reminder was sent.';
   const timestamp = Number(model.nextReminderAt) || 0;
   if (!timestamp) return 'Scheduling your next reminder…';
@@ -52,6 +53,7 @@ function render(model) {
   const settings = model.settings || { enabled: true, reminderTime: '19:00' };
   const seconds = model.todayDate === todayKey() ? Math.max(0, Number(model.todaySeconds) || 0) : 0;
   const complete = model.completedDate === todayKey() || seconds >= 180;
+  const missed = settings.enabled !== false && !complete && Number(model.missedReminderAt) > 0;
   const manuallyArmed = model.forceReminderAt > Date.now() && model.forceReminderAt === model.nextReminderAt;
   const percent = Math.min(100, seconds / 180 * 100);
 
@@ -59,8 +61,8 @@ function render(model) {
   timeInput.value = settings.reminderTime || '19:00';
   timeInput.disabled = !enabledInput.checked;
   statusCard.classList.toggle('complete', complete);
-  statusIcon.textContent = complete ? '✅' : '⏱️';
-  statusTitle.textContent = complete ? 'Today’s quest is complete!' : 'Three minutes today';
+  statusIcon.textContent = complete ? '✅' : missed ? '🚀' : '⏱️';
+  statusTitle.textContent = complete ? 'Today’s quest is complete!' : missed ? 'Your quest is waiting' : 'Three minutes today';
   statusDetail.textContent = complete
     ? 'Great work — your reminder will stay quiet.'
     : `${formatSeconds(seconds)} practised · ${formatSeconds(180 - seconds)} to go`;
@@ -68,6 +70,8 @@ function render(model) {
   progressBar.setAttribute('aria-valuenow', String(Math.min(180, Math.floor(seconds))));
   if (!enabledInput.checked) {
     quietNote.textContent = 'Daily reminders are currently paused.';
+  } else if (missed) {
+    quietNote.textContent = 'Chrome was unavailable at reminder time, so the alert was skipped. The GO icon stays until you complete three minutes.';
   } else if (manuallyArmed) {
     quietNote.textContent = 'This reminder was just set manually, so it will appear even if today’s goal is complete.';
   } else {
