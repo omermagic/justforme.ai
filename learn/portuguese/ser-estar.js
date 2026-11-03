@@ -5,6 +5,7 @@ window.SerEstarTrainer = (() => {
   const MASTERY_WINDOW = 12;
   const MASTERY_CORRECT = 11;
   const CARD_HISTORY_LIMIT = 100;
+  const DAILY_FOCUS_LIMIT_SECONDS = 6 * 60;
   // These lookup values are deliberately accent-free because family() first
   // normalizes learner input, allowing either typed or button-selected forms.
   const SER_FORMS = new Set(['ser', 'sou', 'es', 'e', 'somos', 'sao', 'era', 'eras', 'eramos', 'eram']);
@@ -191,20 +192,47 @@ window.SerEstarTrainer = (() => {
     return '';
   }
 
-  function normalizeState(raw = {}) {
+  function localDayKey(now = Date.now()) {
+    const date = new Date(now);
+    const pad = value => String(value).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
+  }
+
+  function normalizeState(raw = {}, now = Date.now()) {
     const recent = Array.isArray(raw.recent) ? raw.recent.slice(-6).map(value => value ? 1 : 0) : [];
     const trainingResults = Array.isArray(raw.trainingResults) ? raw.trainingResults.slice(-16).filter(result => result&&['ser','estar'].includes(result.target)).map(result=>({target:result.target,right:Boolean(result.right)})) : [];
     const validCardIds = new Set(cards.map(card => card.id));
     const cardHistory = Array.isArray(raw.cardHistory) ? raw.cardHistory.filter(id => validCardIds.has(id)).slice(-CARD_HISTORY_LIMIT) : [];
+    const today = localDayKey(now);
+    const focusDay = today;
+    const focusSecondsToday = raw.focusDay === today ? Math.min(DAILY_FOCUS_LIMIT_SECONDS, Math.max(0, Number(raw.focusSecondsToday) || 0)) : 0;
+    const dailyFocusRemaining = DAILY_FOCUS_LIMIT_SECONDS - focusSecondsToday;
     return {
       recent,
-      focusRemaining: Math.min(FOCUS_SECONDS, Math.max(0, Number(raw.focusRemaining) || 0)),
+      focusRemaining: Math.min(FOCUS_SECONDS, dailyFocusRemaining, Math.max(0, Number(raw.focusRemaining) || 0)),
       needsTraining: Boolean(raw.needsTraining||Number(raw.focusRemaining)>0),
       trainingResults,
       cardHistory,
+      focusDay,
+      focusSecondsToday,
       masteredAt: Math.max(0, Number(raw.masteredAt) || 0),
       lastTriggeredWrongCount: Math.max(0, Math.floor(Number(raw.lastTriggeredWrongCount) || 0))
     };
+  }
+
+  function syncDailyFocus(state, now = Date.now()) {
+    const today = localDayKey(now);
+    if (state.focusDay !== today) {
+      state.focusDay = today;
+      state.focusSecondsToday = 0;
+      state.focusRemaining = 0;
+    }
+    state.focusSecondsToday = Math.min(DAILY_FOCUS_LIMIT_SECONDS, Math.max(0, Number(state.focusSecondsToday) || 0));
+    return DAILY_FOCUS_LIMIT_SECONDS - state.focusSecondsToday;
+  }
+
+  function dailyFocusRemaining(state, now = Date.now()) {
+    return syncDailyFocus(state, now);
   }
 
   function wrongEvidence(words = {}) {
@@ -228,15 +256,15 @@ window.SerEstarTrainer = (() => {
     return Boolean(directConfusion || repeatedDifficulty);
   }
 
-  function begin(state, totalWrong) {
+  function begin(state, totalWrong, now = Date.now()) {
     state.needsTraining = true;
-    state.focusRemaining = FOCUS_SECONDS;
+    state.focusRemaining = Math.min(FOCUS_SECONDS, dailyFocusRemaining(state, now));
     state.trainingResults = [];
     state.lastTriggeredWrongCount = Math.max(state.lastTriggeredWrongCount, Math.floor(Number(totalWrong) || 0));
   }
 
-  function startMission(state) {
-    if (state.needsTraining) state.focusRemaining = FOCUS_SECONDS;
+  function startMission(state, now = Date.now()) {
+    if (state.needsTraining) state.focusRemaining = Math.min(FOCUS_SECONDS, dailyFocusRemaining(state, now));
     return state.focusRemaining;
   }
 
@@ -257,7 +285,11 @@ window.SerEstarTrainer = (() => {
 
   function spend(state, seconds, now = Date.now()) {
     const before = state.focusRemaining;
-    state.focusRemaining = Math.max(0, before - Math.max(0, Number(seconds) || 0));
+    const availableToday = dailyFocusRemaining(state, now);
+    const elapsed = Math.min(before, availableToday, Math.max(0, Number(seconds) || 0));
+    state.focusSecondsToday = Math.min(DAILY_FOCUS_LIMIT_SECONDS, state.focusSecondsToday + elapsed);
+    state.focusRemaining = Math.max(0, before - elapsed);
+    if (state.focusSecondsToday >= DAILY_FOCUS_LIMIT_SECONDS) state.focusRemaining = 0;
     if (before > 0 && state.focusRemaining === 0 && isAmazing(state)) {
       state.needsTraining = false;
       state.masteredAt = now;
@@ -277,5 +309,5 @@ window.SerEstarTrainer = (() => {
     return card;
   }
 
-  return Object.freeze({ FOCUS_SECONDS, MASTERY_WINDOW, MASTERY_CORRECT, CARD_HISTORY_LIMIT, cards, family, normalizeState, wrongEvidence, shouldBegin, noteAttempt, begin, startMission, noteTrainingResult, isAmazing, spend, nextCard });
+  return Object.freeze({ FOCUS_SECONDS, MASTERY_WINDOW, MASTERY_CORRECT, CARD_HISTORY_LIMIT, DAILY_FOCUS_LIMIT_SECONDS, cards, family, normalizeState, wrongEvidence, shouldBegin, noteAttempt, begin, startMission, noteTrainingResult, isAmazing, spend, dailyFocusRemaining, nextCard });
 })();
