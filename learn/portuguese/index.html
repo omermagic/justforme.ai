@@ -155,8 +155,8 @@ gtag('js',new Date());gtag('config','G-E3JJGMR427');
     </section>
   </main>
 </div>
-<script src="./celebrations.js?v=41"></script>
-<script src="./ser-estar.js?v=41"></script>
+<script src="./celebrations.js?v=42"></script>
+<script src="./ser-estar.js?v=42"></script>
 <script>
 'use strict';
 /* Palavra Quest © 2026. Offline-capable with no accounts or advertising. */
@@ -1605,6 +1605,8 @@ let bank=Array.isArray(EMBEDDED_BANK)&&EMBEDDED_BANK.length>=4900?EMBEDDED_BANK:
 let bankFull=Array.isArray(bank)&&bank.length>=4900;if(!bankFull)bank=START_WORDS;
 let bankById=new Map(bank.map(w=>[w.id,w]));let importStatus=bankFull?'5,000-word pack installed':'Starter pack ready · full pack not installed';
 let clozeCatalogCache=null,clozeCatalogBank=null,clozeCardsByWordCache=null;
+const CORRECT_FEEDBACK_MS=920;
+const MISTAKE_FEEDBACK_MS=2800;
 let view='home',session=null,uiMessage='',loadingBank=false,feedbackTimeout=0,intervalHandle=null,audio=null;
 let speechGapTimer=0,speechGeneration=0,answerSpeechActive=false,queuedAutomaticSpeech='',answerSpeechWaiters=[];
 function saveProgress(){if(!lsWrite(PROGRESS_KEY,learning))notify('Storage is full or blocked. Export your progress, and allow site storage.')}function savePrefs(){lsWrite(PREF_KEY,prefs)}
@@ -2309,13 +2311,13 @@ function answer(given,clicked,skipped=false){
  feedbackTimeout=setTimeout(()=>{
   if(prefs.sound&&answerSpeechActive)answerSpeechWaiters.push(showNextQuestion);
   else showNextQuestion();
- },right?920:1800)}
+ },right?CORRECT_FEEDBACK_MS:MISTAKE_FEEDBACK_MS)}
 function finishSession(){if(!session)return;clearTimeout(feedbackTimeout);recordSessionTime(true);stopSessionClock();view='result';render()}
 function result(){let s=session,m=metrics(),accuracy=s.questions?Math.round(100*s.right/s.questions):0,elapsed=Math.min(180,Math.max(0,180-s.remaining)),masteredThisRun=Math.max(0,m.known-s.masteredAtStart),focus=TRAINING_TYPES[s.focus];let heading=s.questions===0?'Adventure paused':accuracy>=85?'Brilliant run!':accuracy>=60?"You're building momentum!":'Every word is progress!';shell(`<main class="center-panel"><div class="big-emoji">${accuracy>=85&&s.questions?'🏆':accuracy>=60?'🚀':'🧭'}</div><div class="eyebrow">${focus?`${focus.icon} ${safe(focus.name.toUpperCase())} TRAINING COMPLETE`:'THREE-MINUTE QUEST COMPLETE'}</div><h1>${heading}</h1><p>Your vocabulary map just got smarter. Missed words will return sooner; known words will wait until you need them again.</p><div class="result-grid"><div class="result-stat"><b>${formatSessionTime(elapsed)}</b><span>PRACTISED</span></div><div class="result-stat"><b>${s.right}/${s.questions}</b><span>CORRECT</span></div><div class="result-stat"><b>${masteredThisRun}</b><span>MASTERED</span></div></div><div class="info" style="text-align:left"><b>🧠 Learning progress</b><br>${s.wrongIds.size} tricky word${s.wrongIds.size===1?'':'s'} queued for extra practice · ${m.known} words mastered overall · ${formatStudyTime(m.totalSeconds)} total active practice</div><div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:25px"><button id="playAgain" class="btn btn-primary">⚡ ${focus?'Train again':'One more mission'}</button><button id="backHome" class="btn btn-ghost">Dashboard</button></div></main>`);document.querySelector('#playAgain').onclick=()=>startSession(s.mode,s.focus);document.querySelector('#backHome').onclick=()=>{session=null;view='home';render()}}
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view==='game'&&session?.current?.kind==='choice'&&!session.current.locked&&['1','2','3','4'].includes(e.key)){let el=document.querySelectorAll('[data-choice]')[Number(e.key)-1];if(el)el.click()}});
 window.addEventListener('message',event=>{if(event.source===window&&event.data?.source==='palavra-quest-reminder'&&event.data.type==='request-daily-practice')announceDailyPractice()});
-render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=41',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=42',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
