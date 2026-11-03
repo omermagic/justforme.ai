@@ -86,7 +86,8 @@ gtag('js',new Date());gtag('config','G-E3JJGMR427');
     </section>
   </main>
 </div>
-<script src="./celebrations.js?v=38"></script>
+<script src="./celebrations.js?v=39"></script>
+<script src="./ser-estar.js?v=39"></script>
 <script>
 'use strict';
 /* Palavra Quest © 2026. Offline-capable with no accounts or advertising. */
@@ -1514,7 +1515,7 @@ function normalizeProgress(raw={}){
   }
  }
  const hist=raw.hist&&typeof raw.hist==='object'&&!Array.isArray(raw.hist)?raw.hist:{};
- const progress={start,words,totalSeconds:Math.max(0,Number(raw.totalSeconds)||0),correctStreak:Math.max(0,Math.floor(Number(raw.correctStreak)||0)),hist,created:Number(raw.created)||Date.now()};
+ const progress={start,words,totalSeconds:Math.max(0,Number(raw.totalSeconds)||0),correctStreak:Math.max(0,Math.floor(Number(raw.correctStreak)||0)),serEstar:window.SerEstarTrainer.normalizeState(raw.serEstar),hist,created:Number(raw.created)||Date.now()};
  if(Number.isFinite(raw.skillRank))progress.skillRank=raw.skillRank;
  if(Number.isFinite(raw.skillAnswers))progress.skillAnswers=raw.skillAnswers;
  if(Number.isFinite(raw.readingAnswers))progress.readingAnswers=Math.max(0,Math.floor(raw.readingAnswers));
@@ -1872,6 +1873,13 @@ function listeningCandidates(w){
 function shouldUseListeningQuestion(wordState){
  return prefs.sound&&'speechSynthesis'in window&&!isMastered(wordState)&&Math.random()<LISTENING_CHANCE;
 }
+function makeSerEstarQuestion(){
+ const card=window.SerEstarTrainer.nextCard(session.lastSerEstarCardId);
+ const w=bankById.get(card.target);
+ if(!w)return null;
+ session.lastSerEstarCardId=card.id;
+ return{w,grammarTarget:card.target,direction:'serEstar',kind:'choice',answer:card.answer,prompt:card.sentence,hint:card.hint,completeSentence:card.sentence.replace('___',card.answer),explanation:card.explanation,options:shuffled(card.options),locked:false,hintUsed:false,translationRevealed:true,started:Date.now()};
+}
 function makeClozeQuestion(w){
  const cards=getClozeCardsByWord().get(w.id),card=cards?.[Math.floor(Math.random()*cards.length)];
  if(!card)return null;
@@ -1917,8 +1925,12 @@ function startSession(mode,focus=''){
  clearTimeout(feedbackTimeout);stopSessionClock();
  const p=localProgress();
  // A new mission keeps some momentum without carrying an oversized head start.
- p.correctStreak=window.PalavraCelebration.sessionStartStreak(p.correctStreak);saveProgress();
- session={mode,focus,remaining:180,timeExpired:false,accountedSeconds:0,masteredAtStart:metrics().known,questions:0,right:0,combo:p.correctStreak,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),readingCardsSeen:new Set(),retryQueue:[],retryCounts:new Map(),readingCount:0,lastReadingAt:-10,current:null,paused:false,levelAtStart:estimatedSkillRank()};
+ p.correctStreak=window.PalavraCelebration.sessionStartStreak(p.correctStreak);
+ if(window.SerEstarTrainer.shouldBegin(p.serEstar,p.words))window.SerEstarTrainer.begin(p.serEstar,window.SerEstarTrainer.wrongEvidence(p.words));
+ if(!focus)window.SerEstarTrainer.startMission(p.serEstar);
+ const serEstarActive=!focus&&p.serEstar.focusRemaining>0;
+ saveProgress();
+ session={mode,focus,remaining:180,timeExpired:false,accountedSeconds:0,masteredAtStart:metrics().known,questions:0,right:0,combo:p.correctStreak,newIds:new Set(),wrongIds:new Set(),seenIds:new Set(),readingCardsSeen:new Set(),retryQueue:[],retryCounts:new Map(),readingCount:0,lastReadingAt:-10,current:null,paused:false,levelAtStart:estimatedSkillRank(),serEstarActive,lastSerEstarCardId:''};
  view='game';nextQuestion();intervalHandle=setInterval(tick,140);
 }
 let lastFrame=0;
@@ -1936,7 +1948,19 @@ function tick(){
  const now=performance.now();
  if(!lastFrame){lastFrame=now;return}
  if(document.hidden||session.paused){lastFrame=now;return}
- const dt=Math.min(.5,(now-lastFrame)/1000);lastFrame=now;session.remaining-=dt;recordSessionTime();
+ const dt=Math.min(.5,(now-lastFrame)/1000);lastFrame=now;session.remaining-=dt;
+ if(session.serEstarActive){
+  const p=localProgress(),wasTraining=p.serEstar.needsTraining;
+  window.SerEstarTrainer.spend(p.serEstar,dt);
+  if(wasTraining&&!p.serEstar.needsTraining){
+   // Training mistakes belong to the completed intervention; they must not
+   // immediately reactivate it at the start of the next mission.
+   p.serEstar.lastTriggeredWrongCount=window.SerEstarTrainer.wrongEvidence(p.words);
+   notify('🌟 Fantástico! You have mastered ser and estar.');
+  }
+  if(p.serEstar.focusRemaining<=0)session.serEstarActive=false;
+ }
+ recordSessionTime();
  if(session.remaining<=0){expireSessionTimer();return}
  const clock=document.querySelector('#clock'),bar=document.querySelector('#timeFill');
  if(clock)clock.textContent=timerText(session.remaining);
@@ -1957,6 +1981,11 @@ function recordSessionTime(force=false){
 function nextQuestion(){
  if(!session)return;
  if(session.remaining<=0)return finishSession();
+ if(session.serEstarActive&&localProgress().serEstar.focusRemaining>0){
+  const grammarQuestion=makeSerEstarQuestion();
+  if(grammarQuestion){session.current=grammarQuestion;game();return}
+  session.serEstarActive=false;
+ }
  const retryReady=session.retryQueue.some(item=>item.readyAt<=session.questions);
  if(session.focus==='reading'||session.focus==='audioStory'){
   const readingQuestion=makeReadingQuestion(true,session.focus==='audioStory');
@@ -1992,10 +2021,11 @@ function questionPromptHTML(q){
  if(q.direction==='listen')return '<span class="listening-prompt"><span>🎧</span><small>Listen carefully</small></span>';
  if(q.direction==='audioReading')return '<span class="listening-prompt"><span>🎙️</span><small>Paragraph hidden · listen carefully</small></span>';
  if(q.direction==='reading')return `<span class="reading-kicker">📖 Portuguese mini-story</span>${safe(q.passage)}`;
- return q.direction==='cloze'?safe(q.prompt).replace('___','<span class="sentence-blank">_____</span>'):safe(q.prompt);
+ return q.direction==='cloze'||q.direction==='serEstar'?safe(q.prompt).replace('___','<span class="sentence-blank">_____</span>'):safe(q.prompt);
 }
 function sentenceHelpText(q,hideTranslation){
  if(isParagraphQuestion(q))return q.question;
+ if(q.direction==='serEstar')return `🇬🇧 ${q.hint}`;
  if(q.direction!=='cloze')return q.direction==='listen'?'Which English meaning matches the word you hear?':q.kind==='type'?'Type the Portuguese word or phrase':q.direction==='reverse'?'Which Portuguese word matches?':'What does this mean in English?';
  return hideTranslation&&!q.translationRevealed?'Use the Portuguese sentence context. Ask for a hint if you need the English translation.':`🇬🇧 ${q.hint}`;
 }
@@ -2014,16 +2044,17 @@ function game(){
  if(!session)return view='home',render();
  const s=session,q=s.current,w=q?.w;
  if(!q)return;
- const label=q.direction==='audioReading'?'ADVANCED · LISTEN · UNDERSTAND':q.direction==='reading'?'READ · LISTEN · UNDERSTAND':q.direction==='cloze'?'COMPLETE THE SENTENCE':q.direction==='listen'?'LISTEN → MEANING':q.kind==='type'?'SPELL IT IN PORTUGUESE':q.direction==='reverse'?'ENGLISH → PORTUGUESE':'PORTUGUESE → ENGLISH';
+ const label=q.direction==='serEstar'?'ADAPTIVE FOCUS · SER OR ESTAR':q.direction==='audioReading'?'ADVANCED · LISTEN · UNDERSTAND':q.direction==='reading'?'READ · LISTEN · UNDERSTAND':q.direction==='cloze'?'COMPLETE THE SENTENCE':q.direction==='listen'?'LISTEN → MEANING':q.kind==='type'?'SPELL IT IN PORTUGUESE':q.direction==='reverse'?'ENGLISH → PORTUGUESE':'PORTUGUESE → ENGLISH';
  const hideTranslation=q.direction==='cloze'&&hidesSentenceTranslations();
  const translationHint=hideTranslation&&!q.translationRevealed?'<button class="listen translation-hint" id="translationHintBtn">🇬🇧 Show English hint</button>':'';
- const rankLabel=q.direction==='audioReading'?'HIDDEN STORY · ADVANCED':q.direction==='reading'?`COMPREHENSION · LEVEL ${q.readingBand}`:`WORD ${w.rank.toLocaleString()} · ${safe(w.pos)}`;
- const wordClass=q.direction==='reading'?' reading-passage':q.direction==='audioReading'||q.direction==='listen'?' listening-word':q.direction==='cloze'?' cloze-sentence':'';
+ const rankLabel=q.direction==='serEstar'?`${Math.ceil(localProgress().serEstar.focusRemaining)}s FOCUS LEFT`:q.direction==='audioReading'?'HIDDEN STORY · ADVANCED':q.direction==='reading'?`COMPREHENSION · LEVEL ${q.readingBand}`:`WORD ${w.rank.toLocaleString()} · ${safe(w.pos)}`;
+ const wordClass=q.direction==='reading'?' reading-passage':q.direction==='audioReading'||q.direction==='listen'?' listening-word':q.direction==='cloze'||q.direction==='serEstar'?' cloze-sentence':'';
  const listenLabel=isParagraphQuestion(q)?'🔊 Hear paragraph again':q.direction==='listen'?'🔊 Play word again':q.direction==='forward'?'🔊 Hear again':q.direction==='cloze'?'🔊 Hear the missing word':'🔊 Hear Portuguese (hint)';
- const tipText=q.direction==='audioReading'?'Advanced listening: the paragraph stays hidden. Replay it and answer from what you hear.':q.direction==='reading'?'The paragraph is read aloud automatically. Replay it whenever you need.':q.direction==='listen'?'Audio replays are part of this listening challenge.':session.mode==='sprint'?'Choose quickly to build a combo!':'Wrong answers are not failures: they teach the scheduler what to bring back.';
- const runLabel=s.focus?`${TRAINING_TYPES[s.focus].icon} ${TRAINING_TYPES[s.focus].name} training`:`${s.newIds.size} new words`;
- shell(`<main class="game-shell"><div class="game-head"><button class="btn btn-ghost btn-small" id="exitSession">← End run</button><div class="game-metrics"><div class="metric clock"><small>⏱</small><span id="clock">${timerText(s.remaining)}</span></div><div class="metric combo"><small>🔥</small><span id="combo">${s.combo} combo</span></div><div class="metric"><small>🧠</small><span id="mastered">${metrics().known} mastered</span></div></div></div><div class="track"><div class="fill" id="timeFill" style="width:${100*s.remaining/180}%"></div></div><div class="question"><div class="question-top"><span class="qtype">${label}</span><span class="rank">${rankLabel}</span></div><div class="word${wordClass}">${questionPromptHTML(q)}</div><div class="word-sub" id="questionHelp">${safe(sentenceHelpText(q,hideTranslation))}</div><div class="listen-row"><button class="listen" id="listenBtn" title="Play European Portuguese pronunciation">${listenLabel}</button>${translationHint}</div>${q.kind==='choice'?`<div class="choices">${q.options.map((o,i)=>`<button class="choice" data-choice="${i}"><span class="letter">${'ABCD'[i]}</span><span>${safe(o)}</span></button>`).join('')}</div><div style="text-align:center;margin-top:14px"><button class="btn btn-outline btn-small" id="dontKnowChoice">🤷 I don't know yet</button></div>`:`<div class="type-wrap"><input autocomplete="off" autocapitalize="off" spellcheck="false" class="type-input" id="typedAnswer" placeholder="Write the Portuguese answer" aria-label="Answer"><div class="type-actions"><button class="btn btn-primary" id="submitTyped">Check answer ↗</button><button class="btn btn-ghost" id="dontKnow">Not sure</button></div></div>`}<div class="feedback hidden" id="feedback" role="status"></div><div class="tip" id="tipLine">${tipText}</div></div><div class="backline"><span>${s.questions} answers · ${safe(runLabel)}</span><span>🇵🇹 Offline-friendly</span></div></main>`);
- document.querySelector('#exitSession').onclick=()=>{if(confirm('End your run early? Your answered words are already saved.'))finishSession()};document.querySelector('#listenBtn').onclick=()=>{
+ const listenControl=q.direction==='serEstar'?'<span class="listen">🎯 Identity, trait, state or location?</span>':`<button class="listen" id="listenBtn" title="Play European Portuguese pronunciation">${listenLabel}</button>${translationHint}`;
+ const tipText=q.direction==='serEstar'?'Use ser for identity and defining facts; estar for states and location. The examples will make the contrast stick.':q.direction==='audioReading'?'Advanced listening: the paragraph stays hidden. Replay it and answer from what you hear.':q.direction==='reading'?'The paragraph is read aloud automatically. Replay it whenever you need.':q.direction==='listen'?'Audio replays are part of this listening challenge.':session.mode==='sprint'?'Choose quickly to build a combo!':'Wrong answers are not failures: they teach the scheduler what to bring back.';
+ const runLabel=s.serEstarActive?'🎯 ser / estar focus':s.focus?`${TRAINING_TYPES[s.focus].icon} ${TRAINING_TYPES[s.focus].name} training`:`${s.newIds.size} new words`;
+ shell(`<main class="game-shell"><div class="game-head"><button class="btn btn-ghost btn-small" id="exitSession">← End run</button><div class="game-metrics"><div class="metric clock"><small>⏱</small><span id="clock">${timerText(s.remaining)}</span></div><div class="metric combo"><small>🔥</small><span id="combo">${s.combo} combo</span></div><div class="metric"><small>🧠</small><span id="mastered">${metrics().known} mastered</span></div></div></div><div class="track"><div class="fill" id="timeFill" style="width:${100*s.remaining/180}%"></div></div><div class="question"><div class="question-top"><span class="qtype">${label}</span><span class="rank">${rankLabel}</span></div><div class="word${wordClass}">${questionPromptHTML(q)}</div><div class="word-sub" id="questionHelp">${safe(sentenceHelpText(q,hideTranslation))}</div><div class="listen-row">${listenControl}</div>${q.kind==='choice'?`<div class="choices">${q.options.map((o,i)=>`<button class="choice" data-choice="${i}"><span class="letter">${'ABCD'[i]}</span><span>${safe(o)}</span></button>`).join('')}</div><div style="text-align:center;margin-top:14px"><button class="btn btn-outline btn-small" id="dontKnowChoice">🤷 I don't know yet</button></div>`:`<div class="type-wrap"><input autocomplete="off" autocapitalize="off" spellcheck="false" class="type-input" id="typedAnswer" placeholder="Write the Portuguese answer" aria-label="Answer"><div class="type-actions"><button class="btn btn-primary" id="submitTyped">Check answer ↗</button><button class="btn btn-ghost" id="dontKnow">Not sure</button></div></div>`}<div class="feedback hidden" id="feedback" role="status"></div><div class="tip" id="tipLine">${tipText}</div></div><div class="backline"><span>${s.questions} answers · ${safe(runLabel)}</span><span>🇵🇹 Offline-friendly</span></div></main>`);
+ document.querySelector('#exitSession').onclick=()=>{if(confirm('End your run early? Your answered words are already saved.'))finishSession()};const listenBtn=document.querySelector('#listenBtn');if(listenBtn)listenBtn.onclick=()=>{
   const replayingAnswer=Boolean(q.locked&&(q.direction==='cloze'||q.direction==='reverse'||isParagraphQuestion(q)));
   const isHint=!q.locked&&(q.direction==='cloze'||q.direction==='reverse');
   const spokenText=isParagraphQuestion(q)?q.passage:q.locked&&q.completeSentence?q.completeSentence:w.pt;
@@ -2092,7 +2123,7 @@ function answer(given,clicked,skipped=false){
  if(q.direction==='forward')queuedAutomaticSpeech='';
  const answerMatches=norm(given)===norm(q.answer),hintedCorrect=Boolean(q.hintUsed&&answerMatches),right=answerMatches&&!q.hintUsed,now=Date.now(),p=localProgress(),skillBefore=estimatedSkillRank(p),responseMs=now-q.started;
  const prior=p.words[q.w.id]||{seen:0,right:0,wrong:0,streak:0,interval:0,ease:2.2,due:0};
- const newWord=prior.seen===0,wasMastered=isMastered(prior),paragraphQuestion=isParagraphQuestion(q),learningStep=Number.isFinite(prior.learningStep)?prior.learningStep:null,dailyStep=Number.isFinite(prior.dailyStep)?prior.dailyStep:null;
+ const newWord=prior.seen===0,wasMastered=isMastered(prior),paragraphQuestion=isParagraphQuestion(q),grammarQuestion=q.direction==='serEstar',learningStep=Number.isFinite(prior.learningStep)?prior.learningStep:null,dailyStep=Number.isFinite(prior.dailyStep)?prior.dailyStep:null;
  q.locked=true;clearTimeout(feedbackTimeout);beep(right);s.questions++;prior.seen++;
  // The celebration streak belongs to the learner, not to one timed mission.
  // Every miss—including a skip or a hint-assisted answer—resets it immediately.
@@ -2105,7 +2136,9 @@ function answer(given,clicked,skipped=false){
    const celebration=window.PalavraCelebration.show(s.combo,prefs.celebrationIndex);
    prefs.celebrationIndex=celebration.index;savePrefs();
   }
-  if(learningStep!==null&&!paragraphQuestion){
+  if(grammarQuestion){
+   reviewNote=q.explanation;
+  }else if(learningStep!==null&&!paragraphQuestion){
    const completedStep=learningStep+1;
    prior.retiredEasy=false;prior.ease=Math.min(3,Math.max(1.45,(Number(prior.ease)||2.2)+.02));
    if(completedStep<LEARNING_RECALLS_REQUIRED){
@@ -2141,12 +2174,25 @@ function answer(given,clicked,skipped=false){
    const days=prior.streak===1?4:prior.streak===2?14:prior.streak===3?45:Math.min(365,Math.max(75,prior.interval*2.2));
    prior.interval=days;prior.due=now+days*DAY;reviewNote=`Next review in ${Math.round(days)} days.`;
   }
+ }else if(grammarQuestion){
+  prior.wrong++;s.wrongIds.add(q.w.id);reviewNote=q.explanation;
  }else{
   prior.wrong++;prior.retiredEasy=false;prior.streak=0;prior.verifiedDays=0;prior.lastCorrectDay='';prior.ease=Math.max(1.3,(Number(prior.ease)||2.2)-.18);prior.interval=0;prior.due=now;s.wrongIds.add(q.w.id);
   if(!paragraphQuestion){delete prior.dailyStep;prior.learningStep=0;queueFailedWord(s,q.w.id)}
   reviewNote=paragraphQuestion?'This story remains part of your comprehension practice.':q.hintUsed?'Hint used — learning restarted; this word will return repeatedly.':'Learning started — this word will return repeatedly.';
  }
- const newSkill=updateSkillEstimate(p,q.w,right);
+ const grammarTarget=q.grammarTarget||(['ser','estar'].includes(q.w.id)?q.w.id:'');
+ if(grammarTarget){
+  if(grammarQuestion)window.SerEstarTrainer.noteTrainingResult(p.serEstar,grammarTarget,right);
+  const needsFocus=window.SerEstarTrainer.noteAttempt(p.serEstar,{target:grammarTarget,given,right});
+  if(needsFocus){
+   const totalWrong=window.SerEstarTrainer.wrongEvidence(p.words)+(newWord&&!right?1:0);
+   window.SerEstarTrainer.begin(p.serEstar,totalWrong);
+   if(!s.focus)s.serEstarActive=true;
+   reviewNote+=s.focus?' 🎯 Ser / estar focus will begin in the next regular mission.':' 🎯 A 90-second ser / estar focus has started and will return each mission until mastered.';
+  }
+ }
+ const newSkill=grammarQuestion?estimatedSkillRank(p):updateSkillEstimate(p,q.w,right);
  if(isParagraphQuestion(q)){
   p.readingAnswers=(Number(p.readingAnswers)||0)+1;
   if(right){
@@ -2159,20 +2205,24 @@ function answer(given,clicked,skipped=false){
  prior.last=now;p.words[q.w.id]=prior;let dk=dayKey();p.hist=p.hist||{};p.hist[dk]=p.hist[dk]||{questions:0,right:0};p.hist[dk].questions++;if(right)p.hist[dk].right++;saveProgress();
  // Reveal and pronounce the natural sentence after a cloze answer. Reverse
  // questions still pronounce the Portuguese word only after grading.
- if(q.direction==='cloze'){
+ if(q.direction==='cloze'||grammarQuestion){
   const wordEl=document.querySelector('.word');
   if(wordEl)wordEl.textContent=q.completeSentence;
   // Once the answer is locked, the translation supports the full-sentence
   // pronunciation without giving away the answer beforehand.
   if(!q.translationRevealed)revealSentenceTranslation(q);
  }
- if(prefs.sound&&q.direction==='cloze')speakPortuguese(q.completeSentence,true,true);else if(prefs.sound&&q.direction==='reverse')speakPortuguese(q.w.pt,true,true);
+ if(prefs.sound&&(q.direction==='cloze'||grammarQuestion))speakPortuguese(q.completeSentence,true,true);else if(prefs.sound&&q.direction==='reverse')speakPortuguese(q.w.pt,true,true);
  const listenBtn=document.querySelector('#listenBtn');if(listenBtn)listenBtn.textContent='🔊 Hear again';
  document.querySelector('#translationHintBtn')?.setAttribute('disabled','');
  if(q.kind==='choice'){document.querySelector('#dontKnowChoice')?.setAttribute('disabled','');document.querySelectorAll('[data-choice]').forEach((el)=>{el.disabled=true;let t=q.options[Number(el.dataset.choice)];if(norm(t)===norm(q.answer))el.classList.add('correct');else if(el===clicked)el.classList.add('wrong');else el.classList.add('muted')})}else{document.querySelector('#typedAnswer')?.setAttribute('disabled','');document.querySelector('#submitTyped')?.setAttribute('disabled','');document.querySelector('#dontKnow')?.setAttribute('disabled','')}
  const f=document.querySelector('#feedback');
  let feedbackTitle,feedbackBody,feedbackIcon;
- if(isParagraphQuestion(q)){
+ if(grammarQuestion){
+  feedbackTitle=right?'✨ Certo — great choice!':`💡 ${safe(q.answer)}`;
+  feedbackBody=safe(q.explanation);
+  feedbackIcon=right?'✅':'🎯';
+ }else if(isParagraphQuestion(q)){
   const storyIcon=q.direction==='audioReading'?'🎙️':'📖';
   feedbackTitle=right?`${storyIcon} You understood the story!`:`${storyIcon} Listen once more`;
   feedbackBody=safe(q.explanation);
@@ -2194,7 +2244,7 @@ function result(){let s=session,m=metrics(),accuracy=s.questions?Math.round(100*
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view==='game'&&session?.current?.kind==='choice'&&!session.current.locked&&['1','2','3','4'].includes(e.key)){let el=document.querySelectorAll('[data-choice]')[Number(e.key)-1];if(el)el.click()}});
 window.addEventListener('message',event=>{if(event.source===window&&event.data?.source==='palavra-quest-reminder'&&event.data.type==='request-daily-practice')announceDailyPractice()});
-render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=38',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=39',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
