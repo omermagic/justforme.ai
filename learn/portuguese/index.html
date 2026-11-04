@@ -158,9 +158,10 @@ gtag('js',new Date());gtag('config','G-E3JJGMR427');
   </main>
 </div>
 <div id="pwaInstallRoot"></div>
-<script src="./celebrations.js?v=44"></script>
-<script src="./ser-estar.js?v=44"></script>
-<script src="./pwa-install.js?v=44"></script>
+<script src="./celebrations.js?v=45"></script>
+<script src="./ser-estar.js?v=45"></script>
+<script src="./pwa-install.js?v=45"></script>
+<script src="./reading-cards.js?v=45"></script>
 <script>
 'use strict';
 /* Palavra Quest © 2026. Offline-capable with no accounts or advertising. */
@@ -1881,7 +1882,7 @@ const READING_CARDS=[
  {id:'b3-qualidade',band:3,focus:'qualidade',passage:'O restaurante reduziu o número de pratos para manter a qualidade durante a falta de pessoal. A ementa completa regressará quando a equipa estiver reforçada.',question:'Porque foi reduzida a ementa?',answer:'Para preservar a qualidade do serviço',wrong:['Para aumentar o preço dos pratos','Porque faltavam ingredientes','Para encerrar mais cedo'],explanation:'Com menos pessoal, uma ementa menor ajuda a manter a qualidade.'},
  {id:'b3-mudanca',band:3,focus:'mudança',passage:'A mudança de horário foi anunciada com pouca antecedência. Muitos utilizadores não viram o aviso e chegaram depois de o serviço já ter encerrado.',question:'O que causou o problema aos utilizadores?',answer:'O aviso tardio da mudança',wrong:['A falta de funcionários','Uma falha no pagamento','O encerramento definitivo do serviço'],explanation:'A alteração foi comunicada demasiado tarde para chegar a todos.'},
  {id:'b3-lei',band:3,focus:'lei',passage:'A nova lei exige que as plataformas expliquem de forma simples como recomendam conteúdos. Os detalhes técnicos podem continuar num documento separado.',question:'O que exige a nova lei?',answer:'Uma explicação simples das recomendações',wrong:['A publicação de todo o código informático','O fim das recomendações automáticas','A remoção de todos os documentos técnicos'],explanation:'As plataformas devem tornar o funcionamento das recomendações compreensível.'}
-];
+].concat(window.PALAVRA_EXTRA_READING_CARDS||[]);
 function readingLevelBand(p=localProgress()){
  const rank=estimatedSkillRank(p),answered=Number(p.readingAnswers)||0,right=Number(p.readingRight)||0;
  const accuracy=answered?right/answered:0;
@@ -2342,7 +2343,7 @@ function result(){
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view==='game'&&session?.current?.kind==='choice'&&!session.current.locked&&['1','2','3','4'].includes(e.key)){let el=document.querySelectorAll('[data-choice]')[Number(e.key)-1];if(el)el.click()}});
 window.addEventListener('message',event=>{if(event.source===window&&event.data?.source==='palavra-quest-reminder'&&event.data.type==='request-daily-practice')announceDailyPractice()});
-render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=44',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=45',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
