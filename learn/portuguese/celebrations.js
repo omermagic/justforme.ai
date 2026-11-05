@@ -62,9 +62,44 @@ window.PalavraCelebration = (() => {
     return { index, message, element: celebration };
   }
 
+  function dayStreakMessage(days) {
+    if(days>=300)return 'Lendário! O teu português já faz parte da tua vida!';
+    if(days>=100)return 'Extraordinário! Uma centena de dias em português!';
+    if(days>=80)return 'Incrível! O hábito está mais forte do que nunca!';
+    if(days>=40)return 'Fantástico! Quarenta dias de verdadeira dedicação!';
+    if(days>=20)return 'Espetacular! Vinte dias sempre a avançar!';
+    if(days>=10)return 'Muito bem! Dez dias seguidos em português!';
+    return 'Parabéns! A tua aventura diária começou em grande!';
+  }
+
+  function showDayStreak(days, persistentPreview = false) {
+    const count=Math.max(1,Math.floor(Number(days)||1));
+    document.querySelector('#streakCelebration')?.remove();
+    const celebration=document.createElement('section');
+    celebration.id='streakCelebration';
+    celebration.className='streak-celebration daily-streak-celebration';
+    celebration.setAttribute('role','status');
+    celebration.setAttribute('aria-live','polite');
+    celebration.innerHTML=`
+      <div class="streak-rays" aria-hidden="true"></div>
+      <div class="streak-card">
+        <span class="streak-emoji" aria-hidden="true">${count>=100?'🏆':count>=40?'🇵🇹':'🔥'}</span>
+        <small>${count} DIAS SEGUIDOS</small>
+        <strong>${dayStreakMessage(count)}</strong>
+      </div>
+      <div class="streak-sparkles" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>`;
+    document.body.append(celebration);
+    if(persistentPreview)celebration.classList.add('preview');
+    else{
+      window.setTimeout(()=>celebration.classList.add('leaving'),2000);
+      window.setTimeout(()=>celebration.remove(),2400);
+    }
+    return celebration;
+  }
+
   if (['127.0.0.1', 'localhost'].includes(location.hostname) && new URLSearchParams(location.search).has('celebration-preview')) {
     window.addEventListener('load', () => window.setTimeout(() => show(20, -1, Math.random, true), 300), { once: true });
   }
 
-  return Object.freeze({ messages, pick, isMilestone, nextStreak, sessionStartStreak, show });
+  return Object.freeze({ messages, pick, isMilestone, nextStreak, sessionStartStreak, show, dayStreakMessage, showDayStreak });
 })();
