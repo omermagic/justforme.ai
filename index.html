@@ -788,6 +788,27 @@
         transform: translate(-50%, -54%) rotate(-5deg);
       }
 
+      .history-orbit {
+        border-color: rgba(244, 181, 69, 0.85);
+        box-shadow:
+          inset 0 0 0 25px #2c2038,
+          inset 0 0 0 26px rgba(244, 181, 69, 0.55),
+          inset 0 0 0 54px #2c2038,
+          inset 0 0 0 55px rgba(132, 199, 203, 0.35);
+      }
+
+      .history-orbit::before,
+      .history-orbit::after {
+        border-color: rgba(244, 181, 69, 0.42);
+      }
+
+      .history-orbit span {
+        color: #f4b545;
+        font-style: normal;
+        font-weight: 700;
+        transform: translate(-50%, -54%) rotate(4deg);
+      }
+
       .prep-coming {
         display: grid;
         min-height: 370px;
@@ -1224,6 +1245,23 @@
                 </div>
               </div>
               <div class="globe math-orbit" aria-hidden="true"><span>∑</span></div>
+            </a>
+
+            <a class="prep-card reveal" href="/ron/history/">
+              <div class="prep-card-copy">
+                <span class="card-kicker">History · Portuguese</span>
+                <h3>Ron’s Athens Mission</h3>
+                <p>
+                  Ancient Greece and Athens: the polis, democracy and citizenship, society,
+                  economy, architecture, theatre, art, historical sources, and the Greek legacy.
+                </p>
+                <div class="prep-meta">
+                  <span>8 current topics</span>
+                  <span>259 questions</span>
+                  <span>7th grade</span>
+                </div>
+              </div>
+              <div class="globe history-orbit" aria-hidden="true"><span>Ω</span></div>
             </a>
           </div>
         </div>
