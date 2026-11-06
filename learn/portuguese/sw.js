@@ -1,9 +1,9 @@
 // Normal visits check GitHub Pages for a new release, but never leave the app
 // hanging on a weak connection. Assets remain available from the local shell.
 const CACHE_PREFIX='palavra-quest-shell-';
-const RELEASE='46';
+const RELEASE='47';
 const CACHE=CACHE_PREFIX+'v'+RELEASE;
-const SHELL=['./index.html','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./celebrations.js','./daily-streak.js','./ser-estar.js','./pwa-install.js','./reading-cards.js'];
+const SHELL=['./index.html','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./celebrations.js','./daily-streak.js','./ser-estar.js','./pwa-install.js','./reading-cards.js','./conversation-cards.js'];
 const NAVIGATION_TIMEOUT_MS=4500;
 
 self.addEventListener('install',event=>{
