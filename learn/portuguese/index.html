@@ -165,12 +165,12 @@ gtag('js',new Date());gtag('config','G-E3JJGMR427');
   </main>
 </div>
 <div id="pwaInstallRoot"></div>
-<script src="./celebrations.js?v=49"></script>
-<script src="./daily-streak.js?v=49"></script>
-<script src="./ser-estar.js?v=49"></script>
-<script src="./pwa-install.js?v=49"></script>
-<script src="./reading-cards.js?v=49"></script>
-<script src="./conversation-cards.js?v=49"></script>
+<script src="./celebrations.js?v=50"></script>
+<script src="./daily-streak.js?v=50"></script>
+<script src="./ser-estar.js?v=50"></script>
+<script src="./pwa-install.js?v=50"></script>
+<script src="./reading-cards.js?v=50"></script>
+<script src="./conversation-cards.js?v=50"></script>
 <script>
 'use strict';
 /* Palavra Quest © 2026. Offline-capable with no accounts or advertising. */
@@ -1627,8 +1627,11 @@ let clozeCatalogCache=null,clozeCatalogBank=null,clozeCardsByWordCache=null;
 const CORRECT_FEEDBACK_MS=920;
 const MISTAKE_FEEDBACK_MS=2800;
 const GRAMMAR_MISTAKE_EXTRA_MS=1000;
+const SPEECH_WATCHDOG_MIN_MS=7000;
+const SPEECH_WATCHDOG_MAX_MS=90000;
 let view='home',session=null,uiMessage='',loadingBank=false,feedbackTimeout=0,dayStreakCelebrationTimer=0,intervalHandle=null,audio=null;
 let speechGapTimer=0,speechGeneration=0,answerSpeechActive=false,queuedAutomaticSpeech='',answerSpeechWaiters=[];
+let speechWatchdogTimer=0;
 function saveProgress(){if(!lsWrite(PROGRESS_KEY,learning))notify('Storage is full or blocked. Export your progress, and allow site storage.')}function savePrefs(){lsWrite(PREF_KEY,prefs)}
 window.PalavraPWA.configure({
  getProgress:()=>learning,
@@ -1746,7 +1749,7 @@ function settings(){
  document.querySelectorAll('[data-start]').forEach(e=>e.onclick=()=>{p.start=Number(e.dataset.start);p.skillRank=startingSkillRank(p.start);p.skillAnswers=0;saveProgress();render()});document.querySelector('#tryDownload').onclick=fetchBank;
  document.querySelector('#importWords').onclick=()=>document.querySelector('#wordFile').click();document.querySelector('#wordFile').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;try{let raw=await f.text();let arr=raw.trim().startsWith('[')?normalizeImportedJSON(JSON.parse(raw)):parseGlossTSV(raw);if(arr.length<100)throw Error('This file has fewer than 100 valid entries.');installBank(arr);render()}catch(err){notify('Could not import vocabulary: '+err.message)}};
  document.querySelector('#export').onclick=exportBackup;document.querySelector('#restore').onclick=()=>document.querySelector('#restoreFile').click();document.querySelector('#restoreFile').onchange=async e=>{try{let obj=JSON.parse(await e.target.files[0].text()),restored=progressFromBackup(obj);if(!confirm('Replace the progress saved on this device with this backup?'))return;learning=restored;saveProgress();view='home';render()}catch(err){notify('Restore failed: '+err.message)}};
- document.querySelector('#soundToggle').onclick=()=>{prefs.sound=!prefs.sound;savePrefs();render()};document.querySelector('#returnHome').onclick=()=>{view='home';render()}}
+ document.querySelector('#soundToggle').onclick=()=>{prefs.sound=!prefs.sound;if(prefs.sound)unlockFeedbackAudio();savePrefs();render()};document.querySelector('#returnHome').onclick=()=>{view='home';render()}}
 function downloadJSON(data,file){let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500)}
 function progressFromBackup(obj){
  if(obj?.type!=='palavra-quest-backup')throw Error('Not a Palavra Quest backup');
@@ -2093,9 +2096,11 @@ function tick(){
  if(bar)bar.style.width=(100*session.remaining/180).toFixed(2)+'%';
 }
 function timerText(s){return `${Math.floor(s/60)}:${String(Math.ceil(s)%60).padStart(2,'0')}`}
-function resetSpeech(){
- clearTimeout(speechGapTimer);speechGapTimer=0;answerSpeechActive=false;queuedAutomaticSpeech='';answerSpeechWaiters=[];speechGeneration++;
+function resetSpeech(releaseWaitingQuestion=false){
+ clearTimeout(speechGapTimer);clearTimeout(speechWatchdogTimer);speechGapTimer=0;speechWatchdogTimer=0;answerSpeechActive=false;queuedAutomaticSpeech='';speechGeneration++;
  try{window.speechSynthesis?.cancel()}catch{}
+ const waiters=answerSpeechWaiters.splice(0);
+ if(releaseWaitingQuestion)waiters.forEach(callback=>callback());
 }
 function stopSessionClock(){clearInterval(intervalHandle);intervalHandle=null;lastFrame=0;resetSpeech()}
 function recordSessionTime(force=false){
@@ -2306,17 +2311,21 @@ function speakPortuguese(word,automatic=false,pauseAfterAnswer=false){
  if(automatic&&!pauseAfterAnswer&&(answerSpeechActive||speechGapTimer)){
   queuedAutomaticSpeech=word;return true;
  }
- clearTimeout(speechGapTimer);speechGapTimer=0;queuedAutomaticSpeech='';answerSpeechActive=false;
+ clearTimeout(speechGapTimer);clearTimeout(speechWatchdogTimer);speechGapTimer=0;speechWatchdogTimer=0;queuedAutomaticSpeech='';answerSpeechActive=false;
  const generation=++speechGeneration;
  try{
-  speechSynthesis.cancel();
+  const synth=window.speechSynthesis;
+  // Avoid repeatedly cancelling an already-idle iOS speech queue. WebKit can
+  // lose completion events when a cancellation races a new utterance.
+  if(synth.speaking||synth.pending)synth.cancel();
+  if(synth.paused)synth.resume();
   let u=new SpeechSynthesisUtterance(word);u.lang='pt-PT';u.rate=.84;
-  let voices=speechSynthesis.getVoices();let voice=voices.find(v=>v.lang.toLowerCase()==='pt-pt')||voices.find(v=>v.lang.toLowerCase().startsWith('pt'));if(voice)u.voice=voice;
+  let voices=synth.getVoices();let voice=voices.find(v=>v.lang.toLowerCase()==='pt-pt')||voices.find(v=>v.lang.toLowerCase().startsWith('pt'));if(voice)u.voice=voice;
   if(pauseAfterAnswer){
    answerSpeechActive=true;let finished=false;
    const finish=()=>{
     if(finished||generation!==speechGeneration)return;
-    finished=true;answerSpeechActive=false;
+    finished=true;clearTimeout(speechWatchdogTimer);speechWatchdogTimer=0;answerSpeechActive=false;
     speechGapTimer=setTimeout(()=>{
      if(generation!==speechGeneration)return;
      speechGapTimer=0;const nextWord=queuedAutomaticSpeech;queuedAutomaticSpeech='';
@@ -2327,12 +2336,56 @@ function speakPortuguese(word,automatic=false,pauseAfterAnswer=false){
     const waiters=answerSpeechWaiters.splice(0);waiters.forEach(callback=>callback());
    };
    u.onend=finish;u.onerror=finish;
+   // Some iPhone Safari versions accept an utterance but never dispatch its
+   // completion event after audio interruption. Always release the learning
+   // flow, even if WebKit's speech queue gets stuck.
+   const expectedDuration=Math.max(SPEECH_WATCHDOG_MIN_MS,Math.min(SPEECH_WATCHDOG_MAX_MS,String(word).length*95+2500));
+   speechWatchdogTimer=setTimeout(()=>{
+    if(finished||generation!==speechGeneration)return;
+    try{synth.cancel()}catch{}
+    finish();
+   },expectedDuration);
   }
-  speechSynthesis.speak(u);
+  synth.speak(u);
   return true;
  }catch{answerSpeechActive=false;if(!automatic)notify('Could not start speech playback.');return false}
 }
-function beep(correct){if(!prefs.sound)return;try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();let o=audio.createOscillator(),g=audio.createGain(),t=audio.currentTime;o.type='sine';o.frequency.setValueAtTime(correct?590:210,t);o.frequency.exponentialRampToValueAtTime(correct?940:170,t+.11);g.gain.setValueAtTime(.035,t);g.gain.exponentialRampToValueAtTime(.0001,t+.18);o.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+.2)}catch{}}
+function discardFeedbackAudio(){
+ const previous=audio;audio=null;
+ try{previous?.close?.().catch?.(()=>{})}catch{}
+}
+function feedbackAudioContext(){
+ const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+ if(!AudioContextClass)return null;
+ if(!audio||audio.state==='closed')audio=new AudioContextClass();
+ // Safari exposes the non-standard interrupted state after calls, app
+ // switches and screen locks. A fresh context is more reliable than reusing
+ // the interrupted graph and is created during the learner's tap.
+ if(audio.state==='interrupted'){discardFeedbackAudio();audio=new AudioContextClass()}
+ return audio;
+}
+function unlockFeedbackAudio(){
+ if(!prefs.sound)return;
+ try{
+  const context=feedbackAudioContext();
+  if(context&&context.state!=='running')context.resume().catch(()=>{if(audio===context)discardFeedbackAudio()});
+ }catch{discardFeedbackAudio()}
+}
+function beep(correct){
+ if(!prefs.sound)return;
+ try{
+  const context=feedbackAudioContext();if(!context)return;
+  const play=()=>{
+   if(context!==audio||context.state!=='running')return;
+   const oscillator=context.createOscillator(),gain=context.createGain(),time=context.currentTime;
+   oscillator.type='sine';oscillator.frequency.setValueAtTime(correct?590:210,time);oscillator.frequency.exponentialRampToValueAtTime(correct?940:170,time+.11);
+   gain.gain.setValueAtTime(.035,time);gain.gain.exponentialRampToValueAtTime(.0001,time+.18);
+   oscillator.connect(gain);gain.connect(context.destination);oscillator.start(time);oscillator.stop(time+.2);
+  };
+  if(context.state==='running')play();
+  else context.resume().then(play).catch(()=>{if(audio===context)discardFeedbackAudio()});
+ }catch{discardFeedbackAudio()}
+}
 // Confident answers to words far below the current range retire those words.
 // Other correct answers use long, expanding review intervals.
 function answer(given,clicked,skipped=false){
@@ -2479,9 +2532,17 @@ function result(){
  window.PalavraPWA.afterSuccessfulMission({elapsed,questions:s.questions});
 }
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
-document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view!=='game'||session?.current?.locked||!['1','2','3','4'].includes(e.key))return;const selector=session.current.direction==='conversation'?'[data-conversation-option]':'[data-choice]';const option=document.querySelectorAll(selector)[Number(e.key)-1];if(option&&!option.disabled)option.click()});
+let audioWasBackgrounded=false;
+document.addEventListener('click',unlockFeedbackAudio,true);
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden){recordSessionTime(true);audioWasBackgrounded=true;discardFeedbackAudio()}
+ else if(audioWasBackgrounded){audioWasBackgrounded=false;discardFeedbackAudio();resetSpeech(true)}
+ lastFrame=0;
+});
+window.addEventListener('pageshow',event=>{if(event.persisted){discardFeedbackAudio();resetSpeech(true)}});
+window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress();discardFeedbackAudio()});window.addEventListener('keydown',e=>{if(view!=='game'||session?.current?.locked||!['1','2','3','4'].includes(e.key))return;const selector=session.current.direction==='conversation'?'[data-conversation-option]':'[data-choice]';const option=document.querySelectorAll(selector)[Number(e.key)-1];if(option&&!option.disabled)option.click()});
 window.addEventListener('message',event=>{if(event.source===window&&event.data?.source==='palavra-quest-reminder'&&event.data.type==='request-daily-practice')announceDailyPractice()});
-render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=49',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=50',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
