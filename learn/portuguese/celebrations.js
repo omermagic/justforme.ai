@@ -1,6 +1,8 @@
 'use strict';
 
 window.PalavraCelebration = (() => {
+  const STREAK_LEAVE_MS = 1050;
+  const STREAK_REMOVE_MS = 1450;
   const messages = Object.freeze([
     { emoji: '🔥', title: 'Parabéns! Estás imparável!' },
     { emoji: '✨', title: 'Excelente! Que sequência incrível!' },
@@ -56,10 +58,10 @@ window.PalavraCelebration = (() => {
     document.body.append(celebration);
     if (persistentPreview) celebration.classList.add('preview');
     else {
-      window.setTimeout(() => celebration.classList.add('leaving'), 1050);
-      window.setTimeout(() => celebration.remove(), 1450);
+      window.setTimeout(() => celebration.classList.add('leaving'), STREAK_LEAVE_MS);
+      window.setTimeout(() => celebration.remove(), STREAK_REMOVE_MS);
     }
-    return { index, message, element: celebration };
+    return { index, message, element: celebration, durationMs: persistentPreview ? 0 : STREAK_REMOVE_MS };
   }
 
   function dayStreakMessage(days) {

@@ -165,12 +165,12 @@ gtag('js',new Date());gtag('config','G-E3JJGMR427');
   </main>
 </div>
 <div id="pwaInstallRoot"></div>
-<script src="./celebrations.js?v=48"></script>
-<script src="./daily-streak.js?v=48"></script>
-<script src="./ser-estar.js?v=48"></script>
-<script src="./pwa-install.js?v=48"></script>
-<script src="./reading-cards.js?v=48"></script>
-<script src="./conversation-cards.js?v=48"></script>
+<script src="./celebrations.js?v=49"></script>
+<script src="./daily-streak.js?v=49"></script>
+<script src="./ser-estar.js?v=49"></script>
+<script src="./pwa-install.js?v=49"></script>
+<script src="./reading-cards.js?v=49"></script>
+<script src="./conversation-cards.js?v=49"></script>
 <script>
 'use strict';
 /* Palavra Quest © 2026. Offline-capable with no accounts or advertising. */
@@ -2352,11 +2352,14 @@ function answer(given,clicked,skipped=false){
  // Every miss—including a skip or a hint-assisted answer—resets it immediately.
  p.correctStreak=window.PalavraCelebration.nextStreak(p.correctStreak,right);s.combo=p.correctStreak;
  if(newWord)s.newIds.add(q.w.id);
- let reviewNote='';
+ let reviewNote='',celebrationWaitMs=0;
  if(right){
   s.right++;prior.right++;
   if(window.PalavraCelebration.isMilestone(s.combo)){
    const celebration=window.PalavraCelebration.show(s.combo,prefs.celebrationIndex);
+   // Let the full-screen celebration finish, then leave a small quiet beat
+   // before rendering or speaking the next question.
+   celebrationWaitMs=celebration.durationMs+150;
    prefs.celebrationIndex=celebration.index;savePrefs();
   }
   if(grammarQuestion){
@@ -2458,10 +2461,11 @@ function answer(given,clicked,skipped=false){
  const display=`<div><strong>${feedbackTitle}</strong>${feedbackBody}<br><small>${safe(reviewNote)}</small></div><div class="ficon">${feedbackIcon}</div>`;
  f.innerHTML=display;f.classList.remove('hidden');f.classList.add(right?'good':hintedCorrect?'assisted':'bad');document.querySelector('#combo').textContent=s.combo+' combo';document.querySelector('#mastered').textContent=metrics(p).known+' mastered';
  const showNextQuestion=()=>continueAfterAnsweredQuestion(s);
+ const feedbackDelay=Math.max(right?CORRECT_FEEDBACK_MS:MISTAKE_FEEDBACK_MS+(grammarQuestion?GRAMMAR_MISTAKE_EXTRA_MS:0),celebrationWaitMs);
  feedbackTimeout=setTimeout(()=>{
   if(prefs.sound&&answerSpeechActive)answerSpeechWaiters.push(showNextQuestion);
   else showNextQuestion();
- },right?CORRECT_FEEDBACK_MS:MISTAKE_FEEDBACK_MS+(grammarQuestion?GRAMMAR_MISTAKE_EXTRA_MS:0))}
+ },feedbackDelay)}
 function finishSession(){if(!session)return;clearTimeout(feedbackTimeout);recordSessionTime(true);stopSessionClock();view='result';render()}
 function result(){
  const s=session,m=metrics();
@@ -2477,7 +2481,7 @@ function result(){
 /* Lifecycle: progress saved on EVERY answer, clock pauses if backgrounded. */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)recordSessionTime(true);lastFrame=0});window.addEventListener('pagehide',()=>{recordSessionTime(true);saveProgress()});window.addEventListener('keydown',e=>{if(view!=='game'||session?.current?.locked||!['1','2','3','4'].includes(e.key))return;const selector=session.current.direction==='conversation'?'[data-conversation-option]':'[data-choice]';const option=document.querySelectorAll(selector)[Number(e.key)-1];if(option&&!option.disabled)option.click()});
 window.addEventListener('message',event=>{if(event.source===window&&event.data?.source==='palavra-quest-reminder'&&event.data.type==='request-daily-practice')announceDailyPractice()});
-render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=48',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
+render();announceDailyPractice();if(!bankFull&&navigator.onLine!==false)fetchBank();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=49',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{}));
 </script>
 </body>
 </html>
