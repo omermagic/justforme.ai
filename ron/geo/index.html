@@ -90,13 +90,17 @@
         margin-top: 20px;
         flex-wrap: wrap;
       }
-      nav button {
+      nav button,
+      nav a {
         background: #ffffff20;
         border: 1px solid #ffffff50;
         color: #fff;
         border-radius: 99px;
         padding: 8px 16px;
         font-weight: 700;
+        font-size: 0.83rem;
+        line-height: normal;
+        text-decoration: none;
       }
       nav button.active {
         background: white;
@@ -534,6 +538,7 @@
         <button data-nav="home" class="active">Fazer um teste</button>
         <button data-nav="guide">Resumo da matéria</button>
         <button data-nav="stats">O meu progresso</button>
+        <a href="/ron/geo/test2/">Ir para o Teste 2 →</a>
       </nav>
     </header>
     <main id="app" aria-live="polite"></main>
