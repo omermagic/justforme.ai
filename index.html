@@ -658,6 +658,32 @@
         color: rgba(9, 9, 10, 0.62);
       }
 
+      .prep-hub-link {
+        display: inline-flex;
+        width: fit-content;
+        margin-top: 18px;
+        padding: 11px 15px;
+        color: var(--white);
+        background: #6d4ce8;
+        border: 1px solid #6d4ce8;
+        font-size: 12px;
+        font-weight: 820;
+        letter-spacing: 0.06em;
+        text-decoration: none;
+        text-transform: uppercase;
+        transition:
+          color 0.2s ease,
+          background 0.2s ease,
+          transform 0.2s ease;
+      }
+
+      .prep-hub-link:hover,
+      .prep-hub-link:focus-visible {
+        color: #6d4ce8;
+        background: transparent;
+        transform: translateY(-2px);
+      }
+
       .prep-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1207,9 +1233,14 @@
           <header class="section-heading reveal">
             <p class="section-number">03 / Prepare</p>
             <h2 id="prep-title">Study smart. <em>Stress less.</em></h2>
-            <p class="section-description">
-              Study resources available now. New tests and new topics will be added as the school year progresses.
-            </p>
+            <div>
+              <p class="section-description">
+                Study resources available now. New tests and new topics will be added as the school year progresses.
+              </p>
+              <a class="prep-hub-link" href="/preparacao-testes/" lang="pt-PT">
+                Ver todos os testes em português
+              </a>
+            </div>
           </header>
 
           <div class="prep-grid">
