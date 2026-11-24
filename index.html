@@ -853,6 +853,212 @@
         font-style: italic;
       }
 
+      /* ---------- Porto recommendation ---------- */
+      .porto-pick {
+        padding: clamp(72px, 9vw, 128px) 0;
+        color: var(--white);
+        background: #17110f;
+      }
+
+      .porto-pick-card {
+        position: relative;
+        min-height: 690px;
+        overflow: hidden;
+        border: 1px solid rgba(244, 241, 233, 0.2);
+        border-radius: 28px;
+        background: #241714;
+        box-shadow: 0 38px 100px rgba(0, 0, 0, 0.35);
+        isolation: isolate;
+      }
+
+      .porto-pick-view {
+        position: absolute;
+        inset: 0;
+        z-index: -3;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+
+      .porto-pick-card::before {
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        content: "";
+        background:
+          linear-gradient(90deg, rgba(14, 8, 8, 0.94) 0%, rgba(14, 8, 8, 0.79) 44%, rgba(14, 8, 8, 0.16) 76%),
+          linear-gradient(0deg, rgba(14, 8, 8, 0.7), transparent 48%);
+      }
+
+      .porto-pick-card::after {
+        position: absolute;
+        width: 430px;
+        height: 430px;
+        right: 2%;
+        bottom: -280px;
+        z-index: -1;
+        content: "";
+        border: 1px solid rgba(255, 201, 101, 0.55);
+        border-radius: 50%;
+        box-shadow:
+          0 0 0 48px rgba(255, 201, 101, 0.07),
+          0 0 0 49px rgba(255, 201, 101, 0.18);
+      }
+
+      .porto-pick-content {
+        display: flex;
+        min-height: 690px;
+        max-width: 760px;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: clamp(34px, 6vw, 76px);
+      }
+
+      .porto-pick-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: fit-content;
+        margin: 0 0 24px;
+        color: #ffd77d;
+        font-size: 14px;
+        font-weight: 850;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .porto-pick-label::before {
+        width: 38px;
+        height: 2px;
+        content: "";
+        background: currentColor;
+      }
+
+      .porto-pick h2 {
+        max-width: 720px;
+        margin: 0;
+        font-size: clamp(3.8rem, 7.2vw, 7.2rem);
+        font-weight: 850;
+        letter-spacing: -0.075em;
+        line-height: 0.84;
+      }
+
+      .porto-pick h2 em {
+        color: #ffd77d;
+        font-family: Georgia, serif;
+        font-weight: 400;
+      }
+
+      .porto-pick-description {
+        max-width: 660px;
+        margin: 28px 0 24px;
+        color: rgba(244, 241, 233, 0.78);
+        font-size: clamp(1rem, 1.5vw, 1.12rem);
+      }
+
+      .porto-pick-facts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0 0 30px;
+        padding: 0;
+        list-style: none;
+      }
+
+      .porto-pick-facts li {
+        padding: 8px 11px;
+        border: 1px solid rgba(244, 241, 233, 0.25);
+        border-radius: 999px;
+        background: rgba(9, 9, 10, 0.25);
+        font-size: 14px;
+        font-weight: 720;
+      }
+
+      .porto-pick-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px 20px;
+        align-items: center;
+      }
+
+      .porto-pick-button {
+        display: inline-flex;
+        min-height: 52px;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 19px;
+        color: var(--black);
+        background: #ffd77d;
+        border: 1px solid #ffd77d;
+        font-size: 14px;
+        font-weight: 850;
+        text-decoration: none;
+        transition:
+          color 0.2s ease,
+          background 0.2s ease,
+          transform 0.2s ease;
+      }
+
+      .porto-pick-button:hover,
+      .porto-pick-button:focus-visible {
+        color: #ffd77d;
+        background: rgba(9, 9, 10, 0.35);
+        transform: translateY(-2px);
+      }
+
+      .porto-pick-disclosure {
+        max-width: 260px;
+        margin: 0;
+        color: rgba(244, 241, 233, 0.6);
+        font-size: 13px;
+      }
+
+      .porto-pick-photo-link {
+        position: absolute;
+        display: block;
+        width: clamp(210px, 23vw, 330px);
+        aspect-ratio: 0.75;
+        top: 7%;
+        right: 5%;
+        z-index: 2;
+        border: 9px solid var(--white);
+        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.48);
+        transform: rotate(4deg);
+        transition:
+          transform 0.25s ease,
+          box-shadow 0.25s ease;
+      }
+
+      .porto-pick-photo-link:hover,
+      .porto-pick-photo-link:focus-visible {
+        box-shadow: 0 34px 82px rgba(0, 0, 0, 0.58);
+        transform: rotate(2deg) translateY(-5px);
+      }
+
+      .porto-pick-photo {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .porto-pick-rating {
+        position: absolute;
+        top: 10%;
+        right: clamp(235px, 27vw, 390px);
+        z-index: 3;
+        max-width: 150px;
+        padding: 13px 15px;
+        color: var(--black);
+        background: var(--acid);
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+        font-size: 13px;
+        font-weight: 850;
+        line-height: 1.25;
+        transform: rotate(-5deg);
+      }
+
       /* ---------- Footer ---------- */
       .site-footer {
         color: var(--white);
@@ -915,6 +1121,23 @@
         .section-description {
           grid-column: 2;
           max-width: 520px;
+        }
+
+        .porto-pick-card,
+        .porto-pick-content {
+          min-height: 820px;
+        }
+
+        .porto-pick-content {
+          max-width: 680px;
+        }
+
+        .porto-pick-photo-link {
+          width: 220px;
+        }
+
+        .porto-pick-rating {
+          right: 240px;
         }
       }
 
@@ -1020,6 +1243,40 @@
 
         .prep-coming {
           min-height: 210px;
+        }
+
+        .porto-pick-card {
+          min-height: 0;
+          padding-top: clamp(330px, 78vw, 390px);
+        }
+
+        .porto-pick-card::before {
+          background:
+            linear-gradient(0deg, rgba(14, 8, 8, 0.97) 0%, rgba(14, 8, 8, 0.79) 54%, rgba(14, 8, 8, 0.18) 100%),
+            linear-gradient(90deg, rgba(14, 8, 8, 0.55), transparent);
+        }
+
+        .porto-pick-content {
+          min-height: 0;
+          justify-content: flex-start;
+          padding: 28px;
+        }
+
+        .porto-pick h2 {
+          font-size: clamp(3.25rem, 14vw, 5.4rem);
+        }
+
+        .porto-pick-photo-link {
+          width: min(47vw, 230px);
+          top: 34px;
+          right: 8%;
+          border-width: 7px;
+        }
+
+        .porto-pick-rating {
+          top: 48px;
+          right: auto;
+          left: 6%;
         }
 
         .footer-inner {
@@ -1329,6 +1586,65 @@
               <div class="globe" aria-hidden="true"><span>S</span></div>
             </a>
           </div>
+        </div>
+      </section>
+
+      <section class="porto-pick" id="porto-experience" aria-labelledby="porto-pick-title">
+        <div class="shell">
+          <article class="porto-pick-card">
+            <img
+              class="porto-pick-view"
+              src="https://www.cookinganexperience.com/images/view-1800.jpg"
+              alt="Sunset over the Douro River from the experience venue"
+              loading="lazy"
+              decoding="async"
+            />
+            <a
+              class="porto-pick-photo-link"
+              href="https://www.cookinganexperience.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Discover Éclairs of the Douro on the Cooking an Experience website"
+            >
+              <img
+                class="porto-pick-photo"
+                src="https://www.cookinganexperience.com/images/ecl-700.jpg"
+                alt="Chocolate éclairs made during the experience, with the Douro in the background"
+                loading="lazy"
+                decoding="async"
+              />
+            </a>
+            <span class="porto-pick-rating">★★★★★<br />5.0 on Google &amp; Viator</span>
+
+            <div class="porto-pick-content">
+              <p class="porto-pick-label">Our Porto pick · Cooking an Experience</p>
+              <h2 id="porto-pick-title">Make éclairs. Sip wine. <em>Keep the evening.</em></h2>
+              <p class="porto-pick-description">
+                Éclairs of the Douro is a warm, hands-on evening with Le Cordon Bleu-trained host
+                Anat. Make French chocolate éclairs, share Portuguese wine and watch the light change
+                over the river—just outside central Porto.
+              </p>
+              <ul class="porto-pick-facts" aria-label="Experience details">
+                <li>2.5 hours</li>
+                <li>Up to 6 guests</li>
+                <li>8–15 min from Porto</li>
+                <li>Beginners welcome</li>
+              </ul>
+              <div class="porto-pick-actions">
+                <a
+                  class="porto-pick-button"
+                  href="https://www.cookinganexperience.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Discover Cooking an Experience
+                </a>
+                <p class="porto-pick-disclosure">
+                  A family project from the makers of this site, hosted in Valbom by the Douro.
+                </p>
+              </div>
+            </div>
+          </article>
         </div>
       </section>
     </main>
