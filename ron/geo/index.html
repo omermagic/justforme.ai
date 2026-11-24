@@ -6,8 +6,16 @@
     <meta name="theme-color" content="#3149ad" />
     <meta
       name="description"
-      content="Testes de Geografia 7.º D, 159 perguntas com correções, explicações, simulações e exercícios de revisão."
+      content="Geografia do 7.º ano: testes e exercícios interativos sobre paisagens, continentes, oceanos, orientação e localização, com correções explicadas."
     />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://justforme.ai/ron/geo/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="JustForMe.ai" />
+    <meta property="og:url" content="https://justforme.ai/ron/geo/" />
+    <meta property="og:title" content="Geografia 7.º Ano – Testes e Exercícios Interativos" />
+    <meta property="og:description" content="Revê Geografia do 7.º ano e pratica com testes, simulações e correções explicadas." />
+    <meta property="og:image" content="https://justforme.ai/assets/screenshots/geografia-1.jpg" />
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-E3JJGMR427"></script>
     <script>
@@ -18,7 +26,7 @@
       gtag("js", new Date());
       gtag("config", "G-E3JJGMR427");
     </script>
-    <title>Geografia · 7.º D | Testes de preparação</title>
+    <title>Geografia 7.º Ano – Testes e Exercícios Interativos</title>
     <style>
       /* Theme */
       :root {
@@ -528,8 +536,8 @@
   </head>
   <body>
     <header>
-      <div class="hero-label">GEOGRAFIA · TURMA 7.º D · PÁGINAS 14–33</div>
-      <h1>🌍 Desafio de Geografia — 7.º D</h1>
+      <div class="hero-label">GEOGRAFIA · 7.º ANO · PÁGINAS 14–33</div>
+      <h1>🌍 Desafio de Geografia — 7.º Ano</h1>
       <p class="sub">
         Testes ilimitados de escolha múltipla, em português de Portugal. 159 perguntas, explicações
         e treino dos erros para chegar bem preparado ao teste.
@@ -2633,7 +2641,7 @@
           return z.total > z.correct;
         }).length;
         APP.innerHTML = `
-<div class="panel"><div class="stats-header"><div><span class="pill">🎯 Objetivo de treino: 90% ou mais</span><h2 style="margin-top:12px">Prontos, 7.º D?</h2><p class="muted">Em cada tentativa, a ordem das perguntas e das opções muda. Podes repetir quantas vezes quiseres!</p></div></div>
+<div class="panel"><div class="stats-header"><div><span class="pill">🎯 Objetivo de treino: 90% ou mais</span><h2 style="margin-top:12px">Pronto para o desafio?</h2><p class="muted">Em cada tentativa, a ordem das perguntas e das opções muda. Podes repetir quantas vezes quiseres!</p></div></div>
 <div class="grid"><div class="tile"><strong>${formatNumber(BANK.length)}</strong><small>Perguntas disponíveis</small></div><div class="tile"><strong>${formatNumber(progress.completed)}</strong><small>Testes concluídos</small></div><div class="tile"><strong>${s.total ? Math.round((100 * s.correct) / s.total) + "%" : "—"}</strong><small>Respostas corretas</small></div></div>
 <label class="select-label">Escolhe o tipo de teste</label><div class="modes">${modeCard("practice", "⚡ Treino rápido", "10 perguntas · correção imediata")}${modeCard("standard", "📘 Treino normal", "20 perguntas · correção imediata")}${modeCard("exam", "📝 Simulação de teste", "35 perguntas · correção final")}${modeCard("marathon", "🏃 Maratona", "50 perguntas · temas misturados")}${modeCard("weak", "🎯 Corrigir os erros", `${missed} perguntas com erros anteriores`)}${modeCard("hard", "🧭 Desafio difícil", "20 perguntas exigentes · correção final")}</div>
 <label for="topic" class="select-label">Escolhe a matéria</label><select id="topic" class="select-wrap"><option value="all" ${state.topic === "all" ? "selected" : ""}>Todos os 8 temas (recomendado)</option>${TOPICS.map((t) => `<option value="${escapeHtml(t)}" ${state.topic === t ? "selected" : ""}>${escapeHtml(t)}</option>`).join("")}</select><div class="buttonbar"><button id="start" class="button">Começar o teste →</button><button id="notesbtn" class="button secondary">Ver o resumo da matéria</button></div><div class="callout"><strong>Plano para dominar a matéria:</strong> treina os 8 temas, estuda as explicações dos erros e tenta atingir pelo menos 90% em duas simulações completas. Este é um objetivo de estudo, não uma escala oficial de notas da escola.</div></div>
@@ -2832,7 +2840,7 @@ ${reveal ? `<div class="feedback ${q.choices[given].correct ? "good" : "bad"}"><
             : percent >= 80
               ? "Quase nos 90%! Revê as perguntas falhadas e tenta novamente."
               : "Cada erro é uma oportunidade de aprender. Revê as explicações e continua!";
-        APP.innerHTML = `<div class="panel"><span class="pill">Teste concluído · ${timerText()}</span><h2 style="margin-top:15px">Resultado — Geografia 7.º D</h2><div class="scorebig">${percent}%</div><div class="grade">${grade(percent)}</div><p><b>${good}/${total}</b> respostas certas · <b>${mistakes}</b> por rever</p><p>${verdict}</p><div class="buttonbar"><button class="button" id="again">Fazer outro teste →</button><button class="button secondary" id="weakagain">Treinar as perguntas erradas</button><button class="button ghost" id="studybtn">Resumo da matéria</button></div></div><div class="panel"><h2>Correção das respostas</h2>${state.test
+        APP.innerHTML = `<div class="panel"><span class="pill">Teste concluído · ${timerText()}</span><h2 style="margin-top:15px">Resultado — Geografia 7.º Ano</h2><div class="scorebig">${percent}%</div><div class="grade">${grade(percent)}</div><p><b>${good}/${total}</b> respostas certas · <b>${mistakes}</b> por rever</p><p>${verdict}</p><div class="buttonbar"><button class="button" id="again">Fazer outro teste →</button><button class="button secondary" id="weakagain">Treinar as perguntas erradas</button><button class="button ghost" id="studybtn">Resumo da matéria</button></div></div><div class="panel"><h2>Correção das respostas</h2>${state.test
           .map((q, i) => {
             let a = state.answers[i],
               isCorrect = a !== null && q.choices[a].correct;
@@ -2858,7 +2866,7 @@ ${reveal ? `<div class="feedback ${q.choices[given].correct ? "good" : "bad"}"><
       }
       // Study guide.
       function renderGuide() {
-        APP.innerHTML = `<div class="panel"><h2>📚 Resumo de Geografia — 7.º D</h2><p class="muted">Matéria baseada nas páginas 14–33 do manual fotografado. Lê o resumo e depois faz testes sobre os temas em que sentes mais dificuldades.</p></div><div class="guide" style="margin-top:14px">${NOTES.map(([title, lines]) => `<article class="note"><h3>${escapeHtml(title)}</h3><ul>${lines.map((x) => `<li>${htmlEmphasis(x)}</li>`).join("")}</ul></article>`).join("")}</div><div class="buttonbar"><button id="guide-go" class="button">Vamos praticar →</button></div>`;
+        APP.innerHTML = `<div class="panel"><h2>📚 Resumo de Geografia — 7.º Ano</h2><p class="muted">Matéria baseada nas páginas 14–33 do manual fotografado. Lê o resumo e depois faz testes sobre os temas em que sentes mais dificuldades.</p></div><div class="guide" style="margin-top:14px">${NOTES.map(([title, lines]) => `<article class="note"><h3>${escapeHtml(title)}</h3><ul>${lines.map((x) => `<li>${htmlEmphasis(x)}</li>`).join("")}</ul></article>`).join("")}</div><div class="buttonbar"><button id="guide-go" class="button">Vamos praticar →</button></div>`;
         document.getElementById("guide-go").onclick = () => switchView("home");
       }
       // Progress dashboard.

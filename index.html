@@ -3,1693 +3,374 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#09090a" />
-    <meta
-      name="description"
-      content="AI by Gazit — personal games and playful learning experiences."
-    />
+    <meta name="theme-color" content="#080b14" />
+    <meta name="description" content="Play free online browser games, learn European Portuguese and prepare for 7th-grade school tests with interactive quizzes on JustForMe.ai." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://justforme.ai/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="JustForMe.ai" />
+    <meta property="og:url" content="https://justforme.ai/" />
+    <meta property="og:title" content="JustForMe.ai – Free Online Games &amp; Interactive Learning" />
+    <meta property="og:description" content="Free browser games, European Portuguese learning and interactive school quizzes. Play or start learning instantly." />
+    <meta property="og:image" content="https://justforme.ai/assets/screenshots/dragon-blocks.jpg" />
+    <meta property="og:image:alt" content="Dragon Blocks free online block puzzle game" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="JustForMe.ai – Free Online Games &amp; Interactive Learning" />
+    <meta name="twitter:description" content="Play free browser games, learn European Portuguese and practise school subjects online." />
+    <meta name="twitter:image" content="https://justforme.ai/assets/screenshots/dragon-blocks.jpg" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <title>JustForMe.ai – Free Online Games &amp; Interactive Learning</title>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://justforme.ai/#website",
+            "url": "https://justforme.ai/",
+            "name": "JustForMe.ai",
+            "description": "Free online browser games, European Portuguese learning and interactive school quizzes.",
+            "inLanguage": ["en", "pt-PT"]
+          },
+          {
+            "@type": "CollectionPage",
+            "@id": "https://justforme.ai/#homepage",
+            "url": "https://justforme.ai/",
+            "name": "JustForMe.ai – Free Online Games & Interactive Learning",
+            "isPartOf": { "@id": "https://justforme.ai/#website" },
+            "mainEntity": {
+              "@type": "ItemList",
+              "name": "Games and learning applications",
+              "numberOfItems": 11,
+              "itemListElement": [
+                { "@type": "ListItem", "position": 1, "name": "Dragon Blocks", "url": "https://justforme.ai/ron/tetris/" },
+                { "@type": "ListItem", "position": 2, "name": "Code Duel", "url": "https://justforme.ai/yuval/mastermind/" },
+                { "@type": "ListItem", "position": 3, "name": "Jelly Lemmy", "url": "https://justforme.ai/games/jellylemmy/" },
+                { "@type": "ListItem", "position": 4, "name": "Land Eater", "url": "https://justforme.ai/shaked/landeater/" },
+                { "@type": "ListItem", "position": 5, "name": "Snoopy's Maze", "url": "https://justforme.ai/anat/pcman/" },
+                { "@type": "ListItem", "position": 6, "name": "Palavra Quest", "url": "https://justforme.ai/learn/portuguese/" },
+                { "@type": "ListItem", "position": 7, "name": "Geografia 7.º Ano — Teste 1", "url": "https://justforme.ai/ron/geo/" },
+                { "@type": "ListItem", "position": 8, "name": "Geografia 7.º Ano — Teste 2", "url": "https://justforme.ai/ron/geo/test2/" },
+                { "@type": "ListItem", "position": 9, "name": "Matemática 7.º Ano", "url": "https://justforme.ai/ron/math/" },
+                { "@type": "ListItem", "position": 10, "name": "História 7.º Ano — Grécia Antiga e Atenas", "url": "https://justforme.ai/ron/history/" },
+                { "@type": "ListItem", "position": 11, "name": "Ciências Naturais 7.º Ano — Tectónica de Placas", "url": "https://justforme.ai/ron/science/test2/" }
+              ]
+            }
+          }
+        ]
+      }
+    </script>
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-E3JJGMR427"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
+      function gtag() { dataLayer.push(arguments); }
       gtag("js", new Date());
       gtag("config", "G-E3JJGMR427");
     </script>
 
-    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-    <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32" />
-    <link rel="apple-touch-icon" href="./apple-touch-icon.png" sizes="180x180" />
-    <title>AI by Gazit — Play. Learn. Explore.</title>
-
     <style>
-      /* ---------- Design tokens ---------- */
       :root {
-        --black: #09090a;
-        --white: #f4f1e9;
-        --acid: #dfff00;
-        --purple: #9c7cff;
-        --line: rgba(244, 241, 233, 0.18);
-        --muted: rgba(244, 241, 233, 0.64);
-        --page: min(calc(100% - 48px), 1280px);
-        --pointer-x: 72%;
-        --pointer-y: 35%;
+        color-scheme: dark;
+        --ink: #080b14;
+        --panel: #101522;
+        --paper: #f6f5ef;
+        --text: #f9f8f4;
+        --muted: #a7afbe;
+        --line: rgba(255, 255, 255, 0.13);
+        --mint: #62e6c4;
+        --lime: #dfff53;
+        --violet: #9b83ff;
+        --yellow: #ffd166;
+        --page: min(1240px, calc(100% - 48px));
+        --radius: 26px;
       }
 
-      /* ---------- Base ---------- */
-      * {
-        box-sizing: border-box;
-      }
-
-      html {
-        scroll-behavior: smooth;
-        overflow-x: clip;
-        background: var(--black);
-      }
-
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; overflow-x: clip; background: var(--ink); }
       body {
         margin: 0;
         overflow-x: clip;
-        color: var(--white);
-        background: var(--black);
+        color: var(--text);
+        background: radial-gradient(circle at 90% 8%, rgba(155, 131, 255, 0.14), transparent 28rem), var(--ink);
         font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
-        line-height: 1.4;
-      }
-
-      body::after {
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: 30;
-        pointer-events: none;
-        opacity: 0.032;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      }
-
-      a {
-        color: inherit;
-      }
-
-      ::selection {
-        color: var(--black);
-        background: var(--acid);
-      }
-
-      .shell {
-        width: var(--page);
-        margin-inline: auto;
-      }
-
-      .skip-link {
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        z-index: 100;
-        padding: 10px 14px;
-        color: var(--black);
-        background: var(--acid);
-        transform: translateY(-150%);
-      }
-
-      .skip-link:focus {
-        transform: none;
-      }
-
-      /* ---------- Header ---------- */
-      .site-header {
-        position: absolute;
-        top: 0;
-        right: 0;
-        left: 0;
-        z-index: 10;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: var(--page);
-        margin-inline: auto;
-        padding: 22px 0;
-        border-bottom: 1px solid var(--line);
-      }
-
-      .brand {
-        display: inline-flex;
-        align-items: center;
-        gap: 11px;
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 800;
-        letter-spacing: -0.03em;
-      }
-
-      .brand-mark {
-        display: grid;
-        width: 32px;
-        aspect-ratio: 1;
-        place-items: center;
-        color: var(--black);
-        background: var(--acid);
-        border-radius: 50%;
-        font-family: Georgia, serif;
-        font-size: 18px;
-        font-style: italic;
-      }
-
-      .site-nav {
-        display: flex;
-        gap: 28px;
-      }
-
-      .site-nav a {
-        color: var(--muted);
-        text-decoration: none;
-        font-size: 10px;
-        font-weight: 760;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-      }
-
-      .site-nav a:hover {
-        color: var(--acid);
-      }
-
-      /* ---------- Hero ---------- */
-      .hero {
-        position: relative;
-        display: grid;
-        min-height: 76svh;
-        align-content: end;
-        overflow: hidden;
-        padding: 135px 0 68px;
-        isolation: isolate;
-      }
-
-      .hero::before {
-        content: "";
-        position: absolute;
-        top: var(--pointer-y);
-        left: var(--pointer-x);
-        z-index: -2;
-        width: min(58vw, 760px);
-        aspect-ratio: 1;
-        background: var(--purple);
-        border-radius: 50%;
-        opacity: 0.19;
-        filter: blur(8px);
-        transform: translate(-50%, -50%);
-        transition:
-          top 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
-          left 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-      }
-
-      .hero::after {
-        content: "";
-        position: absolute;
-        top: -22%;
-        right: -12%;
-        z-index: -1;
-        width: min(62vw, 800px);
-        aspect-ratio: 1;
-        border: 1px solid rgba(244, 241, 233, 0.22);
-        border-radius: 50%;
-        box-shadow:
-          inset 0 0 0 9vw var(--black),
-          inset 0 0 0 calc(9vw + 1px) rgba(223, 255, 0, 0.34),
-          inset 0 0 0 18vw var(--black),
-          inset 0 0 0 calc(18vw + 1px) rgba(244, 241, 233, 0.18);
-        animation: breathe 7s ease-in-out infinite;
-      }
-
-      .eyebrow {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 0 0 24px;
-        color: var(--muted);
-        font-size: 10px;
-        font-weight: 760;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-      }
-
-      .eyebrow::before {
-        content: "✦";
-        color: var(--acid);
-        font-size: 16px;
-      }
-
-      h1 {
-        position: relative;
-        z-index: 2;
-        max-width: 1120px;
-        margin: 0;
-        font-size: clamp(4.7rem, 11.5vw, 10.5rem);
-        font-weight: 850;
-        letter-spacing: -0.09em;
-        line-height: 0.73;
-        text-transform: uppercase;
-      }
-
-      h1 span {
-        display: block;
-      }
-
-      h1 .human {
-        margin-left: 12vw;
-        color: var(--acid);
-        font-family: Georgia, "Times New Roman", serif;
-        font-weight: 400;
-        font-style: italic;
-        letter-spacing: -0.075em;
-        text-transform: none;
-        transform: rotate(-3deg);
-      }
-
-      .hero-bottom {
-        position: relative;
-        z-index: 3;
-        display: grid;
-        grid-template-columns: 1fr minmax(280px, 440px);
-        gap: 40px;
-        align-items: end;
-        margin-top: 42px;
-      }
-
-      .hero-index {
-        color: rgba(244, 241, 233, 0.38);
-        font-family: Georgia, serif;
-        font-size: 13px;
-        font-style: italic;
-      }
-
-      .hero-intro {
-        margin: 0;
-        color: var(--muted);
-        font-size: clamp(1.05rem, 1.5vw, 1.3rem);
-        letter-spacing: -0.025em;
-      }
-
-      .hero-intro strong {
-        color: var(--white);
-      }
-
-      /* ---------- Kinetic strip ---------- */
-      .ticker {
-        position: relative;
-        z-index: 5;
-        overflow: hidden;
-        color: var(--black);
-        background: var(--acid);
-        transform: rotate(-1deg) scale(1.02);
-      }
-
-      .ticker-track {
-        display: flex;
-        width: max-content;
-        padding: 13px 0;
-        animation: ticker 20s linear infinite;
-      }
-
-      .ticker-track span {
-        padding-right: 30px;
-        font-size: 12px;
-        font-weight: 850;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-      }
-
-      /* ---------- Shared collection layout ---------- */
-      .collection {
-        padding: clamp(88px, 10vw, 140px) 0;
-      }
-
-      .section-heading {
-        display: grid;
-        grid-template-columns: 120px minmax(0, 1fr) minmax(240px, 360px);
-        gap: 32px;
-        align-items: end;
-        margin-bottom: 54px;
-      }
-
-      .section-number {
-        margin: 0;
-        color: var(--acid);
-        font-family: Georgia, serif;
-        font-size: 18px;
-        font-style: italic;
-      }
-
-      .section-heading h2 {
-        margin: 0;
-        font-size: clamp(3.7rem, 7vw, 7rem);
-        font-weight: 840;
-        letter-spacing: -0.08em;
-        line-height: 0.8;
-      }
-
-      .section-heading h2 em {
-        color: var(--acid);
-        font-family: Georgia, serif;
-        font-weight: 400;
-      }
-
-      .section-description {
-        margin: 0;
-        color: var(--muted);
-        font-size: 14px;
-      }
-
-      /* ---------- Games ---------- */
-      .games {
-        background: var(--black);
-      }
-
-      .game-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 18px;
-      }
-
-      .game-card {
-        position: relative;
-        display: flex;
-        min-height: 360px;
-        flex-direction: column;
-        justify-content: space-between;
-        overflow: hidden;
-        padding: 28px;
-        color: var(--black);
-        background: var(--white);
-        border: 1px solid transparent;
-        text-decoration: none;
-        isolation: isolate;
-        transition:
-          transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
-          box-shadow 0.3s ease;
-      }
-
-      .game-card::after {
-        content: "";
-        position: absolute;
-        right: -12%;
-        bottom: -38%;
-        z-index: -1;
-        width: 58%;
-        aspect-ratio: 1;
-        border: 1px solid currentColor;
-        border-radius: 50%;
-        opacity: 0.24;
-        box-shadow:
-          0 0 0 28px transparent,
-          0 0 0 29px currentColor,
-          0 0 0 58px transparent,
-          0 0 0 59px currentColor;
-      }
-
-      .game-card:hover,
-      .game-card:focus-visible {
-        z-index: 2;
-        transform: translateY(-7px) rotate(-0.5deg);
-        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
-      }
-
-      .game-card--maze {
-        background: #ffeaa4;
-      }
-
-      .game-card--duel {
-        color: var(--white);
-        background: #6d4ce8;
-      }
-
-      .game-card--blocks {
-        color: var(--white);
-        background: #1063cf;
-      }
-
-      .game-card--land {
-        background: #ff9cc5;
-      }
-
-      .game-card--jelly {
-        background: #8ce5c3;
-      }
-
-      .card-top,
-      .card-bottom {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 18px;
-      }
-
-      .card-kicker,
-      .card-type {
-        font-size: 9px;
-        font-weight: 820;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-      }
-
-      .card-type {
-        padding: 7px 9px;
-        border: 1px solid currentColor;
-      }
-
-      .card-center {
-        position: relative;
-        z-index: 1;
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 24px;
-        align-items: end;
-        margin-block: 44px;
-      }
-
-      .card-title {
-        max-width: 430px;
-        margin: 0;
-        font-size: clamp(2.8rem, 5vw, 5rem);
-        font-weight: 850;
-        letter-spacing: -0.075em;
-        line-height: 0.82;
-      }
-
-      .card-symbol {
-        display: grid;
-        width: clamp(80px, 11vw, 130px);
-        aspect-ratio: 1;
-        place-items: center;
-        border: 1px solid currentColor;
-        border-radius: 50%;
-        font-family: Georgia, serif;
-        font-size: clamp(2.8rem, 6vw, 5rem);
-        font-style: italic;
-        transform: rotate(7deg);
-      }
-
-      .card-note {
-        margin: 0;
-        font-size: 12px;
-        font-weight: 680;
-      }
-
-      .card-arrow {
-        font-size: 25px;
-        transition: transform 0.25s ease;
-      }
-
-      .game-card:hover .card-arrow,
-      .game-card:focus-visible .card-arrow {
-        transform: translate(4px, -4px);
-      }
-
-      /* ---------- Learning ---------- */
-      .learning {
-        color: #082229;
-        background: #74e7c6;
-      }
-
-      .learning .section-number,
-      .learning .section-heading h2 em {
-        color: #07566a;
-      }
-
-      .learning .section-description {
-        color: rgba(8, 34, 41, 0.68);
-      }
-
-      .learn-card {
-        position: relative;
-        display: grid;
-        min-height: 430px;
-        grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
-        gap: clamp(30px, 6vw, 90px);
-        align-items: center;
-        overflow: hidden;
-        padding: clamp(30px, 5vw, 68px);
-        color: var(--white);
-        background:
-          radial-gradient(circle at 82% 20%, rgba(77, 230, 199, 0.23), transparent 32%),
-          #081b31;
-        text-decoration: none;
-        isolation: isolate;
-        transition:
-          transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
-          box-shadow 0.3s ease;
-      }
-
-      .learn-card:hover,
-      .learn-card:focus-visible {
-        transform: translateY(-7px);
-        box-shadow: 0 26px 70px rgba(3, 34, 42, 0.3);
-      }
-
-      .learn-copy {
-        position: relative;
-        z-index: 2;
-      }
-
-      .learn-kicker {
-        color: #74e7c6;
-        font-size: 10px;
-        font-weight: 850;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-      }
-
-      .learn-card h3 {
-        max-width: 650px;
-        margin: 18px 0 22px;
-        font-size: clamp(3.5rem, 7vw, 7rem);
-        font-weight: 850;
-        letter-spacing: -0.08em;
-        line-height: 0.8;
-      }
-
-      .learn-card p {
-        max-width: 560px;
-        margin: 0;
-        color: rgba(244, 241, 233, 0.7);
-        font-size: 15px;
+        font-size: 1rem;
         line-height: 1.55;
-      }
-
-      .learn-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 28px;
-      }
-
-      .learn-meta span {
-        padding: 7px 9px;
-        border: 1px solid rgba(116, 231, 198, 0.38);
-        font-size: 9px;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-      }
-
-      .learn-action {
-        display: inline-flex;
-        margin-top: 32px;
-        align-items: center;
-        gap: 10px;
-        color: #081b31;
-        background: #74e7c6;
-        padding: 12px 15px;
-        font-size: 10px;
-        font-weight: 850;
-        letter-spacing: 0.11em;
-        text-transform: uppercase;
-      }
-
-      .word-stack {
-        position: relative;
-        min-height: 320px;
-      }
-
-      .word-card {
-        position: absolute;
-        right: 4%;
-        width: min(88%, 330px);
-        padding: 24px;
-        color: #082229;
-        background: #f4f1e9;
-        border: 1px solid rgba(8, 34, 41, 0.22);
-        box-shadow: 13px 14px 0 rgba(0, 0, 0, 0.26);
-      }
-
-      .word-card:nth-child(1) {
-        top: 1%;
-        transform: rotate(5deg);
-      }
-
-      .word-card:nth-child(2) {
-        top: 34%;
-        right: 14%;
-        color: #f4f1e9;
-        background: #664bdd;
-        transform: rotate(-4deg);
-      }
-
-      .word-card:nth-child(3) {
-        top: 67%;
-        right: 1%;
-        background: #ffc96b;
-        transform: rotate(3deg);
-      }
-
-      .word-card strong,
-      .word-card small {
-        display: block;
-      }
-
-      .word-card strong {
-        font-family: Georgia, serif;
-        font-size: clamp(2rem, 4vw, 3.6rem);
-        font-style: italic;
-        line-height: 0.9;
-      }
-
-      .word-card small {
-        margin-top: 8px;
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      /* ---------- Test prep ---------- */
-      .test-prep {
-        color: var(--black);
-        background: var(--white);
-      }
-
-      .test-prep .section-number,
-      .test-prep .section-heading h2 em {
-        color: #6d4ce8;
-      }
-
-      .test-prep .section-description {
-        color: rgba(9, 9, 10, 0.62);
-      }
-
-      .prep-hub-link {
-        display: inline-flex;
-        width: fit-content;
-        margin-top: 18px;
-        padding: 11px 15px;
-        color: var(--white);
-        background: #6d4ce8;
-        border: 1px solid #6d4ce8;
-        font-size: 12px;
-        font-weight: 820;
-        letter-spacing: 0.06em;
-        text-decoration: none;
-        text-transform: uppercase;
-        transition:
-          color 0.2s ease,
-          background 0.2s ease,
-          transform 0.2s ease;
-      }
-
-      .prep-hub-link:hover,
-      .prep-hub-link:focus-visible {
-        color: #6d4ce8;
-        background: transparent;
-        transform: translateY(-2px);
-      }
-
-      .prep-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 18px;
-      }
-
-      .prep-card {
-        position: relative;
-        display: grid;
-        min-height: 370px;
-        grid-template-columns: minmax(0, 1fr) minmax(170px, 0.75fr);
-        gap: 26px;
-        align-items: center;
-        overflow: hidden;
-        padding: clamp(28px, 4vw, 48px);
-        color: var(--white);
-        background: #17141f;
-        text-decoration: none;
-        isolation: isolate;
-        transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-      }
-
-      .prep-card:hover,
-      .prep-card:focus-visible {
-        transform: translateY(-6px);
-      }
-
-      .prep-card-copy {
-        position: relative;
-        z-index: 2;
-      }
-
-      .prep-card .card-kicker {
-        color: var(--acid);
-      }
-
-      .prep-card h3 {
-        margin: 18px 0 22px;
-        font-size: clamp(2.8rem, 5vw, 5rem);
-        font-weight: 840;
-        letter-spacing: -0.075em;
-        line-height: 0.82;
-      }
-
-      .prep-card p {
-        max-width: 360px;
-        margin: 0 0 30px;
-        color: var(--muted);
-        font-size: 14px;
-      }
-
-      .prep-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .prep-meta span {
-        padding: 7px 9px;
-        border: 1px solid var(--line);
-        font-size: 9px;
-        font-weight: 780;
-        letter-spacing: 0.11em;
-        text-transform: uppercase;
-      }
-
-      .globe {
-        position: relative;
-        width: min(100%, 260px);
-        aspect-ratio: 1;
-        justify-self: end;
-        border: 1px solid rgba(223, 255, 0, 0.75);
-        border-radius: 50%;
-        box-shadow:
-          inset 0 0 0 25px #17141f,
-          inset 0 0 0 26px rgba(223, 255, 0, 0.45),
-          inset 0 0 0 54px #17141f,
-          inset 0 0 0 55px rgba(244, 241, 233, 0.3);
-        animation: breathe 6s ease-in-out infinite;
-      }
-
-      .globe::before,
-      .globe::after {
-        content: "";
-        position: absolute;
-        inset: 0 34%;
-        border: 1px solid rgba(244, 241, 233, 0.32);
-        border-radius: 50%;
-      }
-
-      .globe::after {
-        inset: 34% 0;
-      }
-
-      .globe span {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        color: var(--acid);
-        font-family: Georgia, serif;
-        font-size: clamp(5rem, 10vw, 8rem);
-        font-style: italic;
-        transform: translate(-50%, -54%) rotate(-12deg);
-      }
-
-      .math-orbit {
-        border-radius: 28px;
-        border-color: rgba(125, 233, 247, 0.8);
-        box-shadow:
-          inset 0 0 0 25px #102532,
-          inset 0 0 0 26px rgba(125, 233, 247, 0.5),
-          inset 0 0 0 54px #102532,
-          inset 0 0 0 55px rgba(182, 251, 121, 0.38);
-        transform: rotate(5deg);
-      }
-
-      .math-orbit::before,
-      .math-orbit::after {
-        border-color: rgba(125, 233, 247, 0.42);
-        border-radius: 14px;
-      }
-
-      .math-orbit span {
-        color: #b6fb79;
-        font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
-        font-style: normal;
-        font-weight: 900;
-        transform: translate(-50%, -54%) rotate(-5deg);
-      }
-
-      .history-orbit {
-        border-color: rgba(244, 181, 69, 0.85);
-        box-shadow:
-          inset 0 0 0 25px #2c2038,
-          inset 0 0 0 26px rgba(244, 181, 69, 0.55),
-          inset 0 0 0 54px #2c2038,
-          inset 0 0 0 55px rgba(132, 199, 203, 0.35);
-      }
-
-      .history-orbit::before,
-      .history-orbit::after {
-        border-color: rgba(244, 181, 69, 0.42);
-      }
-
-      .history-orbit span {
-        color: #f4b545;
-        font-style: normal;
-        font-weight: 700;
-        transform: translate(-50%, -54%) rotate(4deg);
-      }
-
-      .prep-coming {
-        display: grid;
-        min-height: 370px;
-        place-items: center;
-        padding: 36px;
-        border: 1px dashed rgba(9, 9, 10, 0.28);
-        text-align: center;
-      }
-
-      .prep-coming p {
-        max-width: 270px;
-        margin: 0;
-        color: rgba(9, 9, 10, 0.5);
-        font-family: Georgia, serif;
-        font-size: clamp(1.5rem, 3vw, 2.25rem);
-        font-style: italic;
-      }
-
-      /* ---------- Porto recommendation ---------- */
-      .porto-pick {
-        padding: clamp(72px, 9vw, 128px) 0;
-        color: var(--white);
-        background: #17110f;
-      }
-
-      .porto-pick-card {
-        position: relative;
-        min-height: 690px;
-        overflow: hidden;
-        border: 1px solid rgba(244, 241, 233, 0.2);
-        border-radius: 28px;
-        background: #241714;
-        box-shadow: 0 38px 100px rgba(0, 0, 0, 0.35);
-        isolation: isolate;
-      }
-
-      .porto-pick-view {
-        position: absolute;
-        inset: 0;
-        z-index: -3;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center;
-      }
-
-      .porto-pick-card::before {
-        position: absolute;
-        inset: 0;
-        z-index: -2;
-        content: "";
-        background:
-          linear-gradient(90deg, rgba(14, 8, 8, 0.94) 0%, rgba(14, 8, 8, 0.79) 44%, rgba(14, 8, 8, 0.16) 76%),
-          linear-gradient(0deg, rgba(14, 8, 8, 0.7), transparent 48%);
-      }
-
-      .porto-pick-card::after {
-        position: absolute;
-        width: 430px;
-        height: 430px;
-        right: 2%;
-        bottom: -280px;
-        z-index: -1;
-        content: "";
-        border: 1px solid rgba(255, 201, 101, 0.55);
-        border-radius: 50%;
-        box-shadow:
-          0 0 0 48px rgba(255, 201, 101, 0.07),
-          0 0 0 49px rgba(255, 201, 101, 0.18);
-      }
-
-      .porto-pick-content {
-        display: flex;
-        min-height: 690px;
-        max-width: 760px;
-        flex-direction: column;
-        justify-content: flex-end;
-        padding: clamp(34px, 6vw, 76px);
-      }
-
-      .porto-pick-label {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        width: fit-content;
-        margin: 0 0 24px;
-        color: #ffd77d;
-        font-size: 14px;
-        font-weight: 850;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-      }
-
-      .porto-pick-label::before {
-        width: 38px;
-        height: 2px;
-        content: "";
-        background: currentColor;
-      }
-
-      .porto-pick h2 {
-        max-width: 720px;
-        margin: 0;
-        font-size: clamp(3.8rem, 7.2vw, 7.2rem);
-        font-weight: 850;
-        letter-spacing: -0.075em;
-        line-height: 0.84;
-      }
-
-      .porto-pick h2 em {
-        color: #ffd77d;
-        font-family: Georgia, serif;
-        font-weight: 400;
-      }
-
-      .porto-pick-description {
-        max-width: 660px;
-        margin: 28px 0 24px;
-        color: rgba(244, 241, 233, 0.78);
-        font-size: clamp(1rem, 1.5vw, 1.12rem);
-      }
-
-      .porto-pick-facts {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin: 0 0 30px;
-        padding: 0;
-        list-style: none;
-      }
-
-      .porto-pick-facts li {
-        padding: 8px 11px;
-        border: 1px solid rgba(244, 241, 233, 0.25);
-        border-radius: 999px;
-        background: rgba(9, 9, 10, 0.25);
-        font-size: 14px;
-        font-weight: 720;
-      }
-
-      .porto-pick-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 14px 20px;
-        align-items: center;
-      }
-
-      .porto-pick-button {
-        display: inline-flex;
-        min-height: 52px;
-        align-items: center;
-        justify-content: center;
-        padding: 12px 19px;
-        color: var(--black);
-        background: #ffd77d;
-        border: 1px solid #ffd77d;
-        font-size: 14px;
-        font-weight: 850;
-        text-decoration: none;
-        transition:
-          color 0.2s ease,
-          background 0.2s ease,
-          transform 0.2s ease;
-      }
-
-      .porto-pick-button:hover,
-      .porto-pick-button:focus-visible {
-        color: #ffd77d;
-        background: rgba(9, 9, 10, 0.35);
-        transform: translateY(-2px);
-      }
-
-      .porto-pick-disclosure {
-        max-width: 260px;
-        margin: 0;
-        color: rgba(244, 241, 233, 0.6);
-        font-size: 13px;
-      }
-
-      .porto-pick-photo-link {
-        position: absolute;
-        display: block;
-        width: clamp(210px, 23vw, 330px);
-        aspect-ratio: 0.75;
-        top: 7%;
-        right: 5%;
-        z-index: 2;
-        border: 9px solid var(--white);
-        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.48);
-        transform: rotate(4deg);
-        transition:
-          transform 0.25s ease,
-          box-shadow 0.25s ease;
-      }
-
-      .porto-pick-photo-link:hover,
-      .porto-pick-photo-link:focus-visible {
-        box-shadow: 0 34px 82px rgba(0, 0, 0, 0.58);
-        transform: rotate(2deg) translateY(-5px);
-      }
-
-      .porto-pick-photo {
-        display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .porto-pick-rating {
-        position: absolute;
-        top: 10%;
-        right: clamp(235px, 27vw, 390px);
-        z-index: 3;
-        max-width: 150px;
-        padding: 13px 15px;
-        color: var(--black);
-        background: var(--acid);
-        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
-        font-size: 13px;
-        font-weight: 850;
-        line-height: 1.25;
-        transform: rotate(-5deg);
-      }
-
-      /* ---------- Footer ---------- */
-      .site-footer {
-        color: var(--white);
-        background: var(--black);
-      }
-
-      .footer-inner {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 24px;
-        padding: 30px 0;
-        color: var(--muted);
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      .footer-inner a {
-        text-decoration: none;
-      }
-
-      .footer-inner a:hover {
-        color: var(--acid);
-      }
-
-      /* ---------- Motion ---------- */
-      .reveal {
-        opacity: 0;
-        transform: translateY(28px);
-        transition:
-          opacity 0.75s ease,
-          transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
-      }
-
-      .reveal.visible {
-        opacity: 1;
-        transform: none;
-      }
-
-      @keyframes breathe {
-        50% {
-          transform: scale(1.04);
-        }
-      }
-
-      @keyframes ticker {
-        to {
-          transform: translateX(-50%);
-        }
-      }
-
-      /* ---------- Responsive ---------- */
-      @media (max-width: 940px) {
-        .section-heading {
-          grid-template-columns: 80px 1fr;
-        }
-
-        .section-description {
-          grid-column: 2;
-          max-width: 520px;
-        }
-
-        .porto-pick-card,
-        .porto-pick-content {
-          min-height: 820px;
-        }
-
-        .porto-pick-content {
-          max-width: 680px;
-        }
-
-        .porto-pick-photo-link {
-          width: 220px;
-        }
-
-        .porto-pick-rating {
-          right: 240px;
-        }
-      }
-
-      @media (max-width: 720px) {
-        :root {
-          --page: calc(100% - 30px);
-        }
-
-        .site-header {
-          padding: 17px 0;
-        }
-
-        .site-nav {
-          gap: 16px;
-        }
-
-        .site-nav a {
-          font-size: 8px;
-          letter-spacing: 0.09em;
-        }
-
-        .hero {
-          min-height: 72svh;
-          padding: 112px 0 46px;
-        }
-
-        .hero::after {
-          top: -5%;
-          right: -62%;
-          width: 130vw;
-          box-shadow:
-            inset 0 0 0 20vw var(--black),
-            inset 0 0 0 calc(20vw + 1px) rgba(223, 255, 0, 0.32),
-            inset 0 0 0 40vw var(--black),
-            inset 0 0 0 calc(40vw + 1px) rgba(244, 241, 233, 0.18);
-        }
-
-        h1 {
-          font-size: clamp(4.6rem, 23vw, 7rem);
-        }
-
-        h1 .human {
-          margin-left: 5vw;
-        }
-
-        .hero-bottom {
-          grid-template-columns: 1fr;
-          gap: 18px;
-          margin-top: 34px;
-        }
-
-        .hero-index {
-          display: none;
-        }
-
-        .section-heading {
-          grid-template-columns: 1fr;
-          gap: 16px;
-          margin-bottom: 34px;
-        }
-
-        .section-description {
-          grid-column: auto;
-        }
-
-        .game-grid,
-        .prep-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .learn-card {
-          min-height: 690px;
-          grid-template-columns: 1fr;
-          align-items: start;
-        }
-
-        .word-stack {
-          min-height: 300px;
-        }
-
-        .game-card {
-          min-height: 315px;
-          padding: 23px;
-        }
-
-        .card-center {
-          margin-block: 34px;
-        }
-
-        .prep-card {
-          min-height: 430px;
-          grid-template-columns: 1fr;
-        }
-
-        .globe {
-          position: absolute;
-          right: -50px;
-          bottom: -70px;
-          z-index: -1;
-          width: 240px;
-          opacity: 0.62;
-        }
-
-        .prep-coming {
-          min-height: 210px;
-        }
-
-        .porto-pick-card {
-          min-height: 0;
-          padding-top: clamp(330px, 78vw, 390px);
-        }
-
-        .porto-pick-card::before {
-          background:
-            linear-gradient(0deg, rgba(14, 8, 8, 0.97) 0%, rgba(14, 8, 8, 0.79) 54%, rgba(14, 8, 8, 0.18) 100%),
-            linear-gradient(90deg, rgba(14, 8, 8, 0.55), transparent);
-        }
-
-        .porto-pick-content {
-          min-height: 0;
-          justify-content: flex-start;
-          padding: 28px;
-        }
-
-        .porto-pick h2 {
-          font-size: clamp(3.25rem, 14vw, 5.4rem);
-        }
-
-        .porto-pick-photo-link {
-          width: min(47vw, 230px);
-          top: 34px;
-          right: 8%;
-          border-width: 7px;
-        }
-
-        .porto-pick-rating {
-          top: 48px;
-          right: auto;
-          left: 6%;
-        }
-
-        .footer-inner {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-      }
-
-      @media (max-width: 420px) {
-        .brand > span:last-child {
-          display: none;
-        }
-
-        .card-title {
-          font-size: 2.65rem;
-        }
-
-        .card-symbol {
-          width: 72px;
-        }
+        -webkit-font-smoothing: antialiased;
+      }
+      body::after {
+        position: fixed; inset: 0; z-index: 100; content: ""; pointer-events: none; opacity: 0.025;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+      img { max-width: 100%; }
+      a { color: inherit; }
+      button, a { -webkit-tap-highlight-color: transparent; }
+      ::selection { color: var(--ink); background: var(--lime); }
+      :focus-visible { outline: 3px solid var(--lime); outline-offset: 4px; }
+      .shell { width: var(--page); margin-inline: auto; }
+      .skip-link { position: fixed; top: 12px; left: 12px; z-index: 200; padding: 10px 14px; color: var(--ink); background: var(--lime); border-radius: 10px; font-weight: 800; transform: translateY(-160%); }
+      .skip-link:focus { transform: none; }
+
+      /* Header */
+      .site-header { position: absolute; inset: 0 0 auto; z-index: 20; }
+      .header-inner { display: flex; min-height: 78px; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--line); }
+      .brand { display: inline-flex; align-items: center; gap: 11px; font-size: 1.05rem; font-weight: 900; letter-spacing: -0.04em; text-decoration: none; }
+      .brand-mark { display: grid; width: 37px; height: 37px; place-items: center; color: var(--ink); background: var(--lime); border-radius: 11px; font-size: 0.82rem; letter-spacing: -0.05em; }
+      .site-nav { display: flex; align-items: center; gap: 24px; }
+      .site-nav a { color: var(--muted); font-size: 0.88rem; font-weight: 730; text-decoration: none; }
+      .site-nav a:hover { color: var(--text); }
+
+      /* Hero */
+      .hero { position: relative; min-height: 760px; overflow: hidden; padding: 150px 0 84px; border-bottom: 1px solid var(--line); }
+      .hero::before { position: absolute; width: 620px; height: 620px; top: -180px; right: -170px; content: ""; border: 1px solid rgba(98, 230, 196, 0.25); border-radius: 50%; box-shadow: 0 0 0 90px rgba(98, 230, 196, 0.025), 0 0 0 91px rgba(98, 230, 196, 0.08); }
+      .hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(430px, 0.82fr); gap: clamp(48px, 7vw, 100px); align-items: center; }
+      .eyebrow { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 20px; color: var(--mint); font-size: 0.88rem; font-weight: 850; letter-spacing: 0.13em; text-transform: uppercase; }
+      .eyebrow::before { width: 34px; height: 2px; content: ""; background: currentColor; }
+      h1, h2, h3, p { text-wrap: pretty; }
+      h1 { max-width: 760px; margin: 0; font-size: clamp(4rem, 8vw, 7.8rem); font-weight: 900; letter-spacing: -0.085em; line-height: 0.82; }
+      .hero-subtitle { max-width: 690px; margin: 28px 0 32px; color: #c4cad5; font-size: clamp(1.12rem, 1.65vw, 1.34rem); }
+      .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+      .button { display: inline-flex; min-height: 50px; align-items: center; justify-content: center; padding: 12px 19px; border: 1px solid transparent; border-radius: 13px; font-size: 0.94rem; font-weight: 850; text-align: center; text-decoration: none; transition: transform 180ms ease, color 180ms ease, background 180ms ease; }
+      .button:hover, .button:focus-visible { transform: translateY(-2px); }
+      .button-primary { color: var(--ink); background: var(--lime); }
+      .button-secondary { color: var(--text); background: rgba(255, 255, 255, 0.05); border-color: var(--line); }
+      .hero-note { margin: 20px 0 0; color: #7f899a; font-size: 0.88rem; }
+      .hero-gallery { position: relative; min-height: 480px; }
+      .hero-shot { position: absolute; display: block; overflow: hidden; border: 7px solid #eae9e3; border-radius: 20px; box-shadow: 0 32px 90px rgba(0, 0, 0, 0.52); text-decoration: none; transition: transform 220ms ease; }
+      .hero-shot:hover, .hero-shot:focus-visible { z-index: 5; transform: rotate(0) translateY(-5px); }
+      .hero-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+      .hero-shot--main { width: 82%; aspect-ratio: 1.5; right: 0; top: 55px; transform: rotate(2.5deg); }
+      .hero-shot--top { width: 54%; aspect-ratio: 1.5; top: 0; left: 0; z-index: 2; transform: rotate(-4deg); }
+      .hero-shot--bottom { width: 58%; aspect-ratio: 1.5; left: 2%; bottom: 0; z-index: 3; transform: rotate(-2deg); }
+      .hero-sticker { position: absolute; right: -6px; bottom: 28px; z-index: 4; padding: 12px 15px; color: var(--ink); background: var(--mint); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35); font-size: 0.82rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; transform: rotate(5deg); }
+
+      /* Collections */
+      .collection { padding: clamp(86px, 10vw, 136px) 0; }
+      .collection-light { color: #111525; background: var(--paper); }
+      .section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 410px); gap: 42px; align-items: end; margin-bottom: 44px; }
+      .section-kicker, .card-category { margin: 0 0 12px; color: var(--mint); font-size: 0.86rem; font-weight: 850; letter-spacing: 0.14em; text-transform: uppercase; }
+      .collection-light .section-kicker { color: #5c45dc; }
+      .section-head h2 { margin: 0; font-size: clamp(3rem, 6vw, 6.1rem); font-weight: 880; letter-spacing: -0.075em; line-height: 0.88; }
+      .section-head > p { margin: 0; color: var(--muted); }
+      .collection-light .section-head > p { color: #5a6170; }
+
+      /* Application cards */
+      .app-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+      .app-card { display: flex; min-width: 0; flex-direction: column; overflow: hidden; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 18px 46px rgba(0, 0, 0, 0.18); transition: transform 200ms ease, border-color 200ms ease; }
+      .app-card:hover { border-color: rgba(255, 255, 255, 0.28); transform: translateY(-5px); }
+      .app-card-media { position: relative; display: block; aspect-ratio: 1.5; overflow: hidden; background: #1b2130; }
+      .app-card-media::after { position: absolute; inset: 0; content: ""; border: 1px solid rgba(255, 255, 255, 0.08); pointer-events: none; }
+      .app-card-media img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+      .app-card:hover .app-card-media img { transform: scale(1.025); }
+      .app-card-body { display: flex; min-height: 270px; flex: 1; flex-direction: column; padding: 28px; }
+      .app-card h3 { margin: 0; font-size: clamp(2rem, 3.4vw, 3.2rem); letter-spacing: -0.055em; line-height: 1; }
+      .app-card-description { max-width: 580px; margin: 15px 0 24px; color: #aeb6c4; }
+      .app-card-footer { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-top: auto; }
+      .app-tags { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; list-style: none; }
+      .app-tags li { padding: 6px 9px; color: #b8c0cd; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 999px; font-size: 0.79rem; font-weight: 720; }
+      .card-button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 10px 15px; color: var(--ink); background: var(--lime); border-radius: 11px; font-size: 0.88rem; font-weight: 870; text-decoration: none; }
+      .app-card:nth-child(2n) .card-button { background: var(--mint); }
+      .app-card:nth-child(3n) .card-button { background: var(--yellow); }
+
+      /* Portuguese feature */
+      .language-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(390px, 0.95fr); min-height: 570px; overflow: hidden; background: linear-gradient(135deg, #0d2537, #112f43 64%, #174b54); border: 1px solid rgba(98, 230, 196, 0.25); border-radius: 30px; box-shadow: 0 28px 80px rgba(0, 0, 0, 0.25); }
+      .language-copy { display: flex; flex-direction: column; justify-content: center; padding: clamp(34px, 6vw, 72px); }
+      .language-copy h3 { margin: 0; font-size: clamp(3rem, 6vw, 6rem); letter-spacing: -0.075em; line-height: 0.88; }
+      .language-copy h3 em { color: var(--mint); font-family: Georgia, serif; font-weight: 400; }
+      .language-copy > p:not(.card-category) { max-width: 600px; margin: 24px 0; color: #c1d1d7; font-size: 1.08rem; }
+      .language-media { position: relative; min-height: 100%; overflow: hidden; background: #0b172d; }
+      .language-media img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: 36% center; }
+      .language-media::after { position: absolute; inset: 0; content: ""; background: linear-gradient(90deg, #112f43, transparent 30%); pointer-events: none; }
+
+      /* Tests */
+      .test-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+      .test-card { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(250px, 0.82fr); min-height: 320px; overflow: hidden; color: #111525; background: #fff; border: 1px solid #dedfe5; border-radius: 24px; box-shadow: 0 16px 44px rgba(24, 27, 48, 0.08); transition: transform 200ms ease, box-shadow 200ms ease; }
+      .test-card:hover { box-shadow: 0 24px 58px rgba(24, 27, 48, 0.14); transform: translateY(-4px); }
+      .test-copy { display: flex; min-width: 0; flex-direction: column; padding: 28px; }
+      .test-card .card-category { color: #6549de; }
+      .test-card h3 { margin: 0; font-size: clamp(1.9rem, 3vw, 2.75rem); letter-spacing: -0.055em; line-height: 1.02; }
+      .test-card p:not(.card-category) { margin: 14px 0 22px; color: #606675; }
+      .test-card .card-button { width: fit-content; margin-top: auto; color: #fff; background: #191d2c; }
+      .test-media { display: block; min-height: 100%; overflow: hidden; background: #111625; }
+      .test-media img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% center; transition: transform 500ms ease; }
+      .test-card:hover .test-media img { transform: scale(1.03); }
+      .test-directory { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-top: 22px; padding: 24px 28px; color: var(--text); background: #181d2d; border-radius: 18px; }
+      .test-directory strong { display: block; font-size: 1.18rem; }
+      .test-directory span { color: #aeb6c4; }
+
+      /* Story and footer */
+      .story { padding: clamp(75px, 9vw, 120px) 0; border-top: 1px solid var(--line); }
+      .story-inner { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(280px, 0.55fr); gap: 60px; align-items: end; }
+      .story h2 { max-width: 850px; margin: 0; font-size: clamp(3rem, 6.4vw, 6.7rem); letter-spacing: -0.078em; line-height: 0.88; }
+      .story h2 em { color: var(--lime); font-family: Georgia, serif; font-weight: 400; }
+      .story p { margin: 0; color: var(--muted); }
+      .site-footer { border-top: 1px solid var(--line); }
+      .footer-inner { display: flex; min-height: 100px; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 28px; color: #838c9d; font-size: 0.88rem; }
+      .footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
+      .footer-links a { color: #bbc2cd; font-weight: 720; text-decoration: none; }
+      .footer-links a:hover { color: var(--lime); }
+
+      .reveal { opacity: 0; transform: translateY(20px); transition: opacity 600ms ease, transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+      .reveal.visible { opacity: 1; transform: none; }
+
+      @media (max-width: 1020px) {
+        .hero-grid { grid-template-columns: 1fr; }
+        .hero-copy { max-width: 850px; }
+        .hero-gallery { width: min(760px, 100%); min-height: 420px; margin-inline: auto; }
+        .language-card { grid-template-columns: 1fr; }
+        .language-media { min-height: 420px; }
+        .language-media::after { background: linear-gradient(180deg, #112f43, transparent 30%); }
+        .test-grid { grid-template-columns: 1fr; }
+      }
+
+      @media (max-width: 760px) {
+        :root { --page: min(100% - 28px, 1240px); }
+        .header-inner { min-height: 68px; }
+        .site-nav { gap: 14px; }
+        .site-nav a { font-size: 0.8rem; }
+        .hero { min-height: 0; padding: 120px 0 72px; }
+        h1 { font-size: clamp(4rem, 19vw, 6.2rem); }
+        .hero-gallery { min-height: 320px; }
+        .hero-shot { border-width: 5px; border-radius: 14px; }
+        .section-head, .story-inner { grid-template-columns: 1fr; gap: 20px; }
+        .app-grid { grid-template-columns: 1fr; }
+        .app-card-body { min-height: 0; }
+        .test-card { grid-template-columns: 1fr; }
+        .test-media { min-height: 280px; order: -1; }
+        .test-directory { align-items: flex-start; flex-direction: column; }
+      }
+
+      @media (max-width: 520px) {
+        .brand { font-size: 0.96rem; }
+        .brand-mark { width: 34px; height: 34px; }
+        .site-nav a:nth-child(2) { display: none; }
+        .hero-actions { display: grid; }
+        .hero-gallery { min-height: 270px; }
+        .hero-shot--main { width: 86%; }
+        .hero-shot--top { width: 58%; }
+        .hero-shot--bottom { width: 62%; }
+        .hero-sticker { bottom: 5px; font-size: 0.75rem; }
+        .collection { padding: 72px 0; }
+        .app-card-body, .test-copy { padding: 23px; }
+        .app-card-footer { align-items: flex-start; flex-direction: column; }
+        .language-copy { padding: 28px 23px 34px; }
+        .language-copy h3 { font-size: clamp(3rem, 16vw, 4.5rem); }
+        .language-media { min-height: 300px; }
+        .test-media { min-height: 230px; }
+        .footer-inner { align-items: flex-start; flex-direction: column; padding: 26px 0; }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        html {
-          scroll-behavior: auto;
-        }
-
-        *,
-        *::before,
-        *::after {
-          animation-duration: 0.01ms !important;
-          animation-iteration-count: 1 !important;
-          transition-duration: 0.01ms !important;
-        }
-
-        .reveal {
-          opacity: 1;
-          transform: none;
-        }
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+        .reveal { opacity: 1; transform: none; }
       }
     </style>
   </head>
 
-  <body>
+  <body id="top">
     <a class="skip-link" href="#main">Skip to content</a>
-
     <header class="site-header">
-      <a class="brand" href="#top" aria-label="AI by Gazit, home">
-        <span class="brand-mark" aria-hidden="true">G</span>
-        <span>AI by Gazit</span>
-      </a>
-      <nav class="site-nav" aria-label="Main navigation">
-        <a href="#games">Games</a>
-        <a href="#learning">Learn</a>
-        <a href="#test-prep">Test prep</a>
-      </nav>
+      <div class="header-inner shell">
+        <a class="brand" href="#top" aria-label="JustForMe.ai home"><span class="brand-mark" aria-hidden="true">JFM</span><span>JustForMe.ai</span></a>
+        <nav class="site-nav" aria-label="Main navigation"><a href="#games">Games</a><a href="#portuguese">Learn Portuguese</a><a href="#school-tests">School Tests</a></nav>
+      </div>
     </header>
 
     <main id="main">
-      <!-- Hero -->
-      <section class="hero shell" id="top" aria-labelledby="hero-title">
-        <p class="eyebrow">Small digital worlds, made personally</p>
-        <h1 id="hero-title">
-          <span>AI, but</span>
-          <span class="human">human.</span>
-        </h1>
-        <div class="hero-bottom">
-          <span class="hero-index">Play / learn / explore</span>
-          <p class="hero-intro">
-            <strong>Made for real people, not imaginary users.</strong>
-            Personal games and playful learning experiences—with character in every pixel.
-          </p>
-        </div>
-      </section>
-
-      <div class="ticker" aria-hidden="true">
-        <div class="ticker-track">
-          <span>Play boldly ✦ Learn differently ✦ Stay curious ✦ Make it personal ✦</span>
-          <span>Play boldly ✦ Learn differently ✦ Stay curious ✦ Make it personal ✦</span>
-        </div>
-      </div>
-
-      <!-- Games come first -->
-      <section class="collection games" id="games" aria-labelledby="games-title">
-        <div class="shell">
-          <header class="section-heading reveal">
-            <p class="section-number">01 / Play</p>
-            <h2 id="games-title">Choose your <em>world.</em></h2>
-            <p class="section-description">
-              Five very different adventures. Every one made with personality—and ready to play.
-            </p>
-          </header>
-
-          <div class="game-grid">
-            <a class="game-card game-card--maze reveal" href="/anat/pcman/">
-              <div class="card-top">
-                <span class="card-kicker">For Anat</span>
-                <span class="card-type">Arcade chase</span>
-              </div>
-              <div class="card-center">
-                <h3 class="card-title">Snoopy’s Maze</h3>
-                <span class="card-symbol" aria-hidden="true">S</span>
-              </div>
-              <div class="card-bottom">
-                <p class="card-note">Ghosts, fruit and airplane-ready fun</p>
-                <span class="card-arrow" aria-hidden="true">↗</span>
-              </div>
-            </a>
-
-            <a class="game-card game-card--duel reveal" href="/yuval/mastermind/">
-              <div class="card-top">
-                <span class="card-kicker">For Yuval</span>
-                <span class="card-type">Logic battle</span>
-              </div>
-              <div class="card-center">
-                <h3 class="card-title">Code Duel</h3>
-                <span class="card-symbol" aria-hidden="true">5</span>
-              </div>
-              <div class="card-bottom">
-                <p class="card-note">Crack the colors before the computer does</p>
-                <span class="card-arrow" aria-hidden="true">↗</span>
-              </div>
-            </a>
-
-            <a class="game-card game-card--blocks reveal" href="/ron/tetris/">
-              <div class="card-top">
-                <span class="card-kicker">For Ron</span>
-                <span class="card-type">Block adventure</span>
-              </div>
-              <div class="card-center">
-                <h3 class="card-title">Dragon Blocks</h3>
-                <span class="card-symbol" aria-hidden="true">▦</span>
-              </div>
-              <div class="card-bottom">
-                <p class="card-note">Porto spirit meets a pixel quest</p>
-                <span class="card-arrow" aria-hidden="true">↗</span>
-              </div>
-            </a>
-
-            <a class="game-card game-card--land reveal" href="/shaked/landeater/">
-              <div class="card-top">
-                <span class="card-kicker">For Shaked</span>
-                <span class="card-type">Territory adventure</span>
-              </div>
-              <div class="card-center">
-                <h3 class="card-title">Land Eater</h3>
-                <span class="card-symbol" aria-hidden="true">♥</span>
-              </div>
-              <div class="card-bottom">
-                <p class="card-note">Help Kitty reclaim the Dream Garden</p>
-                <span class="card-arrow" aria-hidden="true">↗</span>
-              </div>
-            </a>
-
-            <a class="game-card game-card--jelly reveal" href="/games/jellylemmy/">
-              <div class="card-top">
-                <span class="card-kicker">The plush rescue</span>
-                <span class="card-type">Puzzle adventure</span>
-              </div>
-              <div class="card-center">
-                <h3 class="card-title">Jelly Lemmy</h3>
-                <span class="card-symbol" aria-hidden="true">J</span>
-              </div>
-              <div class="card-bottom">
-                <p class="card-note">Guide the troop and collect every cuddly friend</p>
-                <span class="card-arrow" aria-hidden="true">↗</span>
-              </div>
-            </a>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-grid shell">
+          <div class="hero-copy">
+            <p class="eyebrow">Free to play · No account needed</p>
+            <h1 id="hero-title">Play. Learn. Get better.</h1>
+            <p class="hero-subtitle">Free browser games, European Portuguese learning and interactive school quizzes.</p>
+            <div class="hero-actions"><a class="button button-primary" href="#games">Play a game</a><a class="button button-secondary" href="/learn/portuguese/">Start learning Portuguese</a></div>
+            <p class="hero-note">Open instantly in your browser. Progress stays on your device.</p>
+          </div>
+          <div class="hero-gallery" aria-label="Featured experiences">
+            <a class="hero-shot hero-shot--main" href="/ron/tetris/" aria-label="Play Dragon Blocks"><img src="/assets/screenshots/dragon-blocks.jpg" alt="Dragon Blocks block puzzle adventure start screen" width="1200" height="800" fetchpriority="high" /></a>
+            <a class="hero-shot hero-shot--top" href="/learn/portuguese/" aria-label="Start Palavra Quest"><img src="/assets/screenshots/palavra-quest.jpg" alt="Palavra Quest European Portuguese learning dashboard" width="1200" height="800" fetchpriority="high" /></a>
+            <a class="hero-shot hero-shot--bottom" href="/ron/science/test2/" aria-label="Study 7th-grade Natural Science"><img src="/assets/screenshots/ciencias.jpg" alt="Interactive 7th-grade Natural Science study dashboard" width="1200" height="800" /></a>
+            <span class="hero-sticker">Pick one and start</span>
           </div>
         </div>
       </section>
 
-      <!-- Short, adaptive learning experiences -->
-      <section class="collection learning" id="learning" aria-labelledby="learning-title">
+      <section class="collection" id="games" aria-labelledby="games-title">
         <div class="shell">
-          <header class="section-heading reveal">
-            <p class="section-number">02 / Learn</p>
-            <h2 id="learning-title">Tiny sessions. <em>Real progress.</em></h2>
-            <p class="section-description">
-              Smart practice that remembers what you know and brings back what needs work.
-            </p>
-          </header>
-
-          <a class="learn-card reveal" href="/learn/portuguese/">
-            <div class="learn-copy">
-              <span class="learn-kicker">European Portuguese · 3-minute missions</span>
-              <h3>Palavra Quest</h3>
-              <p>
-                Build a useful vocabulary through quick recognition, recall and spelling challenges.
-                Private, device-local progress and adaptive reviews keep every learner moving forward.
-              </p>
-              <div class="learn-meta">
-                <span>Up to 5,000 words</span>
-                <span>Saved locally</span>
-                <span>Works offline</span>
-              </div>
-              <span class="learn-action">Start learning <span aria-hidden="true">↗</span></span>
-            </div>
-            <div class="word-stack" aria-hidden="true">
-              <div class="word-card"><strong>olá</strong><small>Hello</small></div>
-              <div class="word-card"><strong>aprender</strong><small>To learn</small></div>
-              <div class="word-card"><strong>conseguir</strong><small>To succeed</small></div>
-            </div>
-          </a>
-        </div>
-      </section>
-
-      <!-- Test prep is designed to grow as new subjects arrive -->
-      <section class="collection test-prep" id="test-prep" aria-labelledby="prep-title">
-        <div class="shell">
-          <header class="section-heading reveal">
-            <p class="section-number">03 / Prepare</p>
-            <h2 id="prep-title">Study smart. <em>Stress less.</em></h2>
-            <div>
-              <p class="section-description">
-                Study resources available now. New tests and new topics will be added as the school year progresses.
-              </p>
-              <a class="prep-hub-link" href="/preparacao-testes/" lang="pt-PT">
-                Testes do 7.º ano em português
-              </a>
-            </div>
-          </header>
-
-          <div class="prep-grid">
-            <a class="prep-card reveal" href="/ron/geo/">
-              <div class="prep-card-copy">
-                <span class="card-kicker">Geography · Test 1 · Portuguese</span>
-                <h3>Geography Challenge · Test 1</h3>
-                <p>
-                  Geography and landscapes, observation and sketches, natural and human landscapes,
-                  humanisation, Mostar, continents and oceans, compass directions, and map location.
-                </p>
-                <div class="prep-meta">
-                  <span>8 current topics</span>
-                  <span>159 questions</span>
-                  <span>7th grade</span>
-                </div>
-              </div>
-              <div class="globe" aria-hidden="true"><span>G</span></div>
-            </a>
-
-            <a class="prep-card reveal" href="/ron/geo/test2/">
-              <div class="prep-card-copy">
-                <span class="card-kicker">Geography · Test 2 · Portuguese</span>
-                <h3>Globe Mission · Test 2</h3>
-                <p>
-                  Absolute and relative location, Earth’s axis and poles, parallels and meridians,
-                  hemispheres, geographic circles, and the cartographic grid.
-                </p>
-                <div class="prep-meta">
-                  <span>7 current topics</span>
-                  <span>77 questions</span>
-                  <span>7th grade</span>
-                </div>
-              </div>
-              <div class="globe" aria-hidden="true"><span>2</span></div>
-            </a>
-
-            <a class="prep-card reveal" href="/ron/math/">
-              <div class="prep-card-copy">
-                <span class="card-kicker">Mathematics · Portuguese</span>
-                <h3>Math Machine</h3>
-                <p>
-                  Sets and integers, the number line, integer operations, fractions and decimals,
-                  and multi-step word problems.
-                </p>
-                <div class="prep-meta">
-                  <span>5 current topics</span>
-                  <span>Portuguese + English</span>
-                  <span>7th grade</span>
-                </div>
-              </div>
-              <div class="globe math-orbit" aria-hidden="true"><span>∑</span></div>
-            </a>
-
-            <a class="prep-card reveal" href="/ron/history/">
-              <div class="prep-card-copy">
-                <span class="card-kicker">History · Portuguese</span>
-                <h3>Athens Mission</h3>
-                <p>
-                  Ancient Greece and Athens: the polis, democracy and citizenship, society,
-                  economy, architecture, theatre, art, historical sources, and the Greek legacy.
-                </p>
-                <div class="prep-meta">
-                  <span>8 current topics</span>
-                  <span>259 questions</span>
-                  <span>7th grade</span>
-                </div>
-              </div>
-              <div class="globe history-orbit" aria-hidden="true"><span>Ω</span></div>
-            </a>
-
-            <a class="prep-card reveal" href="/ron/science/test2/">
-              <div class="prep-card-copy">
-                <span class="card-kicker">Natural Science · Test 2 · Portuguese</span>
-                <h3>Earth Dynamics · Test 2</h3>
-                <p>
-                  Continental drift, ocean-floor relief, paleomagnetism, plate tectonics,
-                  plate boundaries, folds, faults, and mountain formation.
-                </p>
-                <div class="prep-meta">
-                  <span>8 current topics</span>
-                  <span>178 questions</span>
-                  <span>7th grade</span>
-                </div>
-              </div>
-              <div class="globe" aria-hidden="true"><span>S</span></div>
-            </a>
+          <header class="section-head reveal"><div><p class="section-kicker">Free online games</p><h2 id="games-title">Choose your next challenge.</h2></div><p>Puzzle, strategy and arcade games with distinct worlds, quick starts and progress saved locally in your browser.</p></header>
+          <div class="app-grid">
+            <article class="app-card reveal">
+              <a class="app-card-media" href="/ron/tetris/" aria-label="Play Dragon Blocks"><img src="/assets/screenshots/dragon-blocks.jpg" alt="Dragon Blocks free online block puzzle game" width="1200" height="800" loading="lazy" decoding="async" /></a>
+              <div class="app-card-body"><p class="card-category">Block puzzle adventure</p><h3>Dragon Blocks</h3><p class="app-card-description">Clear lines, recover crystals and unlock six evolving block worlds in this fast, mobile-friendly puzzle adventure.</p><div class="app-card-footer"><ul class="app-tags" aria-label="Game features"><li>Swipe controls</li><li>Saved progress</li></ul><a class="card-button" href="/ron/tetris/">Play Dragon Blocks</a></div></div>
+            </article>
+            <article class="app-card reveal">
+              <a class="app-card-media" href="/yuval/mastermind/" aria-label="Play Code Duel"><img src="/assets/screenshots/code-duel.jpg" alt="Code Duel free online code breaking strategy game" width="1200" height="800" loading="lazy" decoding="async" /></a>
+              <div class="app-card-body"><p class="card-category">Code breaking strategy</p><h3>Code Duel</h3><p class="app-card-description">Crack a five-colour secret while the computer tries to solve yours. Choose a difficulty and outthink the machine.</p><div class="app-card-footer"><ul class="app-tags" aria-label="Game features"><li>Three levels</li><li>Two-sided duel</li></ul><a class="card-button" href="/yuval/mastermind/">Play Code Duel</a></div></div>
+            </article>
+            <article class="app-card reveal">
+              <a class="app-card-media" href="/games/jellylemmy/" aria-label="Play Jelly Lemmy"><img src="/assets/screenshots/jelly-lemmy.jpg" alt="Jelly Lemmy free online rescue puzzle game" width="1200" height="800" loading="lazy" decoding="async" /></a>
+              <div class="app-card-body"><p class="card-category">Rescue puzzle</p><h3>Jelly Lemmy</h3><p class="app-card-description">Guide a walking troop, assign the right skills and rescue every plush across 20 increasingly tricky worlds.</p><div class="app-card-footer"><ul class="app-tags" aria-label="Game features"><li>20 worlds</li><li>Touch friendly</li></ul><a class="card-button" href="/games/jellylemmy/">Play Jelly Lemmy</a></div></div>
+            </article>
+            <article class="app-card reveal">
+              <a class="app-card-media" href="/shaked/landeater/" aria-label="Play Land Eater"><img src="/assets/screenshots/land-eater.jpg" alt="Land Eater free online territory capture arcade game" width="1200" height="800" loading="lazy" decoding="async" /></a>
+              <div class="app-card-body"><p class="card-category">Territory arcade game</p><h3>Land Eater</h3><p class="app-card-description">Draw brave paths, close each loop and reclaim the garden while smarter enemies make every level more demanding.</p><div class="app-card-footer"><ul class="app-tags" aria-label="Game features"><li>Endless levels</li><li>Swipe controls</li></ul><a class="card-button" href="/shaked/landeater/">Play Land Eater</a></div></div>
+            </article>
+            <article class="app-card reveal">
+              <a class="app-card-media" href="/anat/pcman/" aria-label="Play Snoopy's Maze"><img src="/assets/screenshots/snoopy-maze.jpg" alt="Snoopy's Maze free online maze chase game" width="1200" height="800" loading="lazy" decoding="async" /></a>
+              <div class="app-card-body"><p class="card-category">Maze chase arcade game</p><h3>Snoopy’s Maze</h3><p class="app-card-description">Collect every treat, dodge four roaming ghosts and chase a new surprise on each level of a classic maze adventure.</p><div class="app-card-footer"><ul class="app-tags" aria-label="Game features"><li>Local high score</li><li>Mobile swipes</li></ul><a class="card-button" href="/anat/pcman/">Play Snoopy’s Maze</a></div></div>
+            </article>
           </div>
         </div>
       </section>
 
-      <section class="porto-pick" id="porto-experience" aria-labelledby="porto-pick-title">
+      <section class="collection" id="portuguese" aria-labelledby="portuguese-title">
         <div class="shell">
-          <article class="porto-pick-card">
-            <img
-              class="porto-pick-view"
-              src="https://www.cookinganexperience.com/images/view-1800.jpg"
-              alt="Sunset over the Douro River from the experience venue"
-              loading="lazy"
-              decoding="async"
-            />
-            <a
-              class="porto-pick-photo-link"
-              href="https://www.cookinganexperience.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Discover Éclairs of the Douro on the Cooking an Experience website"
-            >
-              <img
-                class="porto-pick-photo"
-                src="https://www.cookinganexperience.com/images/ecl-700.jpg"
-                alt="Chocolate éclairs made during the experience, with the Douro in the background"
-                loading="lazy"
-                decoding="async"
-              />
-            </a>
-            <span class="porto-pick-rating">★★★★★<br />5.0 on Google &amp; Viator</span>
-
-            <div class="porto-pick-content">
-              <p class="porto-pick-label">Our Porto pick · Cooking an Experience</p>
-              <h2 id="porto-pick-title">Make éclairs. Sip wine. <em>Keep the evening.</em></h2>
-              <p class="porto-pick-description">
-                Éclairs of the Douro is a warm, hands-on evening with Le Cordon Bleu-trained host
-                Anat. Make French chocolate éclairs, share Portuguese wine and watch the light change
-                over the river—just outside central Porto.
-              </p>
-              <ul class="porto-pick-facts" aria-label="Experience details">
-                <li>2.5 hours</li>
-                <li>Up to 6 guests</li>
-                <li>8–15 min from Porto</li>
-                <li>Beginners welcome</li>
-              </ul>
-              <div class="porto-pick-actions">
-                <a
-                  class="porto-pick-button"
-                  href="https://www.cookinganexperience.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Discover Cooking an Experience
-                </a>
-                <p class="porto-pick-disclosure">
-                  A family project from the makers of this site, hosted in Valbom by the Douro.
-                </p>
-              </div>
-            </div>
+          <header class="section-head reveal"><div><p class="section-kicker">Learn European Portuguese</p><h2 id="portuguese-title">Three minutes. Real progress.</h2></div><p>Adaptive practice remembers what you know, revisits what you forget and builds useful European Portuguese one short mission at a time.</p></header>
+          <article class="language-card reveal">
+            <div class="language-copy"><p class="card-category">Vocabulary · listening · sentences · reading</p><h3>Palavra <em>Quest</em></h3><p>Learn European Portuguese through quick word battles, spelling, listening, sentence completion and real-life reading challenges. No login required.</p><ul class="app-tags" aria-label="Learning features"><li>Up to 5,000 words</li><li>Adaptive review</li><li>Progress on device</li></ul><div style="margin-top: 28px"><a class="button button-primary" href="/learn/portuguese/">Start Learning</a></div></div>
+            <a class="language-media" href="/learn/portuguese/" aria-label="Start learning European Portuguese with Palavra Quest"><img src="/assets/screenshots/palavra-quest.jpg" alt="Palavra Quest adaptive European Portuguese vocabulary learning app" width="1200" height="800" loading="lazy" decoding="async" /></a>
           </article>
         </div>
       </section>
+
+      <section class="collection collection-light" id="school-tests" aria-labelledby="tests-title">
+        <div class="shell">
+          <header class="section-head reveal"><div><p class="section-kicker">School tests · 7.º ano</p><h2 id="tests-title">Study the topic. Test yourself.</h2></div><p lang="pt-PT">Testes e exercícios interativos gratuitos para alunos do 7.º ano em Portugal. Revê a matéria, treina os erros e prepara o próximo teste.</p></header>
+          <div class="test-grid" lang="pt-PT">
+            <article class="test-card reveal"><div class="test-copy"><p class="card-category">Geografia · Teste 1</p><h3>Geografia 7.º Ano — Paisagens e localização</h3><p>Paisagens naturais e humanas, continentes, oceanos, orientação e localização em mapas.</p><a class="card-button" href="/ron/geo/">Começar teste</a></div><a class="test-media" href="/ron/geo/" aria-label="Abrir Geografia do 7.º ano — Teste 1"><img src="/assets/screenshots/geografia-1.jpg" alt="Teste interativo de Geografia do 7.º ano sobre paisagens e localização" width="1200" height="800" loading="lazy" decoding="async" /></a></article>
+            <article class="test-card reveal"><div class="test-copy"><p class="card-category">Geografia · Teste 2</p><h3>Geografia 7.º Ano — Rede cartográfica</h3><p>Latitude, longitude, paralelos, meridianos, hemisférios e localização absoluta.</p><a class="card-button" href="/ron/geo/test2/">Começar teste</a></div><a class="test-media" href="/ron/geo/test2/" aria-label="Abrir Geografia do 7.º ano — Teste 2"><img src="/assets/screenshots/geografia-2.jpg" alt="Teste interativo de Geografia do 7.º ano sobre coordenadas e rede cartográfica" width="1200" height="800" loading="lazy" decoding="async" /></a></article>
+            <article class="test-card reveal"><div class="test-copy"><p class="card-category">Matemática</p><h3>Matemática 7.º Ano — Exercícios e testes</h3><p>Números inteiros, reta numérica, operações, frações, decimais e problemas.</p><a class="card-button" href="/ron/math/">Começar treino</a></div><a class="test-media" href="/ron/math/" aria-label="Abrir Matemática do 7.º ano"><img src="/assets/screenshots/matematica.jpg" alt="Exercícios e testes online de Matemática do 7.º ano" width="1200" height="800" loading="lazy" decoding="async" /></a></article>
+            <article class="test-card reveal"><div class="test-copy"><p class="card-category">História</p><h3>História 7.º Ano — Grécia Antiga e Atenas</h3><p>Pólis, democracia, cidadania, sociedade, economia, arte, teatro e legado grego.</p><a class="card-button" href="/ron/history/">Começar treino</a></div><a class="test-media" href="/ron/history/" aria-label="Abrir História do 7.º ano"><img src="/assets/screenshots/historia.jpg" alt="Exercícios de História do 7.º ano sobre a Grécia Antiga e Atenas" width="1200" height="800" loading="lazy" decoding="async" /></a></article>
+            <article class="test-card reveal"><div class="test-copy"><p class="card-category">Ciências Naturais</p><h3>Ciências Naturais 7.º Ano — Tectónica de placas</h3><p>Deriva continental, relevo oceânico, limites de placas, dobras, falhas e montanhas.</p><a class="card-button" href="/ron/science/test2/">Começar treino</a></div><a class="test-media" href="/ron/science/test2/" aria-label="Abrir Ciências Naturais do 7.º ano"><img src="/assets/screenshots/ciencias.jpg" alt="Exercícios de Ciências Naturais do 7.º ano sobre tectónica de placas" width="1200" height="800" loading="lazy" decoding="async" /></a></article>
+          </div>
+          <div class="test-directory reveal" lang="pt-PT"><div><strong>Todos os recursos de preparação para testes</strong><span>Compara os temas e escolhe o teste que corresponde à tua matéria.</span></div><a class="button button-primary" href="/preparacao-testes/">Ver preparação do 7.º ano</a></div>
+        </div>
+      </section>
+
+      <section class="story" aria-labelledby="story-title"><div class="story-inner shell reveal"><h2 id="story-title">Built for my family. <em>Shared with the world.</em></h2><p>Every experience started with one real person, one real need and a lot of iteration. They are now open for anyone to play, learn and improve—free in the browser.</p></div></section>
     </main>
 
-    <footer class="site-footer">
-      <div class="footer-inner shell">
-        <span>© <span id="year"></span> AI by Gazit</span>
-        <span>Made with curiosity in Valbom</span>
-        <a href="https://lifeisfor.fun/" target="_blank" rel="noopener noreferrer">
-          Life is for fun ↗
-        </a>
-        <a href="#top">Again ↑</a>
-      </div>
-    </footer>
+    <footer class="site-footer"><div class="footer-inner shell"><span>© <span id="year"></span> JustForMe.ai · Made in Valbom, Portugal</span><div class="footer-links"><a href="https://www.cookinganexperience.com/" target="_blank" rel="noopener noreferrer">Porto pick: Cooking an Experience</a><a href="https://lifeisfor.fun/" target="_blank" rel="noopener noreferrer">Life is for fun</a><a href="#top">Back to top</a></div></div></footer>
 
     <script>
-      // Always show the current year.
       document.getElementById("year").textContent = new Date().getFullYear();
-
-      const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-      // Let the hero's color field gently follow the pointer.
-      if (!reducedMotion) {
-        document.addEventListener("pointermove", (event) => {
-          document.documentElement.style.setProperty("--pointer-x", `${event.clientX}px`);
-          document.documentElement.style.setProperty("--pointer-y", `${event.clientY}px`);
-        });
-      }
-
-      // Reveal catalog items as they enter the viewport.
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const revealItems = document.querySelectorAll(".reveal");
       if (reducedMotion || !("IntersectionObserver" in window)) {
         revealItems.forEach((item) => item.classList.add("visible"));
       } else {
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add("visible");
-                observer.unobserve(entry.target);
-              }
-            });
-          },
-          { threshold: 0.12 },
-        );
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) { entry.target.classList.add("visible"); observer.unobserve(entry.target); }
+          });
+        }, { threshold: 0.08 });
         revealItems.forEach((item) => observer.observe(item));
       }
     </script>
