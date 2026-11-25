@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#071d38" />
+    <meta name="description" content="Play Douro Dash, a free turn-based cargo puzzle game. Collect crates on the Douro River and plan the perfect route back to the dock." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://justforme.ai/games/douro-dash/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="JustForMe.ai" />
+    <meta property="og:url" content="https://justforme.ai/games/douro-dash/" />
+    <meta property="og:title" content="Douro Dash – Free Online Cargo Puzzle Game" />
+    <meta property="og:description" content="Grab cargo, ride river currents and make it back to the dock before your moves run out." />
+    <meta property="og:image" content="https://justforme.ai/assets/screenshots/douro-dash.jpg" />
+    <meta property="og:image:alt" content="Douro Dash cargo boat puzzle on the Douro River" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <title>Douro Dash – Free Online Cargo Puzzle Game</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="stylesheet" href="./styles.css?v=1" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "Douro Dash",
+        "url": "https://justforme.ai/games/douro-dash/",
+        "description": "A turn-based cargo route puzzle set on the Douro River.",
+        "gamePlatform": "Web browser",
+        "applicationCategory": "Game",
+        "operatingSystem": "Any",
+        "isAccessibleForFree": true,
+        "numberOfPlayers": 1
+      }
+    </script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-E3JJGMR427"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-E3JJGMR427");
+    </script>
+
+    <script src="./core.js?v=1" defer></script>
+    <script src="./game.js?v=1" defer></script>
+  </head>
+
+  <body>
+    <div class="page-glow" aria-hidden="true"></div>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Back to JustForMe.ai">
+          <span class="brand-mark" aria-hidden="true">JFM</span>
+          <span>JustForMe.ai</span>
+        </a>
+        <button class="level-button" id="level-button" type="button" aria-haspopup="dialog">
+          <span>Voyage</span>
+          <strong id="header-level">01 / 12</strong>
+        </button>
+      </header>
+
+      <section class="game-intro" aria-labelledby="game-title">
+        <div>
+          <p class="eyebrow">Porto cargo puzzle</p>
+          <h1 id="game-title">Douro <em>Dash</em></h1>
+        </div>
+        <p>Grab cargo. Get back to the dock before your moves run out.</p>
+      </section>
+
+      <section class="game-layout" aria-label="Douro Dash game">
+        <div class="river-column">
+          <div class="river-header">
+            <div>
+              <span id="level-kicker">Level 1</span>
+              <h2 id="level-name">Ribeira Warm-Up</h2>
+            </div>
+            <button class="restart-button" id="restart-button" type="button">Restart</button>
+          </div>
+
+          <div class="board-wrap">
+            <div class="hills hills-left" aria-hidden="true"></div>
+            <div class="hills hills-right" aria-hidden="true"></div>
+            <div class="bridge" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="board" id="board" role="application" aria-label="Five by six Douro River game board. Swipe or use direction controls."></div>
+            <div class="event-toast" id="event-toast" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <aside class="captain-panel" aria-label="Voyage status and controls">
+          <div class="status-grid" aria-label="Current voyage status">
+            <div class="status-card target-card">
+              <span>Target</span>
+              <strong><b id="target-value">4</b> cargo</strong>
+            </div>
+            <div class="status-card cargo-card">
+              <span>On board</span>
+              <strong><b id="cargo-value">0</b> cargo</strong>
+            </div>
+            <div class="status-card moves-card">
+              <span>Moves</span>
+              <strong><b id="moves-value">12</b> left</strong>
+            </div>
+          </div>
+
+          <div class="route-note">
+            <span>Captain's note</span>
+            <p id="level-subtitle">An easy first loop from the quay.</p>
+          </div>
+
+          <div class="controls" aria-label="Move the cargo boat">
+            <button class="direction direction-up" data-direction="up" type="button" aria-label="Move up"><span aria-hidden="true">↑</span></button>
+            <button class="direction direction-left" data-direction="left" type="button" aria-label="Move left"><span aria-hidden="true">←</span></button>
+            <div class="control-compass" aria-hidden="true"><span>N</span><i></i></div>
+            <button class="direction direction-right" data-direction="right" type="button" aria-label="Move right"><span aria-hidden="true">→</span></button>
+            <button class="direction direction-down" data-direction="down" type="button" aria-label="Move down"><span aria-hidden="true">↓</span></button>
+          </div>
+          <p class="control-help">Swipe the river, use arrow keys, or tap a direction.</p>
+
+          <div class="legend" aria-label="Board symbols">
+            <div><span class="legend-symbol legend-dock">D</span><span>Dock</span></div>
+            <div><span class="legend-symbol legend-current">↟</span><span>Current</span></div>
+            <div><span class="legend-symbol legend-reef">◆</span><span>Reef</span></div>
+            <div><span class="legend-symbol legend-cargo">3</span><span>Cargo</span></div>
+          </div>
+        </aside>
+      </section>
+
+      <noscript><p class="noscript">Douro Dash needs JavaScript enabled to steer the boat.</p></noscript>
+    </main>
+
+    <div class="modal" id="level-modal" hidden>
+      <div class="modal-backdrop" data-close-modal></div>
+      <section class="modal-card level-picker" role="dialog" aria-modal="true" aria-labelledby="level-picker-title">
+        <div class="modal-heading">
+          <div><p class="eyebrow">Your river map</p><h2 id="level-picker-title">Choose a voyage</h2></div>
+          <button class="close-button" type="button" data-close-modal aria-label="Close level picker">×</button>
+        </div>
+        <div class="level-grid" id="level-grid"></div>
+        <button class="reset-progress" id="reset-progress" type="button">Reset voyage progress</button>
+      </section>
+    </div>
+
+    <div class="modal" id="result-modal" hidden>
+      <div class="modal-backdrop"></div>
+      <section class="modal-card result-card" role="dialog" aria-modal="true" aria-labelledby="result-title">
+        <div class="result-emblem" id="result-emblem" aria-hidden="true">⚓</div>
+        <p class="eyebrow" id="result-kicker">Cargo banked</p>
+        <h2 id="result-title">Voyage cleared!</h2>
+        <p id="result-copy">A clean run back to Ribeira.</p>
+        <div class="result-score"><span>Banked</span><strong id="result-score">0</strong></div>
+        <div class="result-actions">
+          <button class="primary-action" id="result-primary" type="button">Next Level</button>
+          <button class="secondary-action" id="result-secondary" type="button">Replay Level</button>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
