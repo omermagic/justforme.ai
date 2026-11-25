@@ -84,6 +84,7 @@
       collectedMask: 0,
       cargoScore: 0,
       leftDock: false,
+      heading: "up",
       locked: false,
       ended: false,
       pickupKeys: new Map()
@@ -179,7 +180,7 @@
 
   function createBoat(extraClass) {
     const boat = document.createElement("span");
-    boat.className = `boat ${extraClass}`.trim();
+    boat.className = `boat heading-${state.heading} ${extraClass}`.trim();
     boat.setAttribute("aria-hidden", "true");
     const loadCount = Math.min(3, Math.ceil(state.cargoScore / 3));
     boat.innerHTML = `
@@ -219,6 +220,7 @@
 
     state.locked = true;
     state.movesLeft -= 1;
+    state.heading = directionName;
     const leftDockDuringMove = transition.path.some((position) => position.x !== state.level.dock.x || position.y !== state.level.dock.y);
     const wasAway = state.leftDock || leftDockDuringMove;
     let gained = 0;
@@ -228,6 +230,7 @@
     render();
 
     if (transition.usedCurrent) {
+      state.heading = transition.current.dy < 0 ? "up" : transition.current.dy > 0 ? "down" : transition.current.dx > 0 ? "right" : "left";
       renderBoard("pushing");
       showToast("Current! Free river push");
       await wait(170);
